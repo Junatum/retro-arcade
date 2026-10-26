@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { setupFullscreen } from '../web/fullscreen.mjs';
+import { setupFullscreen } from '../web/fullscreen.js';
 class FakeElement {
   constructor() {
     this.names = new Set();

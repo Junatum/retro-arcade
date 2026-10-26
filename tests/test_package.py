@@ -13,6 +13,21 @@ ROOT = pathlib.Path(__file__).resolve().parents[1]
 
 
 class PackageTests(unittest.TestCase):
+    def test_openwrt_static_js_modules_have_supported_mime_extension(self):
+        # Stock uhttpd only maps .js to JavaScript MIME; .mjs fails ES module loading.
+        import hashlib
+        import json
+        sources = list((ROOT / 'web').rglob('*'))
+        self.assertFalse([p for p in sources if p.is_file() and p.suffix == '.mjs'])
+        self.assertIn('src="./app.js?v=0.1.0-r3"', (ROOT / 'web/index.html').read_text())
+        self.assertEqual(json.loads((ROOT / 'package.json').read_text())['type'], 'module')
+        manifest = json.loads((ROOT / 'web/mgba/manifest.json').read_text())
+        self.assertEqual(
+            hashlib.sha256((ROOT / 'web/mgba/mgba.js').read_bytes()).hexdigest(),
+            manifest['artifacts']['mgba.js'],
+        )
+        self.assertEqual(audit(release=True), [])
+
     def test_source_inventory_contains_only_approved_engines(self):
         self.assertEqual(audit(), [])
         for directory, expected in release_audit.EXPECTED_SOURCE_COMPONENTS.items():
@@ -52,7 +67,7 @@ class PackageTests(unittest.TestCase):
         self.assertIn('mGBA', readme)
         self.assertIn('하나의 mGBA 엔진', readme)
         self.assertIn("connect-src 'self'", html)
-        self.assertIn('app.mjs?v=0.1.0-r3', html)
+        self.assertIn('app.js?v=0.1.0-r3', html)
         self.assertIn("'wasm-unsafe-eval'", html)
         for source in (readme, html, third_party, (ROOT / 'docs/ARCHITECTURE.md').read_text()):
             self.assertIn('mGBA', source)
@@ -114,13 +129,13 @@ class PackageTests(unittest.TestCase):
 
     def test_fullscreen_controls_are_packaged(self):
         html = (ROOT / 'web/index.html').read_text()
-        script = (ROOT / 'web/app.mjs').read_text()
-        fullscreen = (ROOT / 'web/fullscreen.mjs').read_text()
+        script = (ROOT / 'web/app.js').read_text()
+        fullscreen = (ROOT / 'web/fullscreen.js').read_text()
         style = (ROOT / 'web/styles.css').read_text()
         self.assertIn('id="fullscreen"', html)
         self.assertIn('aria-controls="player-section"', html)
-        self.assertIn("import { setupFullscreen } from './fullscreen.mjs'", script)
-        self.assertIn("'fullscreen.mjs'", (ROOT / 'scripts/release_audit.py').read_text())
+        self.assertIn("import { setupFullscreen } from './fullscreen.js'", script)
+        self.assertIn("'fullscreen.js'", (ROOT / 'scripts/release_audit.py').read_text())
         self.assertIn('fullscreenchange', fullscreen)
         self.assertIn("event.key === 'Escape'", fullscreen)
         self.assertIn('requestFullscreen()', fullscreen)
@@ -130,7 +145,7 @@ class PackageTests(unittest.TestCase):
 
     def test_system_selection_hides_only_after_player_starts(self):
         html = (ROOT / 'web/index.html').read_text()
-        script = (ROOT / 'web/app.mjs').read_text()
+        script = (ROOT / 'web/app.js').read_text()
         self.assertIn('class="library" id="system-library"', html)
         show_player = script.split('function showPlayer(system,label){', 1)[1].split('\n}', 1)[0]
         self.assertIn("$('system-library').classList.add('hidden')", show_player)
@@ -140,15 +155,15 @@ class PackageTests(unittest.TestCase):
         self.assertIn('window.location.reload()', script.split('async function exitGame()', 1)[1])
 
     def test_platform_touch_controller_bundle_and_css(self):
-        app = (ROOT / 'web/app.mjs').read_text()
-        script = (ROOT / 'web/controller.mjs').read_text()
+        app = (ROOT / 'web/app.js').read_text()
+        script = (ROOT / 'web/controller.js').read_text()
         css = (ROOT / 'web/styles.css').read_text()
         audit_source = (ROOT / 'scripts/release_audit.py').read_text()
         workflow = (ROOT / '.github/workflows/verify.yml').read_text()
         self.assertIn("import { renderController", app)
         self.assertIn('activeController?.releaseAll()', app)
-        self.assertIn("'controller.mjs'", audit_source)
-        self.assertIn('node --check web/controller.mjs', workflow)
+        self.assertIn("'controller.js'", audit_source)
+        self.assertIn('node --check web/controller.js', workflow)
         for selector in ('.controller-dpad', '.controller-face', '.controller-shoulders',
                          '.controller-meta', '.keypad--chip8', '.keypad--handheld'):
             self.assertIn(selector, css)

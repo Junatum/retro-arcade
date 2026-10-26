@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {MgbaPlayer,GBA_BUTTONS,GBA_WIDTH,GBA_HEIGHT,GB_WIDTH,GB_HEIGHT} from '../web/mgba-player.mjs';
+import {MgbaPlayer,GBA_BUTTONS,GBA_WIDTH,GBA_HEIGHT,GB_WIDTH,GB_HEIGHT} from '../web/mgba-player.js';
 function createMock(){
   const bytes=new Uint8Array(32*1024*1024+256);
   const calls={painted:0,loads:[],frames:0,pressed:[],freed:[],restored:0,destroyed:0};

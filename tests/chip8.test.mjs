@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { Chip8, FONT, ROM_START, MAX_ROM_BYTES } from '../web/chip8.mjs';
-import { DEMO_ROM } from '../web/demo.mjs';
+import { Chip8, FONT, ROM_START, MAX_ROM_BYTES } from '../web/chip8.js';
+import { DEMO_ROM } from '../web/demo.js';
 function machine(...ops) {
   const m=new Chip8(()=>0.5);
   m.load(Uint8Array.from(ops.flatMap(op=>[op>>>8,op&255])));

@@ -56,7 +56,7 @@ class MgbaBuildTests(unittest.TestCase):
         self.assertIn('_Static_assert(sizeof(color_t) == 4', code)
 
     def test_gb_and_gba_share_mgba_core(self):
-        system = (ROOT/'web/systems.mjs').read_text()
+        system = (ROOT/'web/systems.js').read_text()
         bridge = (ROOT/'native/mgba_bridge.c').read_text()
         self.assertIn("id:'mgba-gb'", system)
         self.assertIn("id:'mgba'", system)

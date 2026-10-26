@@ -18,17 +18,17 @@ ROM은 브라우저에서만 처리합니다. 외부 CDN, 게임 서버, 상용 
 
 | 경로 | 역할 |
 |---|---|
-| `web/app.mjs`, `web/systems.mjs` | 플랫폼 선택, ROM 로딩, 입력 및 렌더링 루프 |
-| `web/controller.mjs` | CHIP-8 4×4 키패드, GB/GBC 십자키·A/B·SELECT/START, GBA L/R 터치 컨트롤러와 멀티터치 해제 |
-| `web/chip8.mjs`, `web/demo.mjs` | CHIP-8 실행기·내장 데모 |
-| `web/jsnes-player.mjs`, `web/nes-audio.mjs` | NES 실행/프레임 변환, SRAM, HTTP 환경의 Web Audio (사용자 활성화) |
+| `web/app.js`, `web/systems.js` | 플랫폼 선택, ROM 로딩, 입력 및 렌더링 루프 |
+| `web/controller.js` | CHIP-8 4×4 키패드, GB/GBC 십자키·A/B·SELECT/START, GBA L/R 터치 컨트롤러와 멀티터치 해제 |
+| `web/chip8.js`, `web/demo.js` | CHIP-8 실행기·내장 데모 |
+| `web/jsnes-player.js`, `web/nes-audio.js` | NES 실행/프레임 변환, SRAM, HTTP 환경의 Web Audio (사용자 활성화) |
 | `web/vendor/jsnes/` | 정확히 JSNES 2.1.0 원본 ES 모듈·매니페스트, 처음 개발 시 한 번 내려받아 포함 |
 | `scripts/vendor_jsnes.py` | npm SHA-512 무결성 검증, 원본 모듈 의존성 트리 추출 |
-| `web/mgba-player.mjs` | mGBA JS/WASM 호출, 해상도 전환, 배터리 저장 |
-| `web/battery-store.mjs` | IndexedDB 기반 브라우저 전용 ROM 세이브 저장소 |
+| `web/mgba-player.js` | mGBA JS/WASM 호출, 해상도 전환, 배터리 저장 |
+| `web/battery-store.js` | IndexedDB 기반 브라우저 전용 ROM 세이브 저장소 |
 | `native/mgba_bridge.c` | mGBA `mCore` 호출 (GB/GBC/GBA), 프레임버퍼/키/세이브 API |
 | `scripts/build_mgba.py` | 공식 소스로부터 로컬 WASM/매니페스트 빌드 |
-| `web/mgba/` | 고정된 `mgba.mjs`, `mgba.wasm`, `manifest.json` |
+| `web/mgba/` | 고정된 `mgba.js`, `mgba.wasm`, `manifest.json` |
 | `scripts/release_audit.py` | 버전, 출처, 파일 해시, ABI 브리지 일치 검증 |
 | `Makefile`, `app-info.json` | OpenWrt APK 패키징 / SmartSafeHub Apps 메타데이터 |
 
@@ -45,7 +45,7 @@ ROM은 브라우저에서만 처리합니다. 외부 CDN, 게임 서버, 상용 
 
 ## mGBA 0.10.5 WASM 번들 및 재빌드
 
-현재 저장소에는 GB/GBC/GBA 지원 브리지와 일치하는 `mgba.mjs`, `mgba.wasm`, `manifest.json`이 포함됩니다. 평소 앱 실행·OpenWrt APK 빌드 시 **WASM 재빌드는 필요하지 않습니다.** 공식 mGBA 코어, `native/mgba_bridge.c` 또는 빌드 옵션을 변경할 때만 개발 PC에서 재빌드하세요. 변경된 브리지와 기존 WASM이 불일치하면 릴리스 검사에서 배포를 차단합니다.
+현재 저장소에는 GB/GBC/GBA 지원 브리지와 일치하는 `mgba.js`, `mgba.wasm`, `manifest.json`이 포함됩니다. 평소 앱 실행·OpenWrt APK 빌드 시 **WASM 재빌드는 필요하지 않습니다.** 공식 mGBA 코어, `native/mgba_bridge.c` 또는 빌드 옵션을 변경할 때만 개발 PC에서 재빌드하세요. 변경된 브리지와 기존 WASM이 불일치하면 릴리스 검사에서 배포를 차단합니다.
 
 개발 PC에 Git, CMake, Emscripten(`emcc`, `emcmake`)을 설치하고 공식 소스를 준비합니다.
 
@@ -57,7 +57,7 @@ python3 -m unittest discover -s tests -p 'test_*.py' -v
 node --test tests/*.test.mjs
 ```
 
-재빌드한 경우 `web/mgba/mgba.mjs`, `mgba.wasm`, `manifest.json`이 갱신됩니다. 해당 세 파일을 함께 커밋해야 합니다. 검사는 정확한 upstream 태그/커밋, SHA-256, 브리지 코드와 매니페스트 일치를 검사합니다. 일반 OpenWrt APK 빌드에는 Emscripten이 필요하지 않습니다.
+재빌드한 경우 `web/mgba/mgba.js`, `mgba.wasm`, `manifest.json`이 갱신됩니다. 해당 세 파일을 함께 커밋해야 합니다. 검사는 정확한 upstream 태그/커밋, SHA-256, 브리지 코드와 매니페스트 일치를 검사합니다. 일반 OpenWrt APK 빌드에는 Emscripten이 필요하지 않습니다.
 
 배포에 앞서 본인이 적법하게 보유한 GB/GBC/GBA ROM으로 화면·입력·세이브/재실행, 브라우저 HTTP 환경의 동작을 확인하세요. **CI 단위 테스트와 매니페스트 검사만으로 실기기 실행까지 검증한 것은 아닙니다.**
 

@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {JsnesPlayer, NES_WIDTH, NES_HEIGHT, validateNesBytes} from '../web/jsnes-player.mjs';
-import {NesAudio} from '../web/nes-audio.mjs';
+import {JsnesPlayer, NES_WIDTH, NES_HEIGHT, validateNesBytes} from '../web/jsnes-player.js';
+import {NesAudio} from '../web/nes-audio.js';
 
 const blankRom = () => {
   const rom = new Uint8Array(16 + 16384);rom.set([0x4e,0x45,0x53,0x1a,1,0,2]);return rom;

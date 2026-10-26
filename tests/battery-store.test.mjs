@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import {romStorageKey,batteryRead,batteryWrite} from '../web/battery-store.mjs';
+import {romStorageKey,batteryRead,batteryWrite} from '../web/battery-store.js';
 test('mGBA save key is deterministic and separated by ROM bytes',()=>{
   assert.equal(romStorageKey(new Uint8Array([1,2,3])),romStorageKey(new Uint8Array([1,2,3])));
   assert.notEqual(romStorageKey(new Uint8Array([1,2,3])),romStorageKey(new Uint8Array([1,2,4])));

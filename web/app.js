@@ -1,12 +1,12 @@
 /* SmartSafeHub Retro Arcade — GPL-3.0-or-later; entirely local browser playback. */
-import { Chip8, DISPLAY_WIDTH, DISPLAY_HEIGHT } from './chip8.mjs';
-import { DEMO_ROM } from './demo.mjs';
-import { SYSTEMS, detectSystem, validateRom } from './systems.mjs?v=0.1.0-r3';
-import { romStorageKey, batteryRead, batteryWrite } from './battery-store.mjs?v=0.1.0-r3';
-import { MgbaPlayer } from './mgba-player.mjs';
-import { JsnesPlayer } from './jsnes-player.mjs';
-import { setupFullscreen } from './fullscreen.mjs';
-import { renderController, CHIP8_KEYBOARD, CHIP8_MATRIX, HANDHELD_KEYS } from './controller.mjs?v=0.1.0-r3';
+import { Chip8, DISPLAY_WIDTH, DISPLAY_HEIGHT } from './chip8.js';
+import { DEMO_ROM } from './demo.js';
+import { SYSTEMS, detectSystem, validateRom } from './systems.js?v=0.1.0-r3';
+import { romStorageKey, batteryRead, batteryWrite } from './battery-store.js?v=0.1.0-r3';
+import { MgbaPlayer } from './mgba-player.js';
+import { JsnesPlayer } from './jsnes-player.js';
+import { setupFullscreen } from './fullscreen.js';
+import { renderController, CHIP8_KEYBOARD, CHIP8_MATRIX, HANDHELD_KEYS } from './controller.js?v=0.1.0-r3';
 const $ = id => document.getElementById(id);
 const input=$('rom-file'), notice=$('notice'), stage=$('game');
 const fullscreen=setupFullscreen($('player-section'),$('fullscreen'),document,document.body);

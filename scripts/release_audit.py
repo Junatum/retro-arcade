@@ -11,10 +11,10 @@ ROOT = Path(__file__).resolve().parents[1]
 WEB = ROOT / 'web'
 VERSION = '0.1.0-r3'
 EXPECTED_WEB = {
-    'index.html', 'styles.css', 'app.mjs', 'fullscreen.mjs', 'controller.mjs', 'chip8.mjs', 'systems.mjs',
-    'demo.mjs', 'open-source.html', 'battery-store.mjs', 'mgba-player.mjs', 'jsnes-player.mjs', 'nes-audio.mjs',
+    'index.html', 'styles.css', 'app.js', 'fullscreen.js', 'controller.js', 'chip8.js', 'systems.js',
+    'demo.js', 'open-source.html', 'battery-store.js', 'mgba-player.js', 'jsnes-player.js', 'nes-audio.js',
 }
-MGBA_VENDOR = {'mgba/mgba.mjs', 'mgba/mgba.wasm', 'mgba/manifest.json'}
+MGBA_VENDOR = {'mgba/mgba.js', 'mgba/mgba.wasm', 'mgba/manifest.json'}
 EXPECTED_SOURCE_COMPONENTS = {
     'native': {'mgba_bridge.c'},
     'scripts': {'build_mgba.py', 'release_audit.py', 'vendor_jsnes.py'},
@@ -68,6 +68,12 @@ def audit(release: bool = False) -> list[str]:
     if 'JSNES' not in readme or 'JSNES' not in notice:
         errors.append('JSNES attribution missing')
     web_files = {p.relative_to(WEB).as_posix() for p in WEB.rglob('*') if p.is_file()}
+    # Stock OpenWrt uhttpd maps .js to text/javascript but does not recognize .mjs.
+    # Module scripts served with its fallback MIME are rejected by browsers.
+    if any(name.endswith('.mjs') for name in web_files):
+        errors.append('OpenWrt uhttpd incompatible .mjs web module: use .js')
+    if './app.js?v=' not in page:
+        errors.append('OpenWrt entrypoint must use a JavaScript MIME-compatible .js URL')
     vendor_files = {name for name in web_files if name.startswith('vendor/jsnes/')}
     ordinary_web = web_files - vendor_files
     if ordinary_web not in (EXPECTED_WEB, EXPECTED_WEB | MGBA_VENDOR):
@@ -82,8 +88,8 @@ def audit(release: bool = False) -> list[str]:
                   if file.is_file() and '__pycache__' not in file.parts}
         if actual != expected:
             errors.append(f'unexpected source inventory in {directory}: {sorted(actual ^ expected)}')
-    for script in ('web/app.mjs', 'web/fullscreen.mjs', 'web/controller.mjs', 'web/chip8.mjs', 'web/demo.mjs', 'web/systems.mjs',
-                   'web/battery-store.mjs', 'web/mgba-player.mjs', 'web/jsnes-player.mjs', 'web/nes-audio.mjs'):
+    for script in ('web/app.js', 'web/fullscreen.js', 'web/controller.js', 'web/chip8.js', 'web/demo.js', 'web/systems.js',
+                   'web/battery-store.js', 'web/mgba-player.js', 'web/jsnes-player.js', 'web/nes-audio.js'):
         try:
             source = (ROOT / script).read_text(encoding='utf-8')
         except OSError as exc:
@@ -162,7 +168,7 @@ def audit(release: bool = False) -> list[str]:
                     errors.append('unapproved mGBA source revision')
                 if manifest.get('license') != 'MPL-2.0' or manifest.get('upstream') != 'https://github.com/mgba-emu/mgba':
                     errors.append('unapproved mGBA upstream or license')
-                for name in ('mgba.mjs', 'mgba.wasm'):
+                for name in ('mgba.js', 'mgba.wasm'):
                     if hashlib.sha256((WEB / 'mgba' / name).read_bytes()).hexdigest() != manifest.get('artifacts', {}).get(name):
                         errors.append(f'invalid mGBA binary hash: {name}')
                 if (WEB / 'mgba/mgba.wasm').read_bytes()[:8] != b'\x00asm\x01\x00\x00\x00':

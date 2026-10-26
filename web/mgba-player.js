@@ -11,7 +11,7 @@ export class MgbaPlayer {
     this.active=false;
     this.width=GBA_WIDTH;this.height=GBA_HEIGHT;
   }
-  static async create(canvas, importer=()=>import('./mgba/mgba.mjs')){
+  static async create(canvas, importer=()=>import('./mgba/mgba.js')){
     let factory;
     try {({default:factory}=await importer());}
     catch {throw new Error('mGBA WASM 파일이 없습니다. docs/ARCHITECTURE.md의 로컬 빌드 절차를 확인해 주세요.');}

@@ -24,14 +24,14 @@ jobs:
         run: node --test tests/*.test.mjs
       - name: JavaScript syntax
         run: |
-          node --check web/app.mjs
-          node --check web/fullscreen.mjs
-          node --check web/controller.mjs
-          node --check web/chip8.mjs
-          node --check web/demo.mjs
-          node --check web/systems.mjs
-          node --check web/battery-store.mjs
-          node --check web/mgba-player.mjs
+          node --check web/app.js
+          node --check web/fullscreen.js
+          node --check web/controller.js
+          node --check web/chip8.js
+          node --check web/demo.js
+          node --check web/systems.js
+          node --check web/battery-store.js
+          node --check web/mgba-player.js
 
-          node --check web/jsnes-player.mjs
-          node --check web/nes-audio.mjs
+          node --check web/jsnes-player.js
+          node --check web/nes-audio.js

@@ -1,5 +1,5 @@
 /* NES/Famicom JSNES 2.1.0 adapter — local ROM, canvas, gamepad and SRAM. */
-import { NesAudio } from './nes-audio.mjs';
+import { NesAudio } from './nes-audio.js';
 
 export const NES_WIDTH = 256;
 export const NES_HEIGHT = 240;

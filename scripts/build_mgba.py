@@ -70,7 +70,7 @@ def main():
         libs=list(build.rglob('libmgba.a'))
         if len(libs)!=1:
             parser.error(f'expected one libmgba.a, found {len(libs)}')
-        js=Path(tmp)/'mgba.mjs'
+        js=Path(tmp)/'mgba.js'
         call('emcc','-O2','-std=gnu11','-D_GNU_SOURCE','-DBUILD_STATIC',
              '-I'+str(source/'include'),'-I'+str(build/'include'),'-I'+str(build),
              str(ROOT/'native/mgba_bridge.c'),str(libs[0]),
@@ -85,7 +85,7 @@ def main():
         if not wasm.is_file() or wasm.read_bytes()[:8]!=b'\x00asm\x01\x00\x00\x00':
             parser.error('invalid Emscripten WebAssembly output')
         OUT.mkdir(parents=True,exist_ok=True)
-        for name in ('mgba.mjs','mgba.wasm'):
+        for name in ('mgba.js','mgba.wasm'):
             shutil.copy2(Path(tmp)/name,OUT/name)
         # MPL notice is obtained from the checked-out release, not invented.
         shutil.copy2(source/'LICENSE',ROOT/'LICENSES/mGBA.txt')
@@ -93,7 +93,7 @@ def main():
             'upstream':UPSTREAM,'tag':VERSION,'revision':revision,
             'license':'MPL-2.0',
             'emcc':subprocess.check_output(['emcc','--version'],text=True).splitlines()[0],
-            'artifacts':{name:sha(OUT/name) for name in ('mgba.mjs','mgba.wasm')},
+            'artifacts':{name:sha(OUT/name) for name in ('mgba.js','mgba.wasm')},
             'bridge_sha256':sha(ROOT/'native/mgba_bridge.c'),
         }
         (OUT/'manifest.json').write_text(json.dumps(manifest,ensure_ascii=False,indent=2)+'\n')

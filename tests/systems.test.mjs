@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { SYSTEMS,detectSystem,validateRom } from '../web/systems.mjs';
+import { SYSTEMS,detectSystem,validateRom } from '../web/systems.js';
 
 test('CHIP-8 and one mGBA engine provide GB/GBC/GBA platforms',()=>{
   assert.deepEqual(SYSTEMS.map(s=>s.id),['chip8','mgba-gb','mgba','nes']);
