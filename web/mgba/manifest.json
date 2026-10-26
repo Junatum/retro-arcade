@@ -1,0 +1,12 @@
+{
+  "upstream": "https://github.com/mgba-emu/mgba",
+  "tag": "0.10.5",
+  "revision": "26b7884bc25a5933960f3cdcd98bac1ae14d42e2",
+  "license": "MPL-2.0",
+  "emcc": "emcc (Emscripten gcc/clang-like replacement + linker emulating GNU ld) 6.0.13-git",
+  "artifacts": {
+    "mgba.mjs": "045ee5b5bcf02dd5e310ed5f351ebf092ddecdc421c647af5535d7f10d51f893",
+    "mgba.wasm": "1b416a44ea4cbf11ee0f7588f68d229f1dc08c4236054258c463cef5a72daa5e"
+  },
+  "bridge_sha256": "23cb7d3544637f12a78482a799a05a9d4670c31aa575203b23018508f37a4a59"
+}

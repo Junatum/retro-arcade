@@ -1,5 +1,108 @@
 :root{font-family:Inter,ui-sans-serif,system-ui,-apple-system,BlinkMacSystemFont,"Apple SD Gothic Neo",sans-serif;color:#eef1fc;background:#0c0e18;font-synthesis:none;-webkit-font-smoothing:antialiased}*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 60% -18%,#262046 0,transparent 43%),#0c0e18}button,input{font:inherit}button{cursor:pointer}button:focus-visible,input:focus-visible{outline:3px solid #b6a7ff;outline-offset:3px}.app{max-width:1180px;margin:auto;padding:0 28px}.header{height:104px;border-bottom:1px solid #2a2a3b;display:flex;align-items:center;justify-content:space-between}.brand{display:flex;align-items:center;gap:14px}.brand-mark{background:#aa8eff;color:#130e26;width:45px;height:45px;border-radius:13px;display:grid;place-items:center;font-size:30px;box-shadow:0 3px 24px #aa8eff55}.eyebrow{font-size:10px;font-weight:800;color:#ada1ff;letter-spacing:.19em}.brand h1{font-size:23px;line-height:1.2;letter-spacing:-.05em;margin:4px 0 0;font-weight:850}.brand em{color:#b9a7ff;font-style:normal}.header-right{display:flex;align-items:center;gap:10px;font-size:10px;font-weight:800;letter-spacing:.13em;color:#a5daca}.status-dot{width:6px;height:6px;background:#69e7ba;border-radius:50%;box-shadow:0 0 12px #69e7ba}.edition{color:#72728d;letter-spacing:0;border:1px solid #37374e;border-radius:6px;padding:5px 8px;margin-left:9px}.intro{margin-top:34px;padding:44px 50px;min-height:315px;border-radius:22px;background:radial-gradient(circle at 85% 50%,#353060 0,transparent 45%),linear-gradient(125deg,#1a1830,#161627);border:1px solid #3d375c;display:flex;justify-content:space-between;gap:24px;overflow:hidden;position:relative}.intro-text{z-index:1;max-width:575px}.pill{display:inline-flex;border:1px solid #6e5e9c;border-radius:100px;color:#cebbff;font-size:10px;font-weight:850;letter-spacing:.17em;padding:9px 14px;background:#3f30625e}.intro h2{font-size:clamp(28px,4vw,48px);line-height:1.19;letter-spacing:-.055em;margin:24px 0 17px;font-weight:900}.intro h2 span{color:#bba6ff}.intro p{font-size:13px;line-height:1.9;color:#aaaac6;margin:0;max-width:490px}.intro-art{width:310px;min-width:260px;position:relative;display:flex;align-items:center;justify-content:center;flex-direction:column}.pixel-stars{font-size:25px;letter-spacing:20px;color:#aaa4dd;position:absolute;top:0}.console{width:205px;height:220px;border-radius:25px 25px 53px 25px;background:#b7a4ea;border-bottom:14px solid #8470bd;box-shadow:22px 19px 0 #110e2359,0 18px 70px #9670ff3b;transform:rotate(10deg);padding:15px}.console-top{background:#544f7e;border-radius:16px 16px 24px 10px;padding:18px 14px}.display{height:92px;background:#222539;border:7px solid #303047;border-radius:7px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#a7f1c3}.display-text{font-family:monospace;font-weight:900;font-size:24px;letter-spacing:4px}.display small{color:#819e9f;font-size:7px;margin-top:6px;letter-spacing:2px}.blink{animation:blink 1s steps(2,start) infinite}@keyframes blink{to{visibility:hidden}}.console-bottom{display:flex;align-items:center;justify-content:space-between;padding:19px 3px}.dpad{font-size:43px;color:#4b3f65}.ab{display:flex;gap:11px;align-self:center;transform:rotate(-26deg)}.ab b{width:26px;height:26px;border-radius:50%;background:#d866a3;box-shadow:0 4px 0 #8d3f7d;display:grid;place-items:center;color:#592a55;font-size:11px}.ground{position:absolute;bottom:-8px;color:#5d4a85;opacity:.65;font-size:11px;letter-spacing:6px}.library,.load-area,.player-section{margin:37px 0}.section-heading{display:flex;justify-content:space-between;align-items:end;margin-bottom:18px;gap:16px}.section-heading h3{font-size:20px;letter-spacing:-.045em;margin:7px 0 0}.help-tag{font-size:11px;border:1px solid #37374d;border-radius:8px;color:#8787a5;padding:8px 11px;letter-spacing:.06em}.system-grid{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:11px}.system{border:1px solid #2c2d42;text-align:left;color:#e9e9fa;border-radius:15px;background:#171926;padding:19px 14px;min-height:147px;transition:border-color .18s,transform .18s,background .18s;display:flex;flex-direction:column;align-items:flex-start}.system:hover{border-color:#7769ae;transform:translateY(-2px)}.system[aria-pressed="true"]{border-color:#a68aff;background:#27213f;box-shadow:inset 0 0 0 1px #a68aff66}.system-icon{width:47px;height:42px;background:#302949;border:1px solid #4e416a;border-radius:10px;display:grid;place-items:center;color:#c1b0ff;font-family:monospace;font-weight:900;font-size:17px;margin-bottom:16px}.system strong{font-size:12px;line-height:1.5}.system small{font-size:10px;color:#999ab7;margin-top:5px}.loader-card{border:1px solid #313248;background:#161824;border-radius:17px;padding:24px}.fields{display:grid;grid-template-columns:1fr 1fr;gap:18px}.field{display:flex;flex-direction:column;gap:11px}.field>span{font-size:12px;font-weight:750}.muted{color:#888aa8;font-weight:450}.field input{color:#ccccea;width:100%;min-height:50px;background:#202236;border:1px dashed #565377;padding:10px;border-radius:9px;font-size:12px}.field input::file-selector-button{background:#444064;border:none;border-radius:6px;color:#ece3ff;padding:8px 12px;margin-right:10px;cursor:pointer}.field small{font-size:10px;color:#9698b5;line-height:1.6}.actions{display:flex;gap:14px;align-items:center;justify-content:space-between;margin-top:26px;border-top:1px solid #2c2c40;padding-top:21px}.privacy{color:#aaa9c1;font-size:11px}.primary{border:0;border-radius:9px;padding:14px 22px;background:#b8a1ff;color:#1a1231;font-weight:850;font-size:12px;min-width:158px}.primary:hover:not(:disabled){background:#c8b8ff}.primary:disabled{opacity:.42;cursor:not-allowed}.primary span{margin-left:12px}.secondary{background:#26253b;color:#e0dafa;border:1px solid #504b74;border-radius:9px;padding:10px 16px;font-size:12px}.player-shell{background:#080913;border:1px solid #3c3958;padding:10px;border-radius:15px;min-height:290px}#game{min-height:340px;width:100%}.player-note{color:#9393b0;font-size:11px;line-height:1.7}.notice{border:1px solid #9a714b;background:#30251c;padding:14px 17px;border-radius:11px;font-size:12px;line-height:1.65;margin:20px 0}.notice.ok{border-color:#537d70;background:#1d302c}.hidden{display:none!important}footer{border-top:1px solid #242536;padding:27px 0 35px;color:#696b87;display:flex;justify-content:space-between;font-size:10px;gap:15px}@media(max-width:900px){.system-grid{grid-template-columns:repeat(3,minmax(0,1fr))}.intro{padding:35px}.intro-art{min-width:190px;transform:scale(.83)}}@media(max-width:650px){.app{padding:0 16px}.header{height:84px}.brand{gap:9px}.brand-mark{width:36px;height:36px;font-size:24px;flex-shrink:0}.brand h1{font-size:17px}.header-right{font-size:9px}.header-right .edition{display:none}.intro{padding:32px 22px;min-height:310px}.intro-art{position:absolute;right:-88px;bottom:-45px;opacity:.21;transform:scale(.9)}.intro-text{max-width:100%}.intro h2{font-size:29px}.intro p{font-size:12px}.system-grid{grid-template-columns:repeat(2,minmax(0,1fr))}.fields{grid-template-columns:1fr}.actions{align-items:stretch;flex-direction:column}.actions .primary{width:100%}.loader-card{padding:18px}footer{flex-direction:column}.system{min-height:130px}}
 /* Verified-source CHIP-8 player */
-#game canvas{display:block;width:100%;height:auto;aspect-ratio:2 / 1;image-rendering:pixelated;border-radius:8px;background:#0a0e1a}
+#game canvas{display:block;width:100%;height:auto;object-fit:contain;image-rendering:pixelated;border-radius:8px;background:#0a0e1a}
 .buttons{display:flex;flex-wrap:wrap;gap:10px;align-items:center}.game-buttons{display:flex;gap:10px;margin:15px 0}.keypad{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;max-width:390px;margin:20px auto}.chip-key{border:1px solid #514a76;color:#dfd8fa;border-radius:9px;background:#28243b;padding:13px 3px;font-size:12px;touch-action:none;user-select:none}.chip-key:active{background:#7661a8;color:white}footer a{color:#b9a7ff}
 @media(max-width:650px){.buttons{width:100%;display:grid;grid-template-columns:1fr 1fr}.buttons button{min-width:0}.keypad{max-width:100%}}
+
+/* GB/GBC use 160×144, GBA uses 240×160; preserve each screen ratio. */
+#game canvas{max-height:75vh;object-fit:contain}
+
+/* Keep playback controls available while the game fills the viewport. */
+.player-heading-actions{display:flex;align-items:center;gap:8px;flex-shrink:0}
+.player-section:fullscreen,
+.player-section.theater-mode{
+  width:100%;height:100vh;height:100dvh;margin:0;padding:clamp(10px,2vh,22px) clamp(12px,2vw,28px);
+  padding-top:max(10px,env(safe-area-inset-top));padding-bottom:max(10px,env(safe-area-inset-bottom));
+  display:flex;flex-direction:column;gap:clamp(7px,1vh,12px);
+  overflow:hidden;background:#0c0e18;color:#eef1fc;
+}
+.player-section.theater-mode{position:fixed;inset:0;z-index:1000}
+body.theater-open{overflow:hidden}
+.player-section:fullscreen .section-heading,
+.player-section.theater-mode .section-heading{flex:0 0 auto;margin:0;align-items:center;min-width:0}
+.player-section:fullscreen .section-heading>div:first-child,
+.player-section.theater-mode .section-heading>div:first-child{min-width:0}
+.player-section:fullscreen .section-heading h3,
+.player-section.theater-mode .section-heading h3{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-size:clamp(13px,1.7vw,19px)}
+.player-section:fullscreen .player-shell,
+.player-section.theater-mode .player-shell{
+  display:flex;justify-content:center;align-items:center;flex:1 1 0;min-height:0;
+  overflow:hidden;padding:6px;background:#000;
+}
+.player-section:fullscreen #game,
+.player-section.theater-mode #game{display:flex;justify-content:center;align-items:center;width:100%;height:100%;min-height:0}
+.player-section:fullscreen #game canvas,
+.player-section.theater-mode #game canvas{
+  display:block;width:100%;height:100%;max-width:100%;max-height:100%;
+  object-fit:contain;image-rendering:pixelated;background:#000;
+}
+.player-section:fullscreen .game-buttons,
+.player-section.theater-mode .game-buttons{flex:0 0 auto;margin:0}
+.player-section:fullscreen .keypad,
+.player-section.theater-mode .keypad{flex:0 0 auto;width:100%;max-width:490px;margin:0 auto;gap:5px}
+.player-section:fullscreen .chip-key,
+.player-section.theater-mode .chip-key{padding:7px 3px;min-height:34px}
+.player-section:fullscreen .player-note,
+.player-section.theater-mode .player-note{display:none}
+@media(max-width:650px){
+  .player-heading-actions{gap:6px}
+  .player-heading-actions .secondary{padding:9px 10px;font-size:11px}
+}
+@media(max-height:480px) and (orientation:landscape){
+  .player-section:fullscreen .eyebrow,.player-section.theater-mode .eyebrow{display:none}
+  .player-section:fullscreen .section-heading h3,.player-section.theater-mode .section-heading h3{margin:0}
+  .player-section:fullscreen .keypad,.player-section.theater-mode .keypad{grid-template-columns:repeat(8,minmax(0,1fr));max-width:700px}
+  .player-section:fullscreen .chip-key,.player-section.theater-mode .chip-key{min-height:27px;padding:4px 2px}
+  .player-section:fullscreen .secondary,.player-section.theater-mode .secondary{padding:6px 10px}
+}
+
+/* Desktop fullscreen prioritizes the game over touch-only controls. */
+@media (pointer:fine) and (min-width:900px){
+  .player-section:fullscreen .keypad,
+  .player-section.theater-mode .keypad{display:none}
+}
+
+/* Platform-aware handheld controls. The cartridge screen stays independent of input size. */
+.keypad--handheld{
+  --direction-size:clamp(34px,9vw,52px);
+  --face-size:clamp(45px,11vw,62px);
+  display:flex;flex-direction:column;align-items:stretch;
+  width:min(100%,540px);max-width:540px;gap:12px;
+  margin:20px auto;padding:16px clamp(10px,3vw,24px);
+  border:1px solid #373451;border-radius:22px;background:#171726;
+}
+.controller-key{touch-action:none;user-select:none;-webkit-user-select:none;cursor:pointer;display:grid;place-items:center;font-weight:750;line-height:1.1}
+.controller-key.is-pressed{background:#9575d5;color:#110e21;transform:translateY(1px)}
+.controller-main{display:flex;align-items:center;justify-content:space-between;gap:12px;width:100%;padding:0 clamp(0px,2vw,12px)}
+.controller-dpad{display:grid;grid-template-columns:repeat(3,var(--direction-size));grid-template-rows:repeat(3,var(--direction-size));position:relative;flex-shrink:0}
+.controller-dpad .controller-key{border-radius:7px;min-height:0;padding:0;font-size:clamp(14px,3vw,20px);z-index:1}
+.controller-dpad-center{grid-area:2 / 2;width:100%;height:100%;background:#28243b;border:1px solid #514a76;pointer-events:none;border-radius:5px}
+.controller-dpad [data-position="up"]{grid-area:1 / 2}
+.controller-dpad [data-position="left"]{grid-area:2 / 1}
+.controller-dpad [data-position="down"]{grid-area:3 / 2}
+.controller-dpad [data-position="right"]{grid-area:2 / 3}
+.controller-face{display:grid;grid-template-columns:repeat(2,var(--face-size));grid-template-rows:repeat(2,var(--face-size));gap:4px;align-items:center;flex-shrink:0}
+.controller-face .controller-key{width:var(--face-size);height:var(--face-size);min-height:0;padding:0;border-radius:50%;font-size:clamp(14px,3vw,19px);background:#4a2c56;border-color:#925a95;box-shadow:0 3px 0 #2a1938}
+.controller-face .controller-key.is-pressed{background:#c27abf;box-shadow:none}
+.controller-face [data-position="a"]{grid-area:1 / 2}
+.controller-face [data-position="b"]{grid-area:2 / 1}
+.controller-meta{display:flex;justify-content:center;gap:12px}
+.controller-meta .controller-key{padding:9px 13px;min-height:32px;min-width:78px;border-radius:18px;font-size:10px;letter-spacing:.06em}
+.controller-shoulders{display:flex;justify-content:space-between;gap:10px}
+.controller-shoulders .controller-key{height:34px;min-height:0;width:clamp(75px,25%,125px);padding:5px 10px;border-radius:14px 14px 9px 9px;background:#33304b}
+.keypad--chip8{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));width:min(100%,340px);max-width:340px;gap:8px;padding:14px;margin:20px auto;border:1px solid #373451;border-radius:18px;background:#171726}
+.keypad--chip8 .chip8-key{min-height:48px;padding:9px 3px;font-size:15px;font-family:ui-monospace,SFMono-Regular,monospace}
+/* Fullscreen uses the same physical arrangement; the old landscape 8-column grid is disabled. */
+.player-section:fullscreen .keypad--handheld,.player-section.theater-mode .keypad--handheld{display:flex;width:min(100%,520px);max-width:520px;margin:0 auto;padding:8px 14px;gap:5px}
+.player-section:fullscreen .keypad--chip8,.player-section.theater-mode .keypad--chip8{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));max-width:270px;margin:0 auto;padding:7px;gap:5px}
+.player-section:fullscreen .controller-key,.player-section.theater-mode .controller-key{min-height:0}
+.player-section:fullscreen .controller-dpad,.player-section.theater-mode .controller-dpad{--direction-size:clamp(28px,7vh,43px)}
+.player-section:fullscreen .controller-face,.player-section.theater-mode .controller-face{--face-size:clamp(35px,8vh,48px)}
+.player-section:fullscreen .controller-shoulders .controller-key,.player-section.theater-mode .controller-shoulders .controller-key{height:27px}
+.player-section:fullscreen .controller-meta .controller-key,.player-section.theater-mode .controller-meta .controller-key{min-height:27px;padding:6px 9px}
+.player-section:fullscreen .chip8-key,.player-section.theater-mode .chip8-key{min-height:28px;padding:5px 2px}
+@media(max-width:400px){
+  .keypad--handheld{--direction-size:clamp(30px,9vw,36px);--face-size:clamp(41px,12vw,49px);gap:9px;padding:12px 9px}
+  .controller-main{gap:7px;padding:0}
+  .controller-meta .controller-key{min-width:70px;padding:8px}
+}

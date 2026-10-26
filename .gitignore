@@ -27,3 +27,6 @@ __pycache__/
 *.pbp
 *.cue
 *.7z
+*.orig
+*.rej
+/*.patch

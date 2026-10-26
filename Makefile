@@ -4,9 +4,9 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=smartsafehub-app-retro-arcade
 PKG_VERSION:=0.1.0
-PKG_RELEASE:=1
-PKG_LICENSE:=GPL-3.0-or-later
-PKG_LICENSE_FILES:=LICENSE
+PKG_RELEASE:=2
+PKG_LICENSE:=GPL-3.0-or-later MPL-2.0
+PKG_LICENSE_FILES:=LICENSE LICENSES/mGBA.txt
 PKG_MAINTAINER:=SmartSafeHub Contributors
 PKGARCH:=all
 
@@ -22,13 +22,15 @@ define Package/smartsafehub-app-retro-arcade
 endef
 
 define Package/smartsafehub-app-retro-arcade/description
-  Self-contained, browser-based CHIP-8 emulator served by OpenWrt.
-  No downloaded cores, console ROMs, BIOS or external runtime services.
+  Browser-based CHIP-8 and mGBA GB/GBC/GBA emulators served by OpenWrt.
+  Emulator binaries must be built separately, then bundled; no APK build downloads.
 endef
 
 define Build/Prepare
 	mkdir -p $(PKG_BUILD_DIR)
 	$(CP) ./LICENSE $(PKG_BUILD_DIR)/
+	$(INSTALL_DIR) $(PKG_BUILD_DIR)/LICENSES
+	$(CP) ./LICENSES/mGBA.txt $(PKG_BUILD_DIR)/LICENSES/
 endef
 
 define Build/Compile
@@ -39,9 +41,12 @@ define Package/smartsafehub-app-retro-arcade/install
 	$(INSTALL_DIR) $(1)/www/retro-arcade
 	$(CP) ./web/. $(1)/www/retro-arcade/
 	$(INSTALL_DATA) ./LICENSE $(1)/www/retro-arcade/LICENSE.txt
-	$(INSTALL_DATA) ./THIRD_PARTY.md $(1)/www/retro-arcade/THIRD_PARTY.md
-	$(INSTALL_DATA) ./SOURCE_OFFER.md $(1)/www/retro-arcade/SOURCE_OFFER.md
-	$(INSTALL_DATA) ./INSTALLATION_INFO.md $(1)/www/retro-arcade/INSTALLATION_INFO.md
+	$(INSTALL_DIR) $(1)/www/retro-arcade/LICENSES
+	$(INSTALL_DATA) ./LICENSES/mGBA.txt $(1)/www/retro-arcade/LICENSES/mGBA.txt
+	$(INSTALL_DATA) ./docs/THIRD_PARTY.md $(1)/www/retro-arcade/THIRD_PARTY.md
+	$(INSTALL_DIR) $(1)/www/retro-arcade/docs
+	$(INSTALL_DATA) ./docs/SOURCE_OFFER.md $(1)/www/retro-arcade/docs/SOURCE_OFFER.md
+	$(INSTALL_DATA) ./docs/INSTALLATION_INFO.md $(1)/www/retro-arcade/docs/INSTALLATION_INFO.md
 endef
 
 $(eval $(call BuildPackage,smartsafehub-app-retro-arcade))
