@@ -1,9 +1,9 @@
 /* Browser-only per-ROM battery storage; no network access. */
 // Stable per-ROM key without transmitting filenames or ROM bytes to the server.
-export function romStorageKey(bytes) {
+export function romStorageKey(bytes, engine = 'mgba') {
   let hash=2166136261;
   for(const b of bytes){hash^=b;hash=Math.imul(hash,16777619);}
-  return `mgba:${bytes.length}:${(hash>>>0).toString(16)}`;
+  return `${engine}:${bytes.length}:${(hash>>>0).toString(16)}`;
 }
 export async function batteryRead(key) {
   if (!('indexedDB' in globalThis)) return null;

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verify offline Retro Arcade inventory and mGBA provenance before release."""
+"""Verify offline Retro Arcade inventory mGBA and JSNES provenance before release."""
 from __future__ import annotations
 import argparse
 import hashlib
@@ -9,16 +9,16 @@ from pathlib import Path
 
 ROOT = Path(__file__).resolve().parents[1]
 WEB = ROOT / 'web'
-VERSION = '0.1.0-r2'
+VERSION = '0.1.0-r3'
 EXPECTED_WEB = {
     'index.html', 'styles.css', 'app.mjs', 'fullscreen.mjs', 'controller.mjs', 'chip8.mjs', 'systems.mjs',
-    'demo.mjs', 'open-source.html', 'battery-store.mjs', 'mgba-player.mjs',
+    'demo.mjs', 'open-source.html', 'battery-store.mjs', 'mgba-player.mjs', 'jsnes-player.mjs', 'nes-audio.mjs',
 }
 MGBA_VENDOR = {'mgba/mgba.mjs', 'mgba/mgba.wasm', 'mgba/manifest.json'}
 EXPECTED_SOURCE_COMPONENTS = {
     'native': {'mgba_bridge.c'},
-    'scripts': {'build_mgba.py', 'release_audit.py'},
-    'LICENSES': {'mGBA.txt'},
+    'scripts': {'build_mgba.py', 'release_audit.py', 'vendor_jsnes.py'},
+    'LICENSES': {'mGBA.txt', 'JSNES.txt'},
 }
 
 
@@ -34,11 +34,11 @@ def audit(release: bool = False) -> list[str]:
         mgba_license = (ROOT / 'LICENSES/mGBA.txt').read_text(encoding='utf-8')
     except (OSError, ValueError) as exc:
         return [f'missing or invalid release source: {exc}']
-    if meta.get('version') != VERSION or meta.get('license') != 'GPL-3.0-or-later AND MPL-2.0':
+    if meta.get('version') != VERSION or meta.get('license') != 'GPL-3.0-or-later AND MPL-2.0 AND Apache-2.0':
         errors.append('incorrect app version/license')
-    if meta.get('included_systems') != ['CHIP-8', 'Game Boy', 'Game Boy Color', 'Game Boy Advance'] or meta.get('offline') is not True:
+    if meta.get('included_systems') != ['CHIP-8', 'Game Boy', 'Game Boy Color', 'Game Boy Advance', 'NES', 'Famicom'] or meta.get('offline') is not True:
         errors.append('incorrect included platforms/offline policy')
-    for required in ('PKG_VERSION:=0.1.0', 'PKG_RELEASE:=2', 'PKG_LICENSE:=GPL-3.0-or-later MPL-2.0',
+    for required in ('PKG_VERSION:=0.1.0', 'PKG_RELEASE:=3', 'PKG_LICENSE:=GPL-3.0-or-later MPL-2.0 Apache-2.0',
                      'python3 $(CURDIR)/scripts/release_audit.py --release'):
         if required not in mk:
             errors.append(f'incorrect OpenWrt package config: {required}')
@@ -53,8 +53,8 @@ def audit(release: bool = False) -> list[str]:
             errors.append(f'missing documentation: {exc}')
     try:
         history = (ROOT / 'CHANGELOG.md').read_text(encoding='utf-8')
-        if re.findall(r'^## (0\.1\.0-r\d+)\b', history, re.M) != [VERSION, '0.1.0-r1']:
-            errors.append('changelog must contain consolidated r2 and original r1')
+        if re.findall(r'^## (0\.1\.0-r\d+)\b', history, re.M) != [VERSION, '0.1.0-r2', '0.1.0-r1']:
+            errors.append('changelog must contain r3, consolidated r2, and original r1')
     except OSError as exc:
         errors.append(f'missing changelog: {exc}')
     if 'GNU GENERAL PUBLIC LICENSE' not in license_text.upper():
@@ -63,9 +63,17 @@ def audit(release: bool = False) -> list[str]:
         errors.append('mGBA MPL-2.0 license missing')
     if 'mGBA' not in readme or 'mGBA' not in notice:
         errors.append('mGBA attribution missing')
+    if not (ROOT / 'LICENSES/JSNES.txt').is_file() or 'Apache License' not in (ROOT / 'LICENSES/JSNES.txt').read_text(encoding='utf-8'):
+        errors.append('JSNES Apache-2.0 license missing')
+    if 'JSNES' not in readme or 'JSNES' not in notice:
+        errors.append('JSNES attribution missing')
     web_files = {p.relative_to(WEB).as_posix() for p in WEB.rglob('*') if p.is_file()}
-    if web_files not in (EXPECTED_WEB, EXPECTED_WEB | MGBA_VENDOR):
-        errors.append(f'unexpected/incomplete web inventory: {sorted(web_files ^ (EXPECTED_WEB | MGBA_VENDOR))}')
+    vendor_files = {name for name in web_files if name.startswith('vendor/jsnes/')}
+    ordinary_web = web_files - vendor_files
+    if ordinary_web not in (EXPECTED_WEB, EXPECTED_WEB | MGBA_VENDOR):
+        errors.append(f'unexpected/incomplete web inventory: {sorted(ordinary_web ^ (EXPECTED_WEB | MGBA_VENDOR))}')
+    if any(name.startswith('vendor/') and not name.startswith('vendor/jsnes/') for name in web_files):
+        errors.append('unreviewed vendor files')
     # Keep the shipped emulation sources limited to the audited mGBA bridge.
     # New native engines/build tools/license bundles require an explicit review.
     for directory, expected in EXPECTED_SOURCE_COMPONENTS.items():
@@ -75,7 +83,7 @@ def audit(release: bool = False) -> list[str]:
         if actual != expected:
             errors.append(f'unexpected source inventory in {directory}: {sorted(actual ^ expected)}')
     for script in ('web/app.mjs', 'web/fullscreen.mjs', 'web/controller.mjs', 'web/chip8.mjs', 'web/demo.mjs', 'web/systems.mjs',
-                   'web/battery-store.mjs', 'web/mgba-player.mjs'):
+                   'web/battery-store.mjs', 'web/mgba-player.mjs', 'web/jsnes-player.mjs', 'web/nes-audio.mjs'):
         try:
             source = (ROOT / script).read_text(encoding='utf-8')
         except OSError as exc:
@@ -97,7 +105,7 @@ def audit(release: bool = False) -> list[str]:
                 errors.append(f'unreviewed binary: {path.relative_to(ROOT)}')
     for required in ('docs/THIRD_PARTY.md', 'docs/ARCHITECTURE.md', 'docs/SOURCE_OFFER.md',
                      'docs/INSTALLATION_INFO.md', 'docs/RELEASE_CHECKLIST.md',
-                     'native/mgba_bridge.c', 'scripts/build_mgba.py', 'LICENSES/mGBA.txt'):
+                     'native/mgba_bridge.c', 'scripts/build_mgba.py', 'scripts/vendor_jsnes.py', 'LICENSES/mGBA.txt', 'LICENSES/JSNES.txt'):
         if not (ROOT / required).is_file():
             errors.append(f'missing required source: {required}')
     if any((ROOT / name).exists() for name in
@@ -108,11 +116,41 @@ def audit(release: bool = False) -> list[str]:
             './docs/SOURCE_OFFER.md' not in mk or
             './docs/INSTALLATION_INFO.md' not in mk):
         errors.append('APK attribution/documentation paths not updated')
-    if (ROOT / 'COMMIT_MESSAGE.txt').exists() or (ROOT / 'web/vendor').exists():
+    if (ROOT / 'COMMIT_MESSAGE.txt').exists():
         errors.append('old vendor/commit file should not be present')
 
     # --check checks source layout in CI, including before a local WASM rebuild.
     # --release *always* checks binary+bridge hashes and blocks stale old GBA ABI.
+    # JSNES is copied unmodified from the pinned npm package once on a development
+    # machine. CI source checks may run before that step; APK releases may not.
+    if vendor_files or release:
+        manifest_file = WEB / 'vendor/jsnes/manifest.json'
+        if not manifest_file.is_file():
+            errors.append('JSNES 2.1.0 vendor modules and manifest required before release')
+        else:
+            try:
+                manifest = json.loads(manifest_file.read_text(encoding='utf-8'))
+                modules = manifest.get('files', {})
+                if (manifest.get('package') != 'jsnes' or manifest.get('version') != '2.1.0' or
+                    manifest.get('license') != 'Apache-2.0' or
+                    manifest.get('upstream') != 'https://github.com/bfirsh/jsnes' or
+                    not re.fullmatch(r'sha512-[A-Za-z0-9+/]+=*', str(manifest.get('npm_integrity', '')))):
+                    errors.append('unapproved JSNES provenance/version/license')
+                if not isinstance(modules, dict) or len(modules) < 3 or not {'src/nes.js','src/controller.js'}.issubset(modules):
+                    errors.append('incomplete JSNES ES module dependency inventory')
+                else:
+                    declared = {'vendor/jsnes/' + name for name in modules} | {'vendor/jsnes/manifest.json'}
+                    if declared != vendor_files:
+                        errors.append(f'unexpected JSNES vendor inventory: {sorted(declared ^ vendor_files)}')
+                    for name, sha in modules.items():
+                        if not re.fullmatch(r'src/(?:[A-Za-z0-9_-]+/)*[A-Za-z0-9_-]+\.js', name):
+                            errors.append(f'unexpected JSNES module name: {name}')
+                            continue
+                        file = WEB / 'vendor/jsnes' / name
+                        if not file.is_file() or hashlib.sha256(file.read_bytes()).hexdigest() != sha:
+                            errors.append(f'invalid JSNES source hash: {name}')
+            except (OSError, ValueError, TypeError, AttributeError) as exc:
+                errors.append(f'invalid JSNES manifest: {exc}')
     if release:
         if not MGBA_VENDOR.issubset(web_files):
             errors.append('mGBA 0.10.5 WASM/JS + provenance manifest are mandatory before APK release')

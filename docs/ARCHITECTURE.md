@@ -1,6 +1,6 @@
 # 아키텍처 및 개발 가이드
 
-SmartSafeHub Retro Arcade `0.1.0-r2`의 구현, 빌드 및 검증 방법입니다. 사용자 소개는 [README](../README.md)를 참조하세요.
+SmartSafeHub Retro Arcade `0.1.0-r3`의 구현, 빌드 및 검증 방법입니다. 사용자 소개는 [README](../README.md)를 참조하세요.
 
 ## 실행 구조
 
@@ -8,7 +8,8 @@ SmartSafeHub Retro Arcade `0.1.0-r2`의 구현, 빌드 및 검증 방법입니�
 SmartSafeHub Apps → OpenWrt 정적 웹서버 (/www/retro-arcade/)
     └─ 사용자 브라우저 (HTML / JS / WASM)
         ├─ CHIP-8: 내장 JavaScript 코어
-        └─ GB/GBC/GBA: mGBA 0.10.5 C 코어 → Emscripten WASM
+        ├─ GB/GBC/GBA: mGBA 0.10.5 C 코어 → Emscripten WASM
+        └─ NES/Famicom: JSNES 2.1.0 ES modules (no WASM)
 ```
 
 ROM은 브라우저에서만 처리합니다. 외부 CDN, 게임 서버, 상용 BIOS는 사용하지 않습니다.
@@ -20,6 +21,9 @@ ROM은 브라우저에서만 처리합니다. 외부 CDN, 게임 서버, 상용 
 | `web/app.mjs`, `web/systems.mjs` | 플랫폼 선택, ROM 로딩, 입력 및 렌더링 루프 |
 | `web/controller.mjs` | CHIP-8 4×4 키패드, GB/GBC 십자키·A/B·SELECT/START, GBA L/R 터치 컨트롤러와 멀티터치 해제 |
 | `web/chip8.mjs`, `web/demo.mjs` | CHIP-8 실행기·내장 데모 |
+| `web/jsnes-player.mjs`, `web/nes-audio.mjs` | NES 실행/프레임 변환, SRAM, HTTP 환경의 Web Audio (사용자 활성화) |
+| `web/vendor/jsnes/` | 정확히 JSNES 2.1.0 원본 ES 모듈·매니페스트, 처음 개발 시 한 번 내려받아 포함 |
+| `scripts/vendor_jsnes.py` | npm SHA-512 무결성 검증, 원본 모듈 의존성 트리 추출 |
 | `web/mgba-player.mjs` | mGBA JS/WASM 호출, 해상도 전환, 배터리 저장 |
 | `web/battery-store.mjs` | IndexedDB 기반 브라우저 전용 ROM 세이브 저장소 |
 | `native/mgba_bridge.c` | mGBA `mCore` 호출 (GB/GBC/GBA), 프레임버퍼/키/세이브 API |
@@ -33,6 +37,7 @@ ROM은 브라우저에서만 처리합니다. 외부 CDN, 게임 서버, 상용 
 - CHIP-8: `.ch8`, `.c8` 최대 3,584바이트, 내장 데모 제공.
 - Game Boy / Color: `.gb`, `.gbc`, 최대 8MiB, mGBA의 GB 코어, 160×144 화면.
 - Game Boy Advance: `.gba`, 최대 32MiB, mGBA의 GBA 코어, 240×160 화면.
+- NES/Famicom: `.nes`, 최대 8MiB, JSNES 코어, 256×240 화면. 십자키·A/B·SELECT/START, 브라우저 IndexedDB에 배터리 RAM 저장. 오디오 켜기는 사용자가 클릭해야 하며 Web Audio 지원 브라우저에 한합니다.
 - 방향키, X(A)/Z(B), Enter(Start)/Shift(Select); GBA는 A(L)/S(R) 추가 지원.
 - 브라우저의 IndexedDB(`smartsafehub-retro-arcade`)에 `mgba:` 접두사로 배터리 저장 데이터를 보관합니다. ROM 파일은 업로드하지 않습니다.
 
@@ -69,3 +74,9 @@ make package/smartsafehub-app-retro-arcade/compile V=s
 ## 라이선스
 
 UI/CHIP-8은 GPL-3.0-or-later이고 mGBA 코어는 MPL-2.0입니다. [오픈소스 고지](THIRD_PARTY.md), [소스 제공 안내](SOURCE_OFFER.md), [설치 안내](INSTALLATION_INFO.md)를 참조하세요.
+
+## JSNES 2.1.0 (원본 ES 모듈, 빌드 없음)
+
+JSNES는 `scripts/vendor_jsnes.py`로 npm 2.1.0 타르볼의 SHA-512를 검증해 `web/vendor/jsnes/src/`에 필요한 원본 ES 모듈만 복사합니다. 원본 내용의 SHA-256을 `manifest.json`에 기록하며 `release_audit.py --release`가 변경·누락을 차단합니다. **OpenWrt APK 빌드 과정은 인터넷을 사용하지 않습니다.** 미준비 상태에서는 릴리스 검사가 실패합니다. `python3 scripts/vendor_jsnes.py`는 개발 PC에서 한 번만 실행하세요.
+
+외부 CDN 및 FCEUmm/libretro 코어를 사용하지 않습니다. HTTP 환경에서 오디오가 가능한 경우 `AudioContext`와 `ScriptProcessorNode`로 재생합니다(일부 브라우저는 제한될 수 있음). `.nes` 파일은 서버로 업로드하지 않습니다.

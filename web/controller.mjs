@@ -28,13 +28,14 @@ export function renderController(root, systemId, press) {
   const doc = root.ownerDocument;
   const isChip8 = systemId === 'chip8';
   const isGba = systemId === 'mgba';
+  const isNes = systemId === 'nes';
   const held = new Set();
   const releaseAll = () => {
     for (const release of [...held]) release();
   };
   root.replaceChildren();
   root.className = `keypad ${isChip8 ? 'keypad--chip8' : 'keypad--handheld'}`;
-  root.setAttribute('aria-label', isChip8 ? 'CHIP-8 16키 터치 키패드' : `${isGba ? 'Game Boy Advance' : 'Game Boy / Color'} 터치 컨트롤러`);
+  root.setAttribute('aria-label', isChip8 ? 'CHIP-8 16키 터치 키패드' : `${isGba ? 'Game Boy Advance' : isNes ? 'NES / Famicom' : 'Game Boy / Color'} 터치 컨트롤러`);
 
   function makeButton(item, groupClass) {
     const btn = doc.createElement('button');

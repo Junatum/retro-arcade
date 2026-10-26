@@ -11,12 +11,12 @@ jobs:
       - uses: actions/checkout@v4
       - name: Verify source contents (offline)
         run: python3 scripts/release_audit.py --check
-      - name: Verify deployable artifacts when mGBA is bundled
+      - name: Verify deployable artifacts when JSNES is vendored
         run: |
-          if [ -f web/mgba/manifest.json ]; then
+          if [ -f web/vendor/jsnes/manifest.json ]; then
             python3 scripts/release_audit.py --release
           else
-            echo "mGBA WASM not yet built; OpenWrt APK release stays blocked"
+            echo "JSNES 2.1.0 not vendored; OpenWrt APK release stays blocked"
           fi
       - name: Python tests
         run: python3 -m unittest discover -s tests -p 'test_*.py' -v
@@ -32,3 +32,6 @@ jobs:
           node --check web/systems.mjs
           node --check web/battery-store.mjs
           node --check web/mgba-player.mjs
+
+          node --check web/jsnes-player.mjs
+          node --check web/nes-audio.mjs

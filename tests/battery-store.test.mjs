@@ -10,3 +10,10 @@ test('no IndexedDB means no game-save network fallback',async()=>{
   assert.equal(await batteryRead('sample'),null);
   assert.equal(await batteryWrite('sample',new Uint8Array([1])),false);
 });
+
+test('NES save keys do not collide with existing mGBA keys',()=>{
+  const rom=new Uint8Array([1,2,3,4]);
+  assert.ok(romStorageKey(rom).startsWith('mgba:'));
+  assert.ok(romStorageKey(rom,'jsnes').startsWith('jsnes:'));
+  assert.notEqual(romStorageKey(rom),romStorageKey(rom,'jsnes'));
+});

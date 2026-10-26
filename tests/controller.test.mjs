@@ -77,3 +77,12 @@ test('one key remains pressed until both touches are released',()=>{
   hit(a,'pointerup',2);
   assert.deepEqual(records,[['a',true],['a',false]]);
 });
+test('NES controller matches original Famicom/NES layout with no L/R',()=>{
+  const el=root(),records=[];
+  renderController(el,'nes',(key,down)=>records.push([key,down]));
+  assert.match(el.attributes['aria-label'],/NES \/ Famicom/);
+  assert.deepEqual(buttons(el).map(b=>b.dataset.position),['up','left','down','right','b','a','select','start']);
+  const a=buttons(el).find(b=>b.dataset.position==='a');
+  hit(a,'pointerdown');hit(a,'pointerup');
+  assert.deepEqual(records,[['a',true],['a',false]]);
+});

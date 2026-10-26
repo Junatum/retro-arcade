@@ -1,11 +1,12 @@
 /* SmartSafeHub Retro Arcade — GPL-3.0-or-later; entirely local browser playback. */
 import { Chip8, DISPLAY_WIDTH, DISPLAY_HEIGHT } from './chip8.mjs';
 import { DEMO_ROM } from './demo.mjs';
-import { SYSTEMS, detectSystem, validateRom } from './systems.mjs';
-import { romStorageKey, batteryRead, batteryWrite } from './battery-store.mjs';
+import { SYSTEMS, detectSystem, validateRom } from './systems.mjs?v=0.1.0-r3';
+import { romStorageKey, batteryRead, batteryWrite } from './battery-store.mjs?v=0.1.0-r3';
 import { MgbaPlayer } from './mgba-player.mjs';
+import { JsnesPlayer } from './jsnes-player.mjs';
 import { setupFullscreen } from './fullscreen.mjs';
-import { renderController, CHIP8_KEYBOARD, CHIP8_MATRIX, HANDHELD_KEYS } from './controller.mjs';
+import { renderController, CHIP8_KEYBOARD, CHIP8_MATRIX, HANDHELD_KEYS } from './controller.mjs?v=0.1.0-r3';
 const $ = id => document.getElementById(id);
 const input=$('rom-file'), notice=$('notice'), stage=$('game');
 const fullscreen=setupFullscreen($('player-section'),$('fullscreen'),document,document.body);
@@ -47,13 +48,14 @@ function drawLoop(time){
   }catch(error){stop(`실행 중 오류: ${error.message}`);return;}
   frame=requestAnimationFrame(drawLoop);
 }
-function stop(reason){running=false;cancelAnimationFrame(frame);$('toggle').textContent='▶ 계속';if(reason)announce(reason);}
+function stop(reason){running=false;cancelAnimationFrame(frame);game?.pause?.();$('toggle').textContent='▶ 계속';if(reason)announce(reason);}
 function showPlayer(system,label){
   loaded=true;running=true;last=0;clock=0;framesSinceSave=0;
   $('intro').classList.add('hidden');$('system-library').classList.add('hidden');$('load-area').classList.add('hidden');
   $('player-section').classList.remove('hidden');
   $('player-title').textContent=`${system.label} · ${label}`;
   $('toggle').textContent='Ⅱ 일시정지';notice.classList.add('hidden');
+  $('sound').classList.toggle('hidden', system.id!=='nes');
   renderKeypad();
   frame=requestAnimationFrame(drawLoop);
   $('player-section').scrollIntoView({block:'start',behavior:'smooth'});
@@ -74,6 +76,16 @@ async function playMgba(bytes,label){
     game=player;saveKey=key;showPlayer(system,label);
   }catch(error){player.destroy();throw error;}
 }
+async function playNes(bytes,label){
+  const player=await JsnesPlayer.create(canvas);
+  try {
+    player.load(bytes);
+    const key=romStorageKey(bytes,'jsnes');
+    const saved=await batteryRead(key);
+    if(saved)player.restore(saved);
+    game=player;saveKey=key;showPlayer(selected,label);
+  }catch(error){player.destroy();throw error;}
+}
 function renderKeypad(){
   activeController?.releaseAll();
   activeController=renderController($('keypad'),selected.id,(key,pressed)=>{
@@ -82,13 +94,13 @@ function renderKeypad(){
 }
 
 function choose(system){
-  if(loaded)return;
+  if(loaded||loading)return;
   selected=system;
   for(const btn of $('systems').children) btn.setAttribute('aria-pressed',String(btn.dataset.system===system.id));
   input.value='';input.accept=system.extensions.map(x=>'.'+x).join(',');
   $('play').disabled=true;
   $('rom-label').textContent=`${system.label} ROM 파일`;
-  $('rom-help').textContent= system.id==='chip8' ? '권리를 보유한 .ch8 / .c8 ROM을 선택하세요 (최대 3,584바이트).' : system.id==='mgba-gb' ? '권리를 보유한 .gb / .gbc ROM을 선택하세요 (최대 8MiB). 게임 데이터는 공유기로 전송되지 않습니다.' : '권리를 보유한 .gba ROM을 선택하세요 (최대 32MiB). BIOS는 필요하지 않으며 ROM은 전송되지 않습니다.';
+  $('rom-help').textContent= system.id==='chip8' ? '권리를 보유한 .ch8 / .c8 ROM을 선택하세요 (최대 3,584바이트).' : system.id==='mgba-gb' ? '권리를 보유한 .gb / .gbc ROM을 선택하세요 (최대 8MiB). 게임 데이터는 공유기로 전송되지 않습니다.' : system.id==='nes' ? '권리를 보유한 .nes 파일을 선택하세요 (최대 8MiB). 게임 데이터는 공유기로 전송되지 않습니다.' : '권리를 보유한 .gba ROM을 선택하세요 (최대 32MiB). BIOS는 필요하지 않으며 ROM은 전송되지 않습니다.';
   $('control-help').textContent=system.id==='chip8' ? '1234 / QWER / ASDF / ZXCV · 모바일 터치 키패드' : '방향키 이동 · X(A) / Z(B) · Enter(START) / Shift(SELECT)' + (system.id==='mgba' ? ' · A(L) / S(R)' : '') + ' · 모바일 터치 지원';
   $('demo').disabled=system.id!=='chip8';
   notice.classList.add('hidden');
@@ -116,15 +128,21 @@ $('play').onclick=async()=>{
   try{
     const bytes=new Uint8Array(await file.arrayBuffer());
     if(selected.id==='chip8')playChip8(bytes,file.name);
+    else if(selected.id==='nes')await playNes(bytes,file.name);
     else await playMgba(bytes,file.name);
   }catch(error){announce(error.message);}
   finally{loading=false;if(!loaded)$('play').disabled=false;}
 };
 $('demo').onclick=()=>{if(selected.id==='chip8')playChip8(DEMO_ROM,'내장 데모 2026');};
+$('sound').onclick=async()=>{
+  if(selected.id!=='nes'||!game)return;
+  try{await game.enableAudio();$('sound').textContent='♫ 사운드 켜짐';$('sound').disabled=true;}
+  catch(error){announce(error.message);}
+};
 $('toggle').onclick=()=>{
   if(!loaded)return;
   if(running){stop();void persistBattery();}
-  else{running=true;last=0;clock=0;$('toggle').textContent='Ⅱ 일시정지';frame=requestAnimationFrame(drawLoop);}
+  else{running=true;last=0;clock=0;game?.resume?.();$('toggle').textContent='Ⅱ 일시정지';frame=requestAnimationFrame(drawLoop);}
 };
 async function exitGame(){activeController?.releaseAll();stop();await persistBattery();await fullscreen.exit();game?.destroy();window.location.reload();}
 $('reset').onclick=exitGame;$('return').onclick=exitGame;
