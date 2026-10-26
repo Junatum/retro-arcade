@@ -1,0 +1,23 @@
+name: Verify Retro Arcade
+on:
+  push:
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Verify release contents (offline)
+        run: python3 scripts/release_audit.py --release
+      - name: Python tests
+        run: python3 -m unittest discover -s tests -p 'test_*.py' -v
+      - name: JavaScript tests
+        run: node --test tests/*.test.mjs
+      - name: JavaScript syntax
+        run: |
+          node --check web/app.mjs
+          node --check web/chip8.mjs
+          node --check web/demo.mjs
+          node --check web/systems.mjs
