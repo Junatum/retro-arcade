@@ -109,3 +109,24 @@ body.theater-open{overflow:hidden}
 
 /* When a platform has no bundled demo, the remaining ROM action uses the full mobile row. */
 @media(max-width:650px){.buttons.buttons--single{grid-template-columns:1fr}}
+
+/* Only the bundled paddle demo receives side labels; regular ROMs are unchanged. */
+.player-shell{position:relative}
+.demo-roles{position:absolute;inset:17px 20px auto;display:flex;justify-content:space-between;gap:8px;z-index:2;pointer-events:none}
+.demo-role{font-size:clamp(10px,1.2vw,13px);font-weight:800;letter-spacing:.06em;text-shadow:0 2px 8px #080913;background:#080913b8;border-radius:6px;padding:5px 8px}
+.demo-role--computer{color:#b9fbc2}
+.demo-role--player{color:#ffba6e}
+@media(max-width:650px){.demo-roles{inset:13px 13px auto}.demo-role{font-size:10px;padding:4px 6px}}
+
+/* Paddle Rally's match result appears over the court (other ROMs unaffected). */
+.player-shell{position:relative}
+.demo-result{position:absolute;inset:0;display:flex;z-index:5;flex-direction:column;align-items:center;justify-content:center;gap:12px;background:#080a15e8;text-align:center;padding:24px;border-radius:15px}
+.demo-result strong{font-size:clamp(26px,5vw,54px);line-height:1.2;color:#ffc0a0;font-weight:900;letter-spacing:-.045em}
+.demo-result--win strong{color:#b9fbc2}
+.demo-result p{margin:0 0 8px;color:#dcd9f2;font-size:clamp(13px,2vw,18px)}
+.demo-result .primary{min-width:140px}
+
+/* Keep the footer at the bottom on short pages without covering gameplay. */
+.app{min-height:100vh;min-height:100dvh;display:flex;flex-direction:column}
+.app>main{flex:1 0 auto}
+.app>footer{margin-top:auto}

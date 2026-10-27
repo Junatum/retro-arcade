@@ -1,6 +1,6 @@
 # 아키텍처 및 개발 가이드
 
-SmartSafeHub Retro Arcade `0.1.0-r4`의 구현, 빌드 및 검증 방법입니다. 사용자 소개는 [README](../README.md)를 참조하세요.
+SmartSafeHub Retro Arcade `0.1.0-r5`의 구현, 빌드 및 검증 방법입니다. 사용자 소개는 [README](../README.md)를 참조하세요.
 
 ## 실행 구조
 
@@ -80,3 +80,9 @@ UI/CHIP-8은 GPL-3.0-or-later이고 mGBA 코어는 MPL-2.0입니다. [오픈소�
 JSNES는 `scripts/vendor_jsnes.py`로 npm 2.1.0 타르볼의 SHA-512를 검증해 `web/vendor/jsnes/src/`에 필요한 원본 ES 모듈만 복사합니다. 원본 내용의 SHA-256을 `manifest.json`에 기록하며 `release_audit.py --release`가 변경·누락을 차단합니다. **OpenWrt APK 빌드 과정은 인터넷을 사용하지 않습니다.** 미준비 상태에서는 릴리스 검사가 실패합니다. `python3 scripts/vendor_jsnes.py`는 개발 PC에서 한 번만 실행하세요.
 
 외부 CDN 및 FCEUmm/libretro 코어를 사용하지 않습니다. HTTP 환경에서 오디오가 가능한 경우 `AudioContext`와 `ScriptProcessorNode`로 재생합니다(일부 브라우저는 제한될 수 있음). `.nes` 파일은 서버로 업로드하지 않습니다.
+
+### 내장 CHIP-8 미니게임
+
+`web/demo.js`는 Atari ROM 등을 가져오지 않고 자체 작성한 **패들 랠리**의 CHIP-8 명령어·스프라이트를 조립합니다. 앱의 기존 CHIP-8 인터프리터만 사용하며 게임 파일을 공유기로 업로드하지 않습니다. W/S(터치 키패드 5/8)로 오른쪽 플레이어 패들을 움직이고 왼쪽 컴퓨터를 상대로 점수를 얻습니다. 내장 게임에 한해 오른쪽 플레이어 패들을 주황색으로 강조하며 외부 CHIP-8 ROM의 색상은 변경하지 않습니다.
+
+내장 패들 랠리에서는 코트 경계선과 플레이어 색상만 브라우저의 화면 변환 단계에서 표시하므로 외부 CHIP-8 ROM의 픽셀은 변경되지 않습니다. 득점 후 CHIP-8 지연 타이머(60Hz, 120틱)로 약 2초간 서브를 대기하며, 5점에 먼저 도달하면 ROM이 종료 상태를 고정하고 웹 UI가 승리·패배 및 다시 플레이 버튼을 표시합니다.

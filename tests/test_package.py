@@ -19,7 +19,7 @@ class PackageTests(unittest.TestCase):
         import json
         sources = list((ROOT / 'web').rglob('*'))
         self.assertFalse([p for p in sources if p.is_file() and p.suffix == '.mjs'])
-        self.assertIn('src="./app.js?v=0.1.0-r4"', (ROOT / 'web/index.html').read_text())
+        self.assertIn('src="./app.js?v=0.1.0-r5-p4"', (ROOT / 'web/index.html').read_text())
         self.assertEqual(json.loads((ROOT / 'package.json').read_text())['type'], 'module')
         manifest = json.loads((ROOT / 'web/mgba/manifest.json').read_text())
         self.assertEqual(
@@ -51,8 +51,8 @@ class PackageTests(unittest.TestCase):
     def test_revision_platforms_and_licenses(self):
         info = json.loads((ROOT / 'app-info.json').read_text())
         make = (ROOT / 'Makefile').read_text()
-        self.assertEqual(info['version'], '0.1.0-r4')
-        self.assertIn('PKG_RELEASE:=4', make)
+        self.assertEqual(info['version'], '0.1.0-r5')
+        self.assertIn('PKG_RELEASE:=5', make)
         self.assertEqual(info['license'], 'GPL-3.0-or-later AND MPL-2.0 AND Apache-2.0')
         self.assertEqual(info['included_systems'], ['CHIP-8', 'Game Boy', 'Game Boy Color', 'Game Boy Advance', 'NES', 'Famicom'])
         self.assertNotIn('GL-MT300N-V2', info['supported_models'])
@@ -67,7 +67,7 @@ class PackageTests(unittest.TestCase):
         self.assertIn('mGBA', readme)
         self.assertIn('하나의 mGBA 엔진', readme)
         self.assertIn("connect-src 'self'", html)
-        self.assertIn('app.js?v=0.1.0-r4', html)
+        self.assertIn('app.js?v=0.1.0-r5', html)
         self.assertIn("'wasm-unsafe-eval'", html)
         for source in (readme, html, third_party, (ROOT / 'docs/ARCHITECTURE.md').read_text()):
             self.assertIn('mGBA', source)
@@ -126,6 +126,40 @@ class PackageTests(unittest.TestCase):
                                      for e in release_audit.audit(release=True)))
                 (fake / 'native/mgba_bridge.c').write_text('// modified')
                 self.assertTrue(any('mGBA bridge changed' in e for e in release_audit.audit(release=True)))
+
+    def test_chip8_paddle_rally_has_original_game_and_controls(self):
+        demo = (ROOT / 'web/demo.js').read_text()
+        app = (ROOT / 'web/app.js').read_text()
+        page = (ROOT / 'web/index.html').read_text()
+        readme = (ROOT / 'README.md').read_text()
+        self.assertIn("DEMO_TITLE = '패들 랠리'", demo)
+        self.assertIn('createPaddleRallyRom()', demo)
+        self.assertIn("key 5 (W on the keyboard)", demo)
+        self.assertIn("key 8 (S on the keyboard)", demo)
+        self.assertIn('playChip8(DEMO_ROM,DEMO_TITLE,true)', app)
+        self.assertIn("from './demo.js?v=0.1.0-r5-p4'", app)
+        self.assertIn('데모 게임 플레이', page)
+        self.assertIn('id="demo-roles"', page)
+        self.assertIn('오른쪽 · 플레이어', page)
+        self.assertIn('왼쪽 · 컴퓨터', page)
+        self.assertIn('demoActive && lit', app)
+        self.assertIn("$('demo-roles').classList.toggle('hidden',!demoActive)", app)
+        self.assertIn('id="demo-controls"', page)
+        self.assertIn('demoControls.classList.toggle', app)
+        self.assertIn('**패들 랠리**', readme)
+        self.assertNotIn('내장 데모 2026', app)
+
+    def test_score_separator_and_sticky_footer_layout(self):
+        demo = (ROOT / 'web/demo.js').read_text()
+        css = (ROOT / 'web/styles.css').read_text()
+        page = (ROOT / 'web/index.html').read_text()
+        self.assertIn("sprite('scoreColon',[0x00,0xC0,0x00,0xC0,0x00])", demo)
+        self.assertIn("ref(0xA000,'scoreColon');op(0xD015)", demo)
+        self.assertIn('.app{min-height:100vh;min-height:100dvh;display:flex;flex-direction:column}', css)
+        self.assertIn('.app>main{flex:1 0 auto}', css)
+        self.assertIn('.app>footer{margin-top:auto}', css)
+        self.assertNotIn('.app>footer{position:fixed', css)
+        self.assertIn('src="./app.js?v=0.1.0-r5-p4"', page)
 
     def test_fullscreen_controls_are_packaged(self):
         html = (ROOT / 'web/index.html').read_text()
@@ -200,6 +234,20 @@ class PackageTests(unittest.TestCase):
         self.assertIn("const SHOULDERS", script)
         self.assertIn("if (isGba)", script)
 
+
+    def test_demo_match_result_and_colored_walls_are_demo_only(self):
+        demo = (ROOT / 'web/demo.js').read_text()
+        app = (ROOT / 'web/app.js').read_text()
+        html = (ROOT / 'web/index.html').read_text()
+        self.assertIn('DEMO_SERVE_DELAY_TICKS = 120', demo)
+        self.assertIn('DEMO_WIN_SCORE = 5', demo)
+        self.assertIn('DEMO_FINISHED_PC', demo)
+        self.assertIn('demoActive && (y===6 || y===30', app)
+        self.assertIn("$('demo-result-title').textContent=won?", app)
+        self.assertIn('id="demo-result"', html)
+        self.assertIn('id="demo-replay"', html)
+        self.assertIn('role="status" aria-live="polite"', html)
+
     def test_stylesheet_urls_track_css_content_to_avoid_stale_controller_layout(self):
         # After APK upgrades, cached old CSS rendered new controller groups as
         # 4-column grid cells instead of the intended handheld D-pad layout.
@@ -231,15 +279,15 @@ class PackageTests(unittest.TestCase):
     def test_consolidated_release_history_and_document_versions(self):
         history = (ROOT / 'CHANGELOG.md').read_text()
         self.assertEqual(re.findall(r'^## (0\.1\.0-r\d+)\b', history, re.M),
-                         ['0.1.0-r4', '0.1.0-r3', '0.1.0-r2', '0.1.0-r1'])
+                         ['0.1.0-r5', '0.1.0-r4', '0.1.0-r3', '0.1.0-r2', '0.1.0-r1'])
         for heading in ('### 추가', '### 개선', '### 수정', '### 호환성', '### 테스트'):
             self.assertIn(heading, history)
         for path in ('README.md', 'docs/ARCHITECTURE.md', 'docs/RELEASE_CHECKLIST.md',
                      'docs/SOURCE_OFFER.md', 'docs/THIRD_PARTY.md', 'web/index.html',
                      'web/open-source.html'):
             source = (ROOT / path).read_text()
-            self.assertIn('0.1.0-r4', source, path)
-            for rev in range(5, 9):
+            self.assertIn('0.1.0-r5', source, path)
+            for rev in range(6, 9):
                 self.assertNotIn(f'0.1.0-r{rev}', source, path)
 
 

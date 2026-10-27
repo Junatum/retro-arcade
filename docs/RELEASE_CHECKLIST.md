@@ -1,4 +1,4 @@
-# Retro Arcade 0.1.0-r4 공개 / APK 배포 확인
+# Retro Arcade 0.1.0-r5 공개 / APK 배포 확인
 
 - [ ] 포함된 mGBA 0.10.5 JS/WASM과 매니페스트의 빌드 출처·해시 확인 (브리지 또는 코어 변경 시에만 재빌드)
 - [ ] `web/mgba/mgba.js`, `mgba.wasm`, `manifest.json` 세 파일 커밋
@@ -17,3 +17,5 @@
 - [ ] JSNES Apache-2.0 원문 및 upstream 버전 고지 확인
 - [ ] ROM 및 상용 BIOS 미포함 확인
 - [ ] CHIP-8/mGBA 오디오 미지원, NES 오디오 활성화 방법과 호환성 안내 확인
+
+- [ ] CHIP-8 내장 **패들 랠리**에서 W/S(터치 5/8) 이동, 공 반사, 점수 변경 확인

@@ -2,7 +2,7 @@
 
 SmartSafeHub Apps에서 제공하는 **로컬 레트로 게임 앱**입니다. 공유기는 웹 파일을 제공하며, 게임은 PC 또는 스마트폰 **브라우저에서 직접 실행**됩니다. 별도 계정이나 게임 서버는 필요하지 않습니다.
 
-**현재 버전:** `0.1.0-r4`
+**현재 버전:** `0.1.0-r5`
 
 ## 지원 게임기
 
@@ -13,7 +13,7 @@ SmartSafeHub Apps에서 제공하는 **로컬 레트로 게임 앱**입니다. �
 | Game Boy Advance | `.gba` | mGBA 0.10.5 | 십자 방향키, A/B, SELECT/START, L/R |
 | NES / Famicom | `.nes` | JSNES 2.1.0 | 십자 방향키, A/B, SELECT/START |
 
-Game Boy, Game Boy Color, Game Boy Advance는 **하나의 mGBA 엔진**으로 실행됩니다. CHIP-8에는 내장 데모가 포함되어 있으며, **내장 데모 실행 버튼은 CHIP-8 선택 시에만 표시**됩니다.
+Game Boy, Game Boy Color, Game Boy Advance는 **하나의 mGBA 엔진**으로 실행됩니다. CHIP-8에는 직접 제작한 **패들 랠리** 미니게임이 포함되어 있으며, **데모 게임 플레이 버튼은 CHIP-8 선택 시에만 표시**됩니다.
 
 ## 주요 기능
 
@@ -28,7 +28,7 @@ Game Boy, Game Boy Color, Game Boy Advance는 **하나의 mGBA 엔진**으로 �
 
 ## 실행해 보기
 
-SmartSafeHub Apps에서 설치한 뒤 **Retro Arcade**를 열고 게임기를 선택해 ROM을 불러오면 됩니다. CHIP-8은 ROM 없이 내장 데모도 실행할 수 있습니다.
+SmartSafeHub Apps에서 설치한 뒤 **Retro Arcade**를 열고 게임기를 선택해 ROM을 불러오면 됩니다. CHIP-8은 ROM 없이 **데모 게임 플레이** 버튼을 눌러 컴퓨터와 대결할 수 있습니다. 키보드 **W/S** 또는 화면의 **5/8** 버튼으로 오른쪽의 주황색 플레이어 패들을 위아래로 움직이세요. 왼쪽 초록색 패들은 컴퓨터이며, 파란색 테두리는 경기장을 나타냅니다. 득점 후 약 2초간 공이 멈추며 **5점 선승**으로 승리·패배 결과와 다시 플레이 버튼을 표시합니다. 화면 상단에는 양쪽 역할과 점수가 표시됩니다.
 
 개발 PC에서는 저장소 루트에서 다음 명령으로 실행할 수 있습니다.
 
