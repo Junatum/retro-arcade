@@ -46,6 +46,13 @@ class PackageTests(unittest.TestCase):
             (fake / 'web/demo.js').write_text((fake / 'web/demo.js').read_text() + '\n// changed\n')
             self.assertIn('app.js', cache_bust.check(web=fake / 'web'))
 
+    def test_browser_e2e_waits_respect_strict_csp(self):
+        page = (ROOT / 'web/index.html').read_text()
+        e2e = (ROOT / 'tests/browser_e2e.py').read_text()
+        self.assertIn("script-src 'self' 'wasm-unsafe-eval'", page)
+        self.assertNotIn('.wait_for_function(', e2e)
+        self.assertIn("page.locator('#player-section').wait_for(state='visible', timeout=12000)", e2e)
+
     def test_save_lifecycle_feedback_and_new_module_are_packaged(self):
         html = (ROOT / 'web/index.html').read_text()
         app = (ROOT / 'web/app.js').read_text()

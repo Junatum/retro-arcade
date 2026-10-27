@@ -105,7 +105,9 @@ class BrowserSmoke(unittest.TestCase):
             page.locator('#rom-file').set_input_files({'name': 'smoke.nes', 'mimeType': 'application/octet-stream', 'buffer': synthetic_nes_rom()})
             self.assertTrue(page.locator('#play').is_enabled())
             page.locator('#play').click()
-            page.wait_for_function("!document.querySelector('#player-section').classList.contains('hidden')", timeout=12000)
+            # A locator waits for a real DOM visibility transition without
+            # evaluating JavaScript strings blocked by the app's strict CSP.
+            page.locator('#player-section').wait_for(state='visible', timeout=12000)
             self.assertEqual(page.locator('#game canvas').evaluate('(c) => [c.width, c.height]'), [256, 240])
             page.locator('#toggle').click()
             self.assertIn('계속', page.locator('#toggle').inner_text())
