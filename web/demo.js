@@ -11,7 +11,7 @@
  * Compile human-readable 16-bit opcodes to CHIP-8 ROM bytes, resolving
  * label references at module load. ROM starts at 0x200 and needs no assets.
  */
-import { ROM_START, MAX_ROM_BYTES } from './chip8.js';
+import { ROM_START, MAX_ROM_BYTES } from './chip8.js?v=24c3002c045b';
 
 export const DEMO_TITLE = '패들 랠리';
 export const DEMO_CONTROLS = '패들 이동: W / S (터치 키패드 5 / 8)';

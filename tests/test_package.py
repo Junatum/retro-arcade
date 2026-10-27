@@ -19,7 +19,7 @@ class PackageTests(unittest.TestCase):
         import json
         sources = list((ROOT / 'web').rglob('*'))
         self.assertFalse([p for p in sources if p.is_file() and p.suffix == '.mjs'])
-        self.assertIn('src="./app.js?v=0.1.0-r5-p4"', (ROOT / 'web/index.html').read_text())
+        self.assertRegex((ROOT / 'web/index.html').read_text(), r'src="\./app\.js\?v=[0-9a-f]{12}"')
         self.assertEqual(json.loads((ROOT / 'package.json').read_text())['type'], 'module')
         manifest = json.loads((ROOT / 'web/mgba/manifest.json').read_text())
         self.assertEqual(
@@ -27,6 +27,33 @@ class PackageTests(unittest.TestCase):
             manifest['artifacts']['mgba.js'],
         )
         self.assertEqual(audit(release=True), [])
+
+    def test_release_ci_requires_all_assets_and_current_browser_cache(self):
+        workflow = (ROOT / '.github/workflows/verify.yml').read_text()
+        self.assertIn('python3 scripts/release_audit.py --release', workflow)
+        self.assertIn('python3 scripts/cache_bust.py --check', workflow)
+        self.assertIn('python3 tests/browser_e2e.py -v', workflow)
+        self.assertNotIn('if [ -f web/vendor/jsnes/manifest.json ]', workflow)
+        from scripts import cache_bust
+        self.assertEqual(cache_bust.check(), [])
+        with tempfile.TemporaryDirectory() as tmp:
+            fake = pathlib.Path(tmp) / 'repo'
+            shutil.copytree(ROOT, fake, ignore=shutil.ignore_patterns('.git', '__pycache__'))
+            (fake / 'web/vendor/jsnes/manifest.json').unlink()
+            with patch.object(release_audit, 'ROOT', fake), patch.object(release_audit, 'WEB', fake / 'web'):
+                self.assertTrue(any('JSNES 2.1.0 vendor' in e for e in release_audit.audit(release=True)))
+            # Changed module content must invalidate the parent import hash.
+            (fake / 'web/demo.js').write_text((fake / 'web/demo.js').read_text() + '\n// changed\n')
+            self.assertIn('app.js', cache_bust.check(web=fake / 'web'))
+
+    def test_save_lifecycle_feedback_and_new_module_are_packaged(self):
+        html = (ROOT / 'web/index.html').read_text()
+        app = (ROOT / 'web/app.js').read_text()
+        save_module = (ROOT / 'web/save-session.js').read_text()
+        self.assertIn('id="save-status"', html)
+        self.assertIn("window.confirm?.('게임을 저장하지 못했습니다.", app)
+        self.assertIn('this.pending', save_module)
+        self.assertIn('batteryReadStrict', save_module)
 
     def test_source_inventory_contains_only_approved_engines(self):
         self.assertEqual(audit(), [])
@@ -51,8 +78,8 @@ class PackageTests(unittest.TestCase):
     def test_revision_platforms_and_licenses(self):
         info = json.loads((ROOT / 'app-info.json').read_text())
         make = (ROOT / 'Makefile').read_text()
-        self.assertEqual(info['version'], '0.1.0-r5')
-        self.assertIn('PKG_RELEASE:=5', make)
+        self.assertEqual(info['version'], '0.1.0-r6')
+        self.assertIn('PKG_RELEASE:=6', make)
         self.assertEqual(info['license'], 'GPL-3.0-or-later AND MPL-2.0 AND Apache-2.0')
         self.assertEqual(info['included_systems'], ['CHIP-8', 'Game Boy', 'Game Boy Color', 'Game Boy Advance', 'NES', 'Famicom'])
         self.assertNotIn('GL-MT300N-V2', info['supported_models'])
@@ -67,7 +94,7 @@ class PackageTests(unittest.TestCase):
         self.assertIn('mGBA', readme)
         self.assertIn('하나의 mGBA 엔진', readme)
         self.assertIn("connect-src 'self'", html)
-        self.assertIn('app.js?v=0.1.0-r5', html)
+        self.assertRegex(html, r'app\.js\?v=[0-9a-f]{12}')
         self.assertIn("'wasm-unsafe-eval'", html)
         for source in (readme, html, third_party, (ROOT / 'docs/ARCHITECTURE.md').read_text()):
             self.assertIn('mGBA', source)
@@ -137,7 +164,7 @@ class PackageTests(unittest.TestCase):
         self.assertIn("key 5 (W on the keyboard)", demo)
         self.assertIn("key 8 (S on the keyboard)", demo)
         self.assertIn('playChip8(DEMO_ROM,DEMO_TITLE,true)', app)
-        self.assertIn("from './demo.js?v=0.1.0-r5-p4'", app)
+        self.assertRegex(app, r"from '\./demo\.js\?v=[0-9a-f]{12}'")
         self.assertIn('데모 게임 플레이', page)
         self.assertIn('id="demo-roles"', page)
         self.assertIn('오른쪽 · 플레이어', page)
@@ -159,7 +186,7 @@ class PackageTests(unittest.TestCase):
         self.assertIn('.app>main{flex:1 0 auto}', css)
         self.assertIn('.app>footer{margin-top:auto}', css)
         self.assertNotIn('.app>footer{position:fixed', css)
-        self.assertIn('src="./app.js?v=0.1.0-r5-p4"', page)
+        self.assertRegex(page, r'src="\./app\.js\?v=[0-9a-f]{12}"')
 
     def test_fullscreen_controls_are_packaged(self):
         html = (ROOT / 'web/index.html').read_text()
@@ -168,7 +195,7 @@ class PackageTests(unittest.TestCase):
         style = (ROOT / 'web/styles.css').read_text()
         self.assertIn('id="fullscreen"', html)
         self.assertIn('aria-controls="player-section"', html)
-        self.assertIn("import { setupFullscreen } from './fullscreen.js'", script)
+        self.assertRegex(script, r"import \{ setupFullscreen \} from '\./fullscreen\.js\?v=[0-9a-f]{12}'")
         self.assertIn("'fullscreen.js'", (ROOT / 'scripts/release_audit.py').read_text())
         self.assertIn('fullscreenchange', fullscreen)
         self.assertIn("event.key === 'Escape'", fullscreen)
@@ -279,15 +306,15 @@ class PackageTests(unittest.TestCase):
     def test_consolidated_release_history_and_document_versions(self):
         history = (ROOT / 'CHANGELOG.md').read_text()
         self.assertEqual(re.findall(r'^## (0\.1\.0-r\d+)\b', history, re.M),
-                         ['0.1.0-r5', '0.1.0-r4', '0.1.0-r3', '0.1.0-r2', '0.1.0-r1'])
+                         ['0.1.0-r6', '0.1.0-r5', '0.1.0-r4', '0.1.0-r3', '0.1.0-r2', '0.1.0-r1'])
         for heading in ('### 추가', '### 개선', '### 수정', '### 호환성', '### 테스트'):
             self.assertIn(heading, history)
         for path in ('README.md', 'docs/ARCHITECTURE.md', 'docs/RELEASE_CHECKLIST.md',
                      'docs/SOURCE_OFFER.md', 'docs/THIRD_PARTY.md', 'web/index.html',
                      'web/open-source.html'):
             source = (ROOT / path).read_text()
-            self.assertIn('0.1.0-r5', source, path)
-            for rev in range(6, 9):
+            self.assertIn('0.1.0-r6', source, path)
+            for rev in range(7, 9):
                 self.assertNotIn(f'0.1.0-r{rev}', source, path)
 
 

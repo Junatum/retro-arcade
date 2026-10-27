@@ -6,18 +6,22 @@ import hashlib
 import json
 import re
 from pathlib import Path
+try:
+    from scripts.cache_bust import check as check_browser_cache
+except ModuleNotFoundError:  # python3 scripts/release_audit.py
+    from cache_bust import check as check_browser_cache
 
 ROOT = Path(__file__).resolve().parents[1]
 WEB = ROOT / 'web'
-VERSION = '0.1.0-r5'
+VERSION = '0.1.0-r6'
 EXPECTED_WEB = {
     'index.html', 'styles.css', 'app.js', 'fullscreen.js', 'controller.js', 'chip8.js', 'systems.js',
-    'demo.js', 'open-source.html', 'battery-store.js', 'mgba-player.js', 'jsnes-player.js', 'nes-audio.js',
+    'demo.js', 'open-source.html', 'battery-store.js', 'save-session.js', 'mgba-player.js', 'jsnes-player.js', 'nes-audio.js',
 }
 MGBA_VENDOR = {'mgba/mgba.js', 'mgba/mgba.wasm', 'mgba/manifest.json'}
 EXPECTED_SOURCE_COMPONENTS = {
     'native': {'mgba_bridge.c'},
-    'scripts': {'build_mgba.py', 'release_audit.py', 'vendor_jsnes.py'},
+    'scripts': {'build_mgba.py', 'cache_bust.py', 'release_audit.py', 'vendor_jsnes.py'},
     'LICENSES': {'mGBA.txt', 'JSNES.txt'},
 }
 
@@ -38,7 +42,7 @@ def audit(release: bool = False) -> list[str]:
         errors.append('incorrect app version/license')
     if meta.get('included_systems') != ['CHIP-8', 'Game Boy', 'Game Boy Color', 'Game Boy Advance', 'NES', 'Famicom'] or meta.get('offline') is not True:
         errors.append('incorrect included platforms/offline policy')
-    for required in ('PKG_VERSION:=0.1.0', 'PKG_RELEASE:=5', 'PKG_LICENSE:=GPL-3.0-or-later MPL-2.0 Apache-2.0',
+    for required in ('PKG_VERSION:=0.1.0', 'PKG_RELEASE:=6', 'PKG_LICENSE:=GPL-3.0-or-later MPL-2.0 Apache-2.0',
                      'python3 $(CURDIR)/scripts/release_audit.py --release'):
         if required not in mk:
             errors.append(f'incorrect OpenWrt package config: {required}')
@@ -53,8 +57,8 @@ def audit(release: bool = False) -> list[str]:
             errors.append(f'missing documentation: {exc}')
     try:
         history = (ROOT / 'CHANGELOG.md').read_text(encoding='utf-8')
-        if re.findall(r'^## (0\.1\.0-r\d+)\b', history, re.M) != [VERSION, '0.1.0-r4', '0.1.0-r3', '0.1.0-r2', '0.1.0-r1']:
-            errors.append('changelog must contain r5, r4, r3, consolidated r2, and original r1')
+        if re.findall(r'^## (0\.1\.0-r\d+)\b', history, re.M) != [VERSION, '0.1.0-r5', '0.1.0-r4', '0.1.0-r3', '0.1.0-r2', '0.1.0-r1']:
+            errors.append('changelog must contain r6, r5, r4, r3, consolidated r2, and original r1')
     except OSError as exc:
         errors.append(f'missing changelog: {exc}')
     if 'GNU GENERAL PUBLIC LICENSE' not in license_text.upper():
@@ -74,6 +78,12 @@ def audit(release: bool = False) -> list[str]:
         errors.append('OpenWrt uhttpd incompatible .mjs web module: use .js')
     if './app.js?v=' not in page:
         errors.append('OpenWrt entrypoint must use a JavaScript MIME-compatible .js URL')
+    try:
+        stale = check_browser_cache(web=WEB)
+        if stale:
+            errors.append(f'stale browser asset hashes: {stale}; run scripts/cache_bust.py --update')
+    except (OSError, ValueError) as exc:
+        errors.append(f'cannot verify browser asset hashes: {exc}')
     vendor_files = {name for name in web_files if name.startswith('vendor/jsnes/')}
     ordinary_web = web_files - vendor_files
     if ordinary_web not in (EXPECTED_WEB, EXPECTED_WEB | MGBA_VENDOR):
@@ -89,7 +99,7 @@ def audit(release: bool = False) -> list[str]:
         if actual != expected:
             errors.append(f'unexpected source inventory in {directory}: {sorted(actual ^ expected)}')
     for script in ('web/app.js', 'web/fullscreen.js', 'web/controller.js', 'web/chip8.js', 'web/demo.js', 'web/systems.js',
-                   'web/battery-store.js', 'web/mgba-player.js', 'web/jsnes-player.js', 'web/nes-audio.js'):
+                   'web/battery-store.js', 'web/save-session.js', 'web/mgba-player.js', 'web/jsnes-player.js', 'web/nes-audio.js'):
         try:
             source = (ROOT / script).read_text(encoding='utf-8')
         except OSError as exc:

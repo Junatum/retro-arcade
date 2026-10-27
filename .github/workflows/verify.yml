@@ -9,15 +9,15 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.13'
       - name: Verify source contents (offline)
         run: python3 scripts/release_audit.py --check
-      - name: Verify deployable artifacts when JSNES is vendored
-        run: |
-          if [ -f web/vendor/jsnes/manifest.json ]; then
-            python3 scripts/release_audit.py --release
-          else
-            echo "JSNES 2.1.0 not vendored; OpenWrt APK release stays blocked"
-          fi
+      - name: Verify release artifacts (mandatory)
+        run: python3 scripts/release_audit.py --release
+      - name: Verify browser cache hashes
+        run: python3 scripts/cache_bust.py --check
       - name: Python tests
         run: python3 -m unittest discover -s tests -p 'test_*.py' -v
       - name: JavaScript tests
@@ -31,7 +31,14 @@ jobs:
           node --check web/demo.js
           node --check web/systems.js
           node --check web/battery-store.js
+          node --check web/save-session.js
           node --check web/mgba-player.js
 
           node --check web/jsnes-player.js
           node --check web/nes-audio.js
+      - name: Install Chromium browser E2E runner (tests only)
+        run: |
+          python3 -m pip install playwright==1.57.0
+          python3 -m playwright install --with-deps chromium
+      - name: HTTP Chromium desktop/mobile smoke tests
+        run: python3 tests/browser_e2e.py -v

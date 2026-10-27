@@ -11,39 +11,51 @@ export class MgbaPlayer {
     this.active=false;
     this.width=GBA_WIDTH;this.height=GBA_HEIGHT;
   }
-  static async create(canvas, importer=()=>import('./mgba/mgba.js')){
+  static async create(canvas, importer=()=>import('./mgba/mgba.js?v=045ee5b5bcf0')){
     let factory;
     try {({default:factory}=await importer());}
     catch {throw new Error('mGBA WASM 파일이 없습니다. docs/ARCHITECTURE.md의 로컬 빌드 절차를 확인해 주세요.');}
     if(typeof factory!=='function')throw new Error('mGBA 모듈 형식이 잘못되었습니다.');
     const mod=await factory({locateFile:name=>new URL(`./mgba/${name}`,import.meta.url).href});
-    for(const fn of ['_ssh_mgba_load','_ssh_mgba_frame','_ssh_mgba_framebuffer','_ssh_mgba_width','_ssh_mgba_height','_ssh_mgba_key','_ssh_mgba_save_size','_ssh_mgba_save','_ssh_mgba_restore','_ssh_mgba_destroy','_malloc','_free']){
-      if(typeof mod[fn]!=='function')throw new Error(`mGBA API 누락: ${fn} (scripts/build_mgba.py로 WASM을 다시 빌드해 주세요.)`);
+    try {
+      for(const fn of ['_ssh_mgba_load','_ssh_mgba_frame','_ssh_mgba_framebuffer','_ssh_mgba_width','_ssh_mgba_height','_ssh_mgba_key','_ssh_mgba_save_size','_ssh_mgba_save','_ssh_mgba_restore','_ssh_mgba_destroy','_malloc','_free']){
+        if(typeof mod[fn]!=='function')throw new Error(`mGBA API 누락: ${fn} (scripts/build_mgba.py로 WASM을 다시 빌드해 주세요.)`);
+      }
+      return new MgbaPlayer(mod,canvas);
+    } catch(error) {
+      // The module may already own native memory even before load().
+      mod._ssh_mgba_destroy?.();
+      throw error;
     }
-    return new MgbaPlayer(mod,canvas);
   }
   load(bytes,platform='gba'){
     if(platform!=='gba'&&platform!=='gb')throw new Error('지원하지 않는 게임 플랫폼입니다.');
     const gb=platform==='gb';
     if(!(bytes instanceof Uint8Array)||bytes.length<(gb?0x150:0xc0)||bytes.length>(gb?8:32)*1024*1024)
       throw new Error(gb?'유효한 GB/GBC ROM이 아닙니다.':'유효한 GBA ROM이 아닙니다.');
-    const ptr=this.mod._malloc(bytes.length);
-    if(!ptr)throw new Error('게임 ROM 메모리를 할당하지 못했습니다.');
-    try{
+    let ptr=0;
+    try {
+      ptr=this.mod._malloc(bytes.length);
+      if(!ptr)throw new Error('게임 ROM 메모리를 할당하지 못했습니다.');
       this.mod.HEAPU8.set(bytes,ptr);
       if(!this.mod._ssh_mgba_load(ptr,bytes.length,gb?1:0))throw new Error('mGBA가 ROM을 열지 못했습니다.');
-    } finally{this.mod._free(ptr);}
-    const width=this.mod._ssh_mgba_width(),height=this.mod._ssh_mgba_height();
-    if((gb && (width!==GB_WIDTH||height!==GB_HEIGHT)) ||
-       (!gb && (width!==GBA_WIDTH||height!==GBA_HEIGHT))) {
+      const width=this.mod._ssh_mgba_width(),height=this.mod._ssh_mgba_height();
+      if((gb && (width!==GB_WIDTH||height!==GB_HEIGHT)) ||
+         (!gb && (width!==GBA_WIDTH||height!==GBA_HEIGHT))) {
+        throw new Error('mGBA 화면 해상도가 올바르지 않습니다.');
+      }
+      this.width=width;this.height=height;
+      this.canvas.setAttribute?.('aria-label',gb?'Game Boy 게임 화면':'Game Boy Advance 게임 화면');
+      this.canvas.width=width;this.canvas.height=height;
+      this.image=this.ctx.createImageData(width,height);
+      this.active=true;
+    } catch(error) {
       this.mod._ssh_mgba_destroy();
-      throw new Error('mGBA 화면 해상도가 올바르지 않습니다.');
+      this.active=false;
+      throw error;
+    } finally {
+      if(ptr)this.mod._free(ptr);
     }
-    this.width=width;this.height=height;
-    this.canvas.setAttribute?.('aria-label',gb?'Game Boy 게임 화면':'Game Boy Advance 게임 화면');
-    this.canvas.width=width;this.canvas.height=height;
-    this.image=this.ctx.createImageData(width,height);
-    this.active=true;
   }
   frame(){
     if(!this.active)return;

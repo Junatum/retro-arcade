@@ -56,3 +56,17 @@ test('mGBA rejects invalid ROM, unexpected dimensions and missing ABI',async()=>
   await assert.rejects(MgbaPlayer.create(canvas,async()=>({default:async()=>wrong})),/API 누락/);
   await assert.rejects(MgbaPlayer.create(canvas,async()=>{throw Error('not found')}),/mGBA WASM/);
 });
+
+test('mGBA cleans native state if ABI is incomplete or ROM load fails',async()=>{
+  const {canvas,mod,calls}=createMock();
+  const invalid={...mod}; delete invalid._ssh_mgba_width;
+  await assert.rejects(MgbaPlayer.create(canvas,async()=>({default:async()=>invalid})),/API 누락/);
+  assert.equal(calls.destroyed,1,'incomplete ABI frees initialized native module');
+  mod._ssh_mgba_load=()=>0;
+  const player=await MgbaPlayer.create(canvas,async()=>({default:async()=>mod}));
+  assert.throws(()=>player.load(new Uint8Array(1024),'gba'),/ROM을 열지 못/);
+  assert.equal(calls.destroyed,2);
+  assert.deepEqual(calls.freed,[2048]);
+  player.destroy();
+  assert.equal(calls.destroyed,2,'destroying a failed load is idempotent');
+});

@@ -1,12 +1,13 @@
 /* SmartSafeHub Retro Arcade — GPL-3.0-or-later; entirely local browser playback. */
-import { Chip8, DISPLAY_WIDTH, DISPLAY_HEIGHT } from './chip8.js';
-import { DEMO_ROM, DEMO_TITLE, DEMO_CONTROLS, DEMO_FINISHED_PC, DEMO_WIN_SCORE } from './demo.js?v=0.1.0-r5-p4';
-import { SYSTEMS, detectSystem, validateRom } from './systems.js?v=0.1.0-r5';
-import { romStorageKey, batteryRead, batteryWrite } from './battery-store.js?v=0.1.0-r5';
-import { MgbaPlayer } from './mgba-player.js';
-import { JsnesPlayer } from './jsnes-player.js';
-import { setupFullscreen } from './fullscreen.js';
-import { renderController, CHIP8_KEYBOARD, CHIP8_MATRIX, HANDHELD_KEYS } from './controller.js?v=0.1.0-r5';
+import { Chip8, DISPLAY_WIDTH, DISPLAY_HEIGHT } from './chip8.js?v=24c3002c045b';
+import { DEMO_ROM, DEMO_TITLE, DEMO_CONTROLS, DEMO_FINISHED_PC, DEMO_WIN_SCORE } from './demo.js?v=d5358e9686ba';
+import { SYSTEMS, detectSystem, validateRom } from './systems.js?v=9345ceb268df';
+import { romStorageKey } from './battery-store.js?v=089100328af3';
+import { SaveSession } from './save-session.js?v=091750ebf000';
+import { MgbaPlayer } from './mgba-player.js?v=8d6c2b534ff6';
+import { JsnesPlayer } from './jsnes-player.js?v=8cc9646dc5e4';
+import { setupFullscreen } from './fullscreen.js?v=27d207810633';
+import { renderController, CHIP8_KEYBOARD, CHIP8_MATRIX, HANDHELD_KEYS } from './controller.js?v=1ae1c797e532';
 const $ = id => document.getElementById(id);
 const input=$('rom-file'), notice=$('notice'), stage=$('game');
 const fullscreen=setupFullscreen($('player-section'),$('fullscreen'),document,document.body);
@@ -21,6 +22,12 @@ const KEYMAP=new Map([...CHIP8_KEYBOARD].map((key,index)=>[key,CHIP8_MATRIX[inde
 const GBKEY=new Map([['arrowup','up'],['arrowdown','down'],['arrowleft','left'],['arrowright','right'],['x','a'],['z','b'],['enter','start'],['shift','select'],['a','l'],['s','r']]);
 let selected=SYSTEMS[0], game=null, running=false, loaded=false, frame=0, last=0,clock=0;
 let saveKey=null,framesSinceSave=0,loading=false,activeController=null,demoActive=false;
+const saves=new SaveSession({status:(type,message)=>{
+  const label=$('save-status');
+  label.textContent=message;
+  label.classList.remove('hidden');
+  label.classList.toggle('save-status--error',type==='warning');
+}});
 function announce(message,ok=false){notice.textContent=message;notice.classList.toggle('ok',ok);notice.classList.remove('hidden');}
 function paintChip8(){
   if(canvas.width!==DISPLAY_WIDTH||canvas.height!==DISPLAY_HEIGHT){canvas.width=DISPLAY_WIDTH;canvas.height=DISPLAY_HEIGHT;}
@@ -86,7 +93,7 @@ function showPlayer(system,label){
   frame=requestAnimationFrame(drawLoop);
   $('player-section').scrollIntoView({block:'start',behavior:'smooth'});
 }
-async function persistBattery(){if(game&&saveKey){const bytes=game.battery();if(bytes)await batteryWrite(saveKey,bytes);}}
+function persistBattery(){return saves.persist(game,saveKey);}
 function playChip8(bytes,label,isDemo=false){
   cancelAnimationFrame(frame);chip8.load(bytes);game=null;saveKey=null;demoActive=isDemo;
   paintChip8();showPlayer(SYSTEMS[0],label);
@@ -97,20 +104,22 @@ async function playMgba(bytes,label){
   try {
     player.load(bytes,system.id==='mgba'?'gba':'gb');
     const key=romStorageKey(bytes);
-    const saved=await batteryRead(key);
-    if(saved)player.restore(saved);
-    game=player;saveKey=key;showPlayer(system,label);
-  }catch(error){player.destroy();throw error;}
+    game=player;saveKey=key;
+    $('save-status').classList.add('hidden');
+    await saves.restore(player,key);
+    showPlayer(system,label);
+  }catch(error){player.destroy();if(game===player){game=null;saveKey=null;}throw error;}
 }
 async function playNes(bytes,label){
   const player=await JsnesPlayer.create(canvas);
   try {
     player.load(bytes);
     const key=romStorageKey(bytes,'jsnes');
-    const saved=await batteryRead(key);
-    if(saved)player.restore(saved);
-    game=player;saveKey=key;showPlayer(selected,label);
-  }catch(error){player.destroy();throw error;}
+    game=player;saveKey=key;
+    $('save-status').classList.add('hidden');
+    await saves.restore(player,key);
+    showPlayer(selected,label);
+  }catch(error){player.destroy();if(game===player){game=null;saveKey=null;}throw error;}
 }
 function renderKeypad(){
   activeController?.releaseAll();
@@ -183,7 +192,15 @@ $('toggle').onclick=()=>{
   if(running){stop();void persistBattery();}
   else{running=true;last=0;clock=0;game?.resume?.();$('toggle').textContent='Ⅱ 일시정지';frame=requestAnimationFrame(drawLoop);}
 };
-async function exitGame(){activeController?.releaseAll();stop();await persistBattery();await fullscreen.exit();game?.destroy();window.location.reload();}
+async function exitGame(){
+  activeController?.releaseAll();
+  stop();
+  const saved=await persistBattery();
+  if(saved===false && !(window.confirm?.('게임을 저장하지 못했습니다. 저장하지 않고 종료하시겠습니까?') ?? false))return;
+  await fullscreen.exit();
+  game?.destroy();
+  window.location.reload();
+}
 $('reset').onclick=exitGame;$('return').onclick=exitGame;
 function onKey(event,pressed){
   if(event.target instanceof HTMLInputElement || !loaded)return;

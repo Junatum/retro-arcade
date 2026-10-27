@@ -130,3 +130,6 @@ body.theater-open{overflow:hidden}
 .app{min-height:100vh;min-height:100dvh;display:flex;flex-direction:column}
 .app>main{flex:1 0 auto}
 .app>footer{margin-top:auto}
+
+/* Battery-save feedback stays visible while playing, including on mobile. */
+.save-status{color:#b9fbc2;font-size:12px;font-weight:700;margin:10px 0}.save-status--error{color:#ffba83}

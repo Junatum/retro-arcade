@@ -1,6 +1,6 @@
 # 아키텍처 및 개발 가이드
 
-SmartSafeHub Retro Arcade `0.1.0-r5`의 구현, 빌드 및 검증 방법입니다. 사용자 소개는 [README](../README.md)를 참조하세요.
+SmartSafeHub Retro Arcade `0.1.0-r6`의 구현, 빌드 및 검증 방법입니다. 사용자 소개는 [README](../README.md)를 참조하세요.
 
 ## 실행 구조
 
@@ -86,3 +86,11 @@ JSNES는 `scripts/vendor_jsnes.py`로 npm 2.1.0 타르볼의 SHA-512를 검증�
 `web/demo.js`는 Atari ROM 등을 가져오지 않고 자체 작성한 **패들 랠리**의 CHIP-8 명령어·스프라이트를 조립합니다. 앱의 기존 CHIP-8 인터프리터만 사용하며 게임 파일을 공유기로 업로드하지 않습니다. W/S(터치 키패드 5/8)로 오른쪽 플레이어 패들을 움직이고 왼쪽 컴퓨터를 상대로 점수를 얻습니다. 내장 게임에 한해 오른쪽 플레이어 패들을 주황색으로 강조하며 외부 CHIP-8 ROM의 색상은 변경하지 않습니다.
 
 내장 패들 랠리에서는 코트 경계선과 플레이어 색상만 브라우저의 화면 변환 단계에서 표시하므로 외부 CHIP-8 ROM의 픽셀은 변경되지 않습니다. 득점 후 CHIP-8 지연 타이머(60Hz, 120틱)로 약 2초간 서브를 대기하며, 5점에 먼저 도달하면 ROM이 종료 상태를 고정하고 웹 UI가 승리·패배 및 다시 플레이 버튼을 표시합니다.
+
+## 출시 안정화 (r6)
+
+- `web/save-session.js`: 읽기·복원 오류를 사용자에게 알리고, 저장 데이터를 즉시 복사하여 IndexedDB 쓰기를 순서대로 처리합니다. 브라우저가 강제 종료되면 비동기 저장 완료는 보장할 수 없습니다.
+- `scripts/cache_bust.py --update`: 개발할 때만 실행하며 첫 번째 파티 JavaScript import와 HTML의 CSS·엔트리포인트에 내용 해시를 부여합니다. `--check`는 CI와 OpenWrt 릴리스 검사에서 강제합니다.
+- 서드파티 JSNES 원본 코드는 변조하지 않고 벤더 매니페스트로 검증합니다. 업데이트 시 벤더 모듈 경로를 포함한 캐시 정책 재검증이 필요합니다.
+- `tests/browser_e2e.py`: 테스트 PC 또는 GitHub CI에서 Chromium/Playwright로 실제 HTTP, 320/390/1280px 화면, NES 합성 테스트 ROM 및 mGBA WASM 초기화를 검사합니다. 별도 상용 게임 ROM은 사용하지 않습니다.
+- OpenWrt APK 자체는 오프라인으로 검증된 JS/WASM 자산만 설치하며 `vendor_jsnes.py`, `build_mgba.py`를 재실행하지 않습니다.

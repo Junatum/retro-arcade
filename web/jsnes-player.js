@@ -1,5 +1,5 @@
 /* NES/Famicom JSNES 2.1.0 adapter — local ROM, canvas, gamepad and SRAM. */
-import { NesAudio } from './nes-audio.js';
+import { NesAudio } from './nes-audio.js?v=51743d8da793';
 
 export const NES_WIDTH = 256;
 export const NES_HEIGHT = 240;
@@ -17,7 +17,7 @@ export function validateNesBytes(bytes) {
 export class JsnesPlayer {
   static async create(canvas, loadCore = async () => {
     const [{default: NES}, {default: Controller}] = await Promise.all([
-      import('./vendor/jsnes/src/nes.js'), import('./vendor/jsnes/src/controller.js'),
+      import('./vendor/jsnes/src/nes.js?v=08119b28aa39'), import('./vendor/jsnes/src/controller.js?v=195631f7e736'),
     ]);
     return {NES, Controller};
   }, audio = new NesAudio()) {

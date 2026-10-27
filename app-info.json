@@ -1,7 +1,7 @@
 {
   "id": "retro-arcade",
   "package": "smartsafehub-app-retro-arcade",
-  "version": "0.1.0-r5",
+  "version": "0.1.0-r6",
   "name": "SmartSafeHub Retro Arcade",
   "category": "entertainment",
   "summary": "브라우저에서 실행하는 CHIP-8, GB/GBC/GBA, NES/Famicom 게임",

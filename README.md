@@ -2,7 +2,7 @@
 
 SmartSafeHub Apps에서 제공하는 **로컬 레트로 게임 앱**입니다. 공유기는 웹 파일을 제공하며, 게임은 PC 또는 스마트폰 **브라우저에서 직접 실행**됩니다. 별도 계정이나 게임 서버는 필요하지 않습니다.
 
-**현재 버전:** `0.1.0-r5`
+**현재 버전:** `0.1.0-r6`
 
 ## 지원 게임기
 
@@ -49,6 +49,21 @@ python3 scripts/release_audit.py --release
 ```
 
 다운로드가 차단된 환경에서는 JSNES 2.1.0 npm tarball과 npm 공식 SHA-512 integrity 값을 확보해 `--archive`, `--integrity` 옵션으로 지정합니다. 정식 릴리스에는 검증된 소스가 모두 포함되어야 합니다.
+
+## 배포 전 안정성 검사
+
+소스 변경 후 `python3 scripts/cache_bust.py --update`로 JavaScript/CSS URL의 내용 해시를 갱신합니다. OpenWrt APK 빌드나 공유기에서는 이 명령을 실행하지 않습니다.
+
+```sh
+python3 scripts/cache_bust.py --check
+python3 scripts/release_audit.py --release
+python3 -m unittest discover -s tests -p 'test_*.py' -v
+node --test tests/*.test.mjs
+```
+
+실제 Chromium HTTP 통합 테스트는 개발 환경에서 Playwright가 준비된 경우 `python3 tests/browser_e2e.py -v`로 실행합니다. 이 명령은 테스트용 임시 HTTP 서버만 사용하고 게임 파일을 내려받지 않습니다.
+
+배터리 저장 게임의 경우 저장 실패·복원 실패를 플레이어에 표시하며 종료 시 재확인합니다. 브라우저 종료·전원 손실 등 갑작스러운 상황에서는 마지막 저장이 보장되지 않으므로 진행 중에는 수시로 게임 내부 저장을 수행하세요.
 
 ## 문서
 

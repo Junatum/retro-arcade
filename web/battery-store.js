@@ -5,18 +5,22 @@ export function romStorageKey(bytes, engine = 'mgba') {
   for(const b of bytes){hash^=b;hash=Math.imul(hash,16777619);}
   return `${engine}:${bytes.length}:${(hash>>>0).toString(16)}`;
 }
-export async function batteryRead(key) {
-  if (!('indexedDB' in globalThis)) return null;
+export async function batteryReadStrict(key) {
+  if (!('indexedDB' in globalThis)) throw new Error('IndexedDB unavailable');
+  const db = await openDB();
   try {
-    const db=await openDB();
-    return await new Promise((resolve,reject)=>{
-      const tx=db.transaction('battery','readonly');
-      const req=tx.objectStore('battery').get(key);
-      req.onsuccess=()=>resolve(req.result ? new Uint8Array(req.result) : null);
-      req.onerror=()=>reject(req.error);
-      tx.oncomplete=()=>db.close();
+    return await new Promise((resolve, reject) => {
+      const tx = db.transaction('battery', 'readonly');
+      const req = tx.objectStore('battery').get(key);
+      req.onsuccess = () => resolve(req.result ? new Uint8Array(req.result) : null);
+      req.onerror = () => reject(req.error || new Error('Unable to read battery save'));
+      tx.onabort = () => reject(tx.error || new Error('Battery read cancelled'));
     });
-  } catch (_) {return null;}
+  } finally { db.close(); }
+}
+export async function batteryRead(key) {
+  try { return await batteryReadStrict(key); }
+  catch { return null; } // Backward compatible best-effort lookup for callers.
 }
 export async function batteryWrite(key,bytes) {
   if (!key || !bytes?.length || !('indexedDB' in globalThis)) return false;
