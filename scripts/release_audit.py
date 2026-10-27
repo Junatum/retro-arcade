@@ -13,9 +13,9 @@ except ModuleNotFoundError:  # python3 scripts/release_audit.py
 
 ROOT = Path(__file__).resolve().parents[1]
 WEB = ROOT / 'web'
-VERSION = '0.1.0-r6'
+VERSION = '1.0.0-r1'
 EXPECTED_WEB = {
-    'index.html', 'styles.css', 'app.js', 'fullscreen.js', 'controller.js', 'chip8.js', 'systems.js',
+    'index.html', 'styles.css', 'favicon.svg', 'favicon.ico', 'app.js', 'fullscreen.js', 'controller.js', 'chip8.js', 'systems.js',
     'demo.js', 'open-source.html', 'battery-store.js', 'save-session.js', 'mgba-player.js', 'jsnes-player.js', 'nes-audio.js',
 }
 MGBA_VENDOR = {'mgba/mgba.js', 'mgba/mgba.wasm', 'mgba/manifest.json'}
@@ -42,23 +42,50 @@ def audit(release: bool = False) -> list[str]:
         errors.append('incorrect app version/license')
     if meta.get('included_systems') != ['CHIP-8', 'Game Boy', 'Game Boy Color', 'Game Boy Advance', 'NES', 'Famicom'] or meta.get('offline') is not True:
         errors.append('incorrect included platforms/offline policy')
-    for required in ('PKG_VERSION:=0.1.0', 'PKG_RELEASE:=6', 'PKG_LICENSE:=GPL-3.0-or-later MPL-2.0 Apache-2.0',
+    for required in ('PKG_VERSION:=1.0.0', 'PKG_RELEASE:=1', 'PKG_LICENSE:=GPL-3.0-or-later MPL-2.0 Apache-2.0',
                      'python3 $(CURDIR)/scripts/release_audit.py --release'):
         if required not in mk:
             errors.append(f'incorrect OpenWrt package config: {required}')
-    if VERSION not in page or VERSION not in readme or VERSION not in notice:
-        errors.append('version mismatch across documentation/UI')
-    for document in ('docs/ARCHITECTURE.md', 'docs/RELEASE_CHECKLIST.md',
-                     'docs/SOURCE_OFFER.md', 'docs/THIRD_PARTY.md'):
+    # Keep a single version badge in the application header, but do not
+    # repeat the product version in general-purpose user documentation.
+    if page.count(f'<span class="edition">v{VERSION}</span>') != 1:
+        errors.append('header version badge must match the OpenWrt release version')
+    # Both user-facing pages must load the locally bundled favicon files.
+    for page_name, html in (('index.html', page), ('open-source.html', notice)):
+        for name in ('favicon.svg', 'favicon.ico'):
+            if f'href="./{name}"' not in html:
+                errors.append(f'missing favicon link in {page_name}: {name}')
+    try:
+        icon_svg = (WEB / 'favicon.svg').read_text(encoding='utf-8')
+        icon_ico = (WEB / 'favicon.ico').read_bytes()
+        if ('<svg' not in icon_svg or 'xmlns="http://www.w3.org/2000/svg"' not in icon_svg or
+                '<script' in icon_svg or re.search(r'(?:href|src)=["\'](?:https?:|//)', icon_svg)):
+            errors.append('invalid or nonlocal favicon SVG')
+        if (len(icon_ico) < 22 or icon_ico[:4] != b'\x00\x00\x01\x00' or
+                icon_ico[4:6] == b'\x00\x00'):
+            errors.append('invalid favicon ICO header')
+    except OSError as exc:
+        errors.append(f'missing favicon assets: {exc}')
+    for document, content in (('README.md', readme),
+                              ('web/open-source.html', notice)):
+        if VERSION in content or re.search(r'\b\d+\.\d+\.\d+-r\d+\b', content):
+            errors.append(f'unnecessary product version shown in {document}')
+    for document in ('docs/ARCHITECTURE.md', 'docs/RELEASE_CHECKLIST.md', 'docs/THIRD_PARTY.md'):
         try:
-            if VERSION not in (ROOT / document).read_text(encoding='utf-8'):
-                errors.append(f'version mismatch in documentation: {document}')
+            content = (ROOT / document).read_text(encoding='utf-8')
+            if re.search(r'\b\d+\.\d+\.\d+-r\d+\b', content):
+                errors.append(f'unnecessary product version shown in {document}')
         except OSError as exc:
             errors.append(f'missing documentation: {exc}')
     try:
+        if VERSION not in (ROOT / 'docs/SOURCE_OFFER.md').read_text(encoding='utf-8'):
+            errors.append('source offer must identify exact release version')
+    except OSError as exc:
+        errors.append(f'missing source offer: {exc}')
+    try:
         history = (ROOT / 'CHANGELOG.md').read_text(encoding='utf-8')
-        if re.findall(r'^## (0\.1\.0-r\d+)\b', history, re.M) != [VERSION, '0.1.0-r5', '0.1.0-r4', '0.1.0-r3', '0.1.0-r2', '0.1.0-r1']:
-            errors.append('changelog must contain r6, r5, r4, r3, consolidated r2, and original r1')
+        if re.findall(r'^## (\d+\.\d+\.\d+-r\d+)\b', history, re.M) != [VERSION, '0.1.0-r6', '0.1.0-r5', '0.1.0-r4', '0.1.0-r3', '0.1.0-r2', '0.1.0-r1']:
+            errors.append('changelog must contain the current release and all previous versions')
     except OSError as exc:
         errors.append(f'missing changelog: {exc}')
     if 'GNU GENERAL PUBLIC LICENSE' not in license_text.upper():

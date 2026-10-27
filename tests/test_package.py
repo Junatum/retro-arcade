@@ -85,8 +85,9 @@ class PackageTests(unittest.TestCase):
     def test_revision_platforms_and_licenses(self):
         info = json.loads((ROOT / 'app-info.json').read_text())
         make = (ROOT / 'Makefile').read_text()
-        self.assertEqual(info['version'], '0.1.0-r6')
-        self.assertIn('PKG_RELEASE:=6', make)
+        self.assertEqual(info['version'], '1.0.0-r1')
+        self.assertIn('PKG_VERSION:=1.0.0', make)
+        self.assertIn('PKG_RELEASE:=1', make)
         self.assertEqual(info['license'], 'GPL-3.0-or-later AND MPL-2.0 AND Apache-2.0')
         self.assertEqual(info['included_systems'], ['CHIP-8', 'Game Boy', 'Game Boy Color', 'Game Boy Advance', 'NES', 'Famicom'])
         self.assertNotIn('GL-MT300N-V2', info['supported_models'])
@@ -312,17 +313,66 @@ class PackageTests(unittest.TestCase):
 
     def test_consolidated_release_history_and_document_versions(self):
         history = (ROOT / 'CHANGELOG.md').read_text()
-        self.assertEqual(re.findall(r'^## (0\.1\.0-r\d+)\b', history, re.M),
-                         ['0.1.0-r6', '0.1.0-r5', '0.1.0-r4', '0.1.0-r3', '0.1.0-r2', '0.1.0-r1'])
+        self.assertEqual(re.findall(r'^## (\d+\.\d+\.\d+-r\d+)\b', history, re.M),
+                         ['1.0.0-r1', '0.1.0-r6', '0.1.0-r5', '0.1.0-r4',
+                          '0.1.0-r3', '0.1.0-r2', '0.1.0-r1'])
         for heading in ('### 추가', '### 개선', '### 수정', '### 호환성', '### 테스트'):
             self.assertIn(heading, history)
+        self.assertIn('1.0.0-r1', (ROOT / 'docs/SOURCE_OFFER.md').read_text())
         for path in ('README.md', 'docs/ARCHITECTURE.md', 'docs/RELEASE_CHECKLIST.md',
-                     'docs/SOURCE_OFFER.md', 'docs/THIRD_PARTY.md', 'web/index.html',
-                     'web/open-source.html'):
+                     'docs/THIRD_PARTY.md', 'web/open-source.html'):
             source = (ROOT / path).read_text()
-            self.assertIn('0.1.0-r6', source, path)
-            for rev in range(7, 9):
-                self.assertNotIn(f'0.1.0-r{rev}', source, path)
+            self.assertIsNone(re.search(r'\b\d+\.\d+\.\d+-r\d+\b', source), path)
+        self.assertIn('<span class="edition">v1.0.0-r1</span>', (ROOT / 'web/index.html').read_text())
+
+    def test_release_guard_requires_correct_header_badge(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            fake = pathlib.Path(tmp) / 'repo'
+            shutil.copytree(ROOT, fake, ignore=shutil.ignore_patterns('.git', '__pycache__'))
+            html = fake / 'web/index.html'
+            html.write_text(html.read_text().replace('v1.0.0-r1</span>', 'v0.1.0-r6</span>'))
+            with patch.object(release_audit, 'ROOT', fake), patch.object(release_audit, 'WEB', fake / 'web'):
+                self.assertTrue(any('header version badge must match' in error
+                                    for error in release_audit.audit(release=True)))
+
+    def test_release_guard_rejects_unnecessary_visible_version(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            fake = pathlib.Path(tmp) / 'repo'
+            shutil.copytree(ROOT, fake, ignore=shutil.ignore_patterns('.git', '__pycache__'))
+            readme = fake / 'README.md'
+            readme.write_text(readme.read_text() + '\n버전: 1.0.0-r1\n')
+            with patch.object(release_audit, 'ROOT', fake), patch.object(release_audit, 'WEB', fake / 'web'):
+                self.assertTrue(any('unnecessary product version shown in README.md' in error
+                                    for error in release_audit.audit(release=True)))
+
+
+    def test_local_favicons_are_packaged_for_both_pages(self):
+        from xml.etree import ElementTree
+        svg = ROOT / 'web/favicon.svg'
+        ico = ROOT / 'web/favicon.ico'
+        self.assertEqual(ElementTree.parse(svg).getroot().tag,
+                         '{http://www.w3.org/2000/svg}svg')
+        contents = ico.read_bytes()
+        self.assertGreater(len(contents), 200)
+        self.assertEqual(contents[:4], b'\x00\x00\x01\x00')
+        self.assertGreaterEqual(int.from_bytes(contents[4:6], 'little'), 2)
+        for page in ('index.html', 'open-source.html'):
+            html = (ROOT / 'web' / page).read_text()
+            self.assertIn('href="./favicon.svg"', html)
+            self.assertIn('href="./favicon.ico"', html)
+        self.assertEqual(audit(release=True), [])
+
+    def test_release_rejects_missing_favicon_or_page_reference(self):
+        with tempfile.TemporaryDirectory() as tmp:
+            fake = pathlib.Path(tmp) / 'repo'
+            shutil.copytree(ROOT, fake, ignore=shutil.ignore_patterns('.git', '__pycache__'))
+            with patch.object(release_audit, 'ROOT', fake), patch.object(release_audit, 'WEB', fake / 'web'):
+                (fake / 'web/favicon.ico').unlink()
+                self.assertTrue(any('favicon' in error for error in audit(release=True)))
+                (fake / 'web/favicon.ico').write_bytes((ROOT / 'web/favicon.ico').read_bytes())
+                source = fake / 'web/open-source.html'
+                source.write_text(source.read_text().replace('href="./favicon.svg"', 'href="./missing.svg"'))
+                self.assertTrue(any('missing favicon link' in error for error in audit(release=True)))
 
 
     def test_jsnes_release_blocks_missing_modules_and_detects_tamper(self):

@@ -1,6 +1,6 @@
 # 아키텍처 및 개발 가이드
 
-SmartSafeHub Retro Arcade `0.1.0-r6`의 구현, 빌드 및 검증 방법입니다. 사용자 소개는 [README](../README.md)를 참조하세요.
+SmartSafeHub Retro Arcade의 구현, 빌드 및 검증 방법입니다. 사용자 소개는 [README](../README.md)를 참조하세요.
 
 ## 실행 구조
 
@@ -87,7 +87,7 @@ JSNES는 `scripts/vendor_jsnes.py`로 npm 2.1.0 타르볼의 SHA-512를 검증�
 
 내장 패들 랠리에서는 코트 경계선과 플레이어 색상만 브라우저의 화면 변환 단계에서 표시하므로 외부 CHIP-8 ROM의 픽셀은 변경되지 않습니다. 득점 후 CHIP-8 지연 타이머(60Hz, 120틱)로 약 2초간 서브를 대기하며, 5점에 먼저 도달하면 ROM이 종료 상태를 고정하고 웹 UI가 승리·패배 및 다시 플레이 버튼을 표시합니다.
 
-## 출시 안정화 (r6)
+## 출시 안정화
 
 - `web/save-session.js`: 읽기·복원 오류를 사용자에게 알리고, 저장 데이터를 즉시 복사하여 IndexedDB 쓰기를 순서대로 처리합니다. 브라우저가 강제 종료되면 비동기 저장 완료는 보장할 수 없습니다.
 - `scripts/cache_bust.py --update`: 개발할 때만 실행하며 첫 번째 파티 JavaScript import와 HTML의 CSS·엔트리포인트에 내용 해시를 부여합니다. `--check`는 CI와 OpenWrt 릴리스 검사에서 강제합니다.

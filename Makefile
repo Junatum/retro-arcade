@@ -3,8 +3,8 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=smartsafehub-app-retro-arcade
-PKG_VERSION:=0.1.0
-PKG_RELEASE:=6
+PKG_VERSION:=1.0.0
+PKG_RELEASE:=1
 PKG_LICENSE:=GPL-3.0-or-later MPL-2.0 Apache-2.0
 PKG_LICENSE_FILES:=LICENSE LICENSES/mGBA.txt LICENSES/JSNES.txt
 PKG_MAINTAINER:=SmartSafeHub Contributors
