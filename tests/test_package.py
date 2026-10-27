@@ -19,7 +19,7 @@ class PackageTests(unittest.TestCase):
         import json
         sources = list((ROOT / 'web').rglob('*'))
         self.assertFalse([p for p in sources if p.is_file() and p.suffix == '.mjs'])
-        self.assertIn('src="./app.js?v=0.1.0-r3"', (ROOT / 'web/index.html').read_text())
+        self.assertIn('src="./app.js?v=0.1.0-r4"', (ROOT / 'web/index.html').read_text())
         self.assertEqual(json.loads((ROOT / 'package.json').read_text())['type'], 'module')
         manifest = json.loads((ROOT / 'web/mgba/manifest.json').read_text())
         self.assertEqual(
@@ -51,8 +51,8 @@ class PackageTests(unittest.TestCase):
     def test_revision_platforms_and_licenses(self):
         info = json.loads((ROOT / 'app-info.json').read_text())
         make = (ROOT / 'Makefile').read_text()
-        self.assertEqual(info['version'], '0.1.0-r3')
-        self.assertIn('PKG_RELEASE:=3', make)
+        self.assertEqual(info['version'], '0.1.0-r4')
+        self.assertIn('PKG_RELEASE:=4', make)
         self.assertEqual(info['license'], 'GPL-3.0-or-later AND MPL-2.0 AND Apache-2.0')
         self.assertEqual(info['included_systems'], ['CHIP-8', 'Game Boy', 'Game Boy Color', 'Game Boy Advance', 'NES', 'Famicom'])
         self.assertNotIn('GL-MT300N-V2', info['supported_models'])
@@ -67,7 +67,7 @@ class PackageTests(unittest.TestCase):
         self.assertIn('mGBA', readme)
         self.assertIn('하나의 mGBA 엔진', readme)
         self.assertIn("connect-src 'self'", html)
-        self.assertIn('app.js?v=0.1.0-r3', html)
+        self.assertIn('app.js?v=0.1.0-r4', html)
         self.assertIn("'wasm-unsafe-eval'", html)
         for source in (readme, html, third_party, (ROOT / 'docs/ARCHITECTURE.md').read_text()):
             self.assertIn('mGBA', source)
@@ -154,6 +154,19 @@ class PackageTests(unittest.TestCase):
         self.assertNotIn("$('system-library').classList", script.split("$('toggle').onclick=", 1)[1].split('\n};', 1)[0])
         self.assertIn('window.location.reload()', script.split('async function exitGame()', 1)[1])
 
+    def test_demo_is_only_available_for_chip8(self):
+        html = (ROOT / 'web/index.html').read_text()
+        script = (ROOT / 'web/app.js').read_text()
+        css = (ROOT / 'web/styles.css').read_text()
+        self.assertIn('id="load-buttons"', html)
+        self.assertIn('id="demo"', html)
+        self.assertIn("const hasDemo=system.id==='chip8'", script)
+        self.assertIn("$('demo').disabled=!hasDemo", script)
+        self.assertIn("$('demo').classList.toggle('hidden',!hasDemo)", script)
+        self.assertIn("$('load-buttons').classList.toggle('buttons--single',!hasDemo)", script)
+        self.assertIn("if(selected.id==='chip8')playChip8(DEMO_ROM", script)
+        self.assertIn('.buttons.buttons--single{grid-template-columns:1fr}', css)
+
     def test_platform_touch_controller_bundle_and_css(self):
         app = (ROOT / 'web/app.js').read_text()
         script = (ROOT / 'web/controller.js').read_text()
@@ -201,15 +214,15 @@ class PackageTests(unittest.TestCase):
     def test_consolidated_release_history_and_document_versions(self):
         history = (ROOT / 'CHANGELOG.md').read_text()
         self.assertEqual(re.findall(r'^## (0\.1\.0-r\d+)\b', history, re.M),
-                         ['0.1.0-r3', '0.1.0-r2', '0.1.0-r1'])
+                         ['0.1.0-r4', '0.1.0-r3', '0.1.0-r2', '0.1.0-r1'])
         for heading in ('### 추가', '### 개선', '### 수정', '### 호환성', '### 테스트'):
             self.assertIn(heading, history)
         for path in ('README.md', 'docs/ARCHITECTURE.md', 'docs/RELEASE_CHECKLIST.md',
                      'docs/SOURCE_OFFER.md', 'docs/THIRD_PARTY.md', 'web/index.html',
                      'web/open-source.html'):
             source = (ROOT / path).read_text()
-            self.assertIn('0.1.0-r3', source, path)
-            for rev in range(4, 9):
+            self.assertIn('0.1.0-r4', source, path)
+            for rev in range(5, 9):
                 self.assertNotIn(f'0.1.0-r{rev}', source, path)
 
 

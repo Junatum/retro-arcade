@@ -1,12 +1,12 @@
 /* SmartSafeHub Retro Arcade — GPL-3.0-or-later; entirely local browser playback. */
 import { Chip8, DISPLAY_WIDTH, DISPLAY_HEIGHT } from './chip8.js';
 import { DEMO_ROM } from './demo.js';
-import { SYSTEMS, detectSystem, validateRom } from './systems.js?v=0.1.0-r3';
-import { romStorageKey, batteryRead, batteryWrite } from './battery-store.js?v=0.1.0-r3';
+import { SYSTEMS, detectSystem, validateRom } from './systems.js?v=0.1.0-r4';
+import { romStorageKey, batteryRead, batteryWrite } from './battery-store.js?v=0.1.0-r4';
 import { MgbaPlayer } from './mgba-player.js';
 import { JsnesPlayer } from './jsnes-player.js';
 import { setupFullscreen } from './fullscreen.js';
-import { renderController, CHIP8_KEYBOARD, CHIP8_MATRIX, HANDHELD_KEYS } from './controller.js?v=0.1.0-r3';
+import { renderController, CHIP8_KEYBOARD, CHIP8_MATRIX, HANDHELD_KEYS } from './controller.js?v=0.1.0-r4';
 const $ = id => document.getElementById(id);
 const input=$('rom-file'), notice=$('notice'), stage=$('game');
 const fullscreen=setupFullscreen($('player-section'),$('fullscreen'),document,document.body);
@@ -102,7 +102,10 @@ function choose(system){
   $('rom-label').textContent=`${system.label} ROM 파일`;
   $('rom-help').textContent= system.id==='chip8' ? '권리를 보유한 .ch8 / .c8 ROM을 선택하세요 (최대 3,584바이트).' : system.id==='mgba-gb' ? '권리를 보유한 .gb / .gbc ROM을 선택하세요 (최대 8MiB). 게임 데이터는 공유기로 전송되지 않습니다.' : system.id==='nes' ? '권리를 보유한 .nes 파일을 선택하세요 (최대 8MiB). 게임 데이터는 공유기로 전송되지 않습니다.' : '권리를 보유한 .gba ROM을 선택하세요 (최대 32MiB). BIOS는 필요하지 않으며 ROM은 전송되지 않습니다.';
   $('control-help').textContent=system.id==='chip8' ? '1234 / QWER / ASDF / ZXCV · 모바일 터치 키패드' : '방향키 이동 · X(A) / Z(B) · Enter(START) / Shift(SELECT)' + (system.id==='mgba' ? ' · A(L) / S(R)' : '') + ' · 모바일 터치 지원';
-  $('demo').disabled=system.id!=='chip8';
+  const hasDemo=system.id==='chip8';
+  $('demo').disabled=!hasDemo;
+  $('demo').classList.toggle('hidden',!hasDemo);
+  $('load-buttons').classList.toggle('buttons--single',!hasDemo);
   notice.classList.add('hidden');
 }
 for(const system of SYSTEMS){

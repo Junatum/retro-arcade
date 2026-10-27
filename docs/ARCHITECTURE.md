@@ -1,6 +1,6 @@
 # 아키텍처 및 개발 가이드
 
-SmartSafeHub Retro Arcade `0.1.0-r3`의 구현, 빌드 및 검증 방법입니다. 사용자 소개는 [README](../README.md)를 참조하세요.
+SmartSafeHub Retro Arcade `0.1.0-r4`의 구현, 빌드 및 검증 방법입니다. 사용자 소개는 [README](../README.md)를 참조하세요.
 
 ## 실행 구조
 
@@ -34,7 +34,7 @@ ROM은 브라우저에서만 처리합니다. 외부 CDN, 게임 서버, 상용 
 
 ## 플랫폼 및 저장
 
-- CHIP-8: `.ch8`, `.c8` 최대 3,584바이트, 내장 데모 제공.
+- CHIP-8: `.ch8`, `.c8` 최대 3,584바이트, 내장 데모 제공. 내장 데모 실행 버튼은 CHIP-8에서만 표시되며 다른 플랫폼에서는 숨깁니다.
 - Game Boy / Color: `.gb`, `.gbc`, 최대 8MiB, mGBA의 GB 코어, 160×144 화면.
 - Game Boy Advance: `.gba`, 최대 32MiB, mGBA의 GBA 코어, 240×160 화면.
 - NES/Famicom: `.nes`, 최대 8MiB, JSNES 코어, 256×240 화면. 십자키·A/B·SELECT/START, 브라우저 IndexedDB에 배터리 RAM 저장. 오디오 켜기는 사용자가 클릭해야 하며 Web Audio 지원 브라우저에 한합니다.

@@ -8,6 +8,7 @@ test('Retro Arcade browser entrypoint creates four selectable platforms', async 
     constructor() { this.names = new Set(); }
     add(name) { this.names.add(name); }
     remove(name) { this.names.delete(name); }
+    contains(name) { return this.names.has(name); }
     toggle(name, force) {
       const add = force === undefined ? !this.names.has(name) : force;
       if (add) this.names.add(name); else this.names.delete(name);
@@ -48,6 +49,21 @@ test('Retro Arcade browser entrypoint creates four selectable platforms', async 
     await import('../web/app.js?startup-test');
     assert.equal(doc.getElementById('systems').children.length, 4);
     assert.deepEqual(doc.getElementById('systems').children.map(b => b.dataset.system), ['chip8','mgba-gb','mgba','nes']);
+    const demo = doc.getElementById('demo');
+    const actions = doc.getElementById('load-buttons');
+    assert.equal(demo.disabled, false, 'CHIP-8 starts with a visible demo');
+    assert.equal(demo.classList.contains('hidden'), false);
+    assert.equal(actions.classList.contains('buttons--single'), false);
+    for (const system of doc.getElementById('systems').children.slice(1)) {
+      system.onclick();
+      assert.equal(demo.disabled, true, `${system.dataset.system} must disable CHIP-8 demo`);
+      assert.equal(demo.classList.contains('hidden'), true, `${system.dataset.system} must hide CHIP-8 demo`);
+      assert.equal(actions.classList.contains('buttons--single'), true, 'ROM button should fill mobile row');
+    }
+    doc.getElementById('systems').children[0].onclick();
+    assert.equal(demo.disabled, false, 'returning to CHIP-8 restores the demo');
+    assert.equal(demo.classList.contains('hidden'), false);
+    assert.equal(actions.classList.contains('buttons--single'), false);
     const nes = doc.getElementById('systems').children[3];
     nes.onclick();
     assert.equal(doc.getElementById('rom-file').accept, '.nes');

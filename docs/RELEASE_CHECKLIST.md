@@ -1,4 +1,4 @@
-# Retro Arcade 0.1.0-r3 공개 / APK 배포 확인
+# Retro Arcade 0.1.0-r4 공개 / APK 배포 확인
 
 - [ ] 포함된 mGBA 0.10.5 JS/WASM과 매니페스트의 빌드 출처·해시 확인 (브리지 또는 코어 변경 시에만 재빌드)
 - [ ] `web/mgba/mgba.js`, `mgba.wasm`, `manifest.json` 세 파일 커밋

@@ -2,7 +2,7 @@
 
 SmartSafeHub Apps에서 제공하는 **로컬 레트로 게임 앱**입니다. 공유기는 웹 파일을 제공하며, 게임은 PC 또는 스마트폰 **브라우저에서 직접 실행**됩니다. 별도 계정이나 게임 서버는 필요하지 않습니다.
 
-**현재 버전:** `0.1.0-r3`
+**현재 버전:** `0.1.0-r4`
 
 ## 지원 게임기
 
@@ -13,7 +13,7 @@ SmartSafeHub Apps에서 제공하는 **로컬 레트로 게임 앱**입니다. �
 | Game Boy Advance | `.gba` | mGBA 0.10.5 | 십자 방향키, A/B, SELECT/START, L/R |
 | NES / Famicom | `.nes` | JSNES 2.1.0 | 십자 방향키, A/B, SELECT/START |
 
-Game Boy, Game Boy Color, Game Boy Advance는 **하나의 mGBA 엔진**으로 실행됩니다. CHIP-8에는 내장 데모가 포함되어 있습니다.
+Game Boy, Game Boy Color, Game Boy Advance는 **하나의 mGBA 엔진**으로 실행됩니다. CHIP-8에는 내장 데모가 포함되어 있으며, **내장 데모 실행 버튼은 CHIP-8 선택 시에만 표시**됩니다.
 
 ## 주요 기능
 
