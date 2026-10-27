@@ -167,6 +167,23 @@ class PackageTests(unittest.TestCase):
         self.assertIn("if(selected.id==='chip8')playChip8(DEMO_ROM", script)
         self.assertIn('.buttons.buttons--single{grid-template-columns:1fr}', css)
 
+    def test_compact_header_intro_and_local_platform_icons(self):
+        html = (ROOT / 'web/index.html').read_text()
+        css = (ROOT / 'web/styles.css').read_text()
+        app = (ROOT / 'web/app.js').read_text()
+        self.assertIn('.header{height:84px;display:flex', css)
+        self.assertNotIn('border-bottom:1px solid #2a2a3b', css)
+        self.assertIn('별도 계정이나 게임 서버 없이 로컬에서 실행하며', html)
+        self.assertNotIn('자체 CHIP-8, mGBA 기반', html)
+        self.assertIn('grid-template-columns:repeat(4,minmax(0,1fr))', css)
+        self.assertIn('const PLATFORM_ICONS = Object.freeze({', app)
+        for key in ("chip8:", "'mgba-gb':", "mgba:", "nes:"):
+            self.assertIn(key, app)
+        self.assertIn('aria-hidden="true"', app)
+        self.assertIn('icon.innerHTML=PLATFORM_ICONS[system.id]', app)
+        self.assertIn('.system-icon svg{', css)
+        self.assertIn("$('demo').classList.toggle('hidden',!hasDemo)", app)
+
     def test_platform_touch_controller_bundle_and_css(self):
         app = (ROOT / 'web/app.js').read_text()
         script = (ROOT / 'web/controller.js').read_text()

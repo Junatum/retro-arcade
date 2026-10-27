@@ -108,9 +108,18 @@ function choose(system){
   $('load-buttons').classList.toggle('buttons--single',!hasDemo);
   notice.classList.add('hidden');
 }
+// Original inline SVG silhouettes: no external requests, trademark assets or icon dependencies.
+// The system labels remain visible and SVGs are decorative only.
+const PLATFORM_ICONS = Object.freeze({
+  chip8: '<svg viewBox="0 0 48 48" aria-hidden="true" focusable="false"><rect x="12" y="12" width="24" height="24" rx="5"/><path d="M17 7v5m7-5v5m7-5v5M17 36v5m7-5v5m7-5v5M7 17h5m-5 7h5m-5 7h5m24-14h5m-5 7h5m-5 7h5"/><path d="M19 20h10m-10 5h10m-10 5h6"/></svg>',
+  'mgba-gb': '<svg viewBox="0 0 48 48" aria-hidden="true" focusable="false"><rect x="14" y="4" width="20" height="40" rx="6"/><rect x="18" y="10" width="12" height="14" rx="2"/><path d="M19 31h8m-4-4v8"/><circle cx="29" cy="30" r="1.5"/><circle cx="31" cy="34" r="1.5"/><path d="M21 39h6"/></svg>',
+  mgba: '<svg viewBox="0 0 48 48" aria-hidden="true" focusable="false"><path d="M11 15h26c4 0 6 4 6 8v9c0 5-3 7-8 7H13c-5 0-8-2-8-7v-9c0-4 2-8 6-8Z"/><rect x="17" y="17" width="14" height="12" rx="2"/><path d="M10 12h10m8 0h10M13 31h7m-3.5-3.5v7"/><circle cx="34" cy="30" r="1.6"/><circle cx="37" cy="33.5" r="1.6"/></svg>',
+  nes: '<svg viewBox="0 0 48 48" aria-hidden="true" focusable="false"><rect x="5" y="17" width="38" height="17" rx="6"/><path d="M13 25h9m-4.5-4.5v9"/><circle cx="32" cy="23.5" r="2"/><circle cx="36" cy="27.5" r="2"/><path d="M22 29h3m2-2h3"/></svg>',
+});
+
 for(const system of SYSTEMS){
   const btn=document.createElement('button');btn.type='button';btn.className='system';btn.dataset.system=system.id;
-  const icon=document.createElement('div');icon.className='system-icon';icon.textContent=system.icon;
+  const icon=document.createElement('div');icon.className='system-icon';icon.innerHTML=PLATFORM_ICONS[system.id];
   const title=document.createElement('strong');title.textContent=system.label;
   const description=document.createElement('small');description.textContent=system.description;
   btn.append(icon,title,description);btn.onclick=()=>choose(system);$('systems').appendChild(btn);

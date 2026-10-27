@@ -64,6 +64,13 @@ test('Retro Arcade browser entrypoint creates four selectable platforms', async 
     assert.equal(demo.disabled, false, 'returning to CHIP-8 restores the demo');
     assert.equal(demo.classList.contains('hidden'), false);
     assert.equal(actions.classList.contains('buttons--single'), false);
+    const platforms = doc.getElementById('systems').children;
+    for (const platform of platforms) {
+      assert.match(platform.children[0].innerHTML, /<svg[^>]+aria-hidden="true"/);
+      assert.match(platform.children[0].innerHTML, /<path|<rect/);
+      assert.equal(platform.children[1].tagName, 'strong');
+    }
+    assert.notEqual(platforms[1].children[0].innerHTML, platforms[2].children[0].innerHTML);
     const nes = doc.getElementById('systems').children[3];
     nes.onclick();
     assert.equal(doc.getElementById('rom-file').accept, '.nes');
