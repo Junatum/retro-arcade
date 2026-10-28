@@ -59,12 +59,23 @@ class PackageTests(unittest.TestCase):
             self.assertIn('app.js', cache_bust.check(web=fake / 'web'))
 
     def test_sega_release_fails_closed_without_locally_built_wasm(self):
-        # The initial patch is source-only by design. It must never emit an
-        # installable APK with only menu entries and no actual emulator core.
+        # Released sources now include the locally built Sega cores. Test the
+        # missing-WASM release gate in an isolated copy, not against a stale
+        # assumption that the real checkout is still source-only.
         self.assertEqual(audit(), [])
-        errors = audit(release=True)
-        self.assertTrue(any('gearsystem: JS/WASM/manifest' in e for e in errors))
-        self.assertTrue(any('blastem: JS/WASM/manifest' in e for e in errors))
+        self.assertEqual(audit(release=True), [])
+        with tempfile.TemporaryDirectory() as tmp:
+            fake = pathlib.Path(tmp) / 'repo'
+            shutil.copytree(ROOT, fake, ignore=shutil.ignore_patterns('.git', '__pycache__'))
+            for engine in release_audit.SEGA_ENGINES:
+                wasm = fake / 'web' / engine / f'{engine}.wasm'
+                self.assertTrue(wasm.is_file(), f'expected bundled WASM: {engine}')
+                wasm.unlink()
+            with patch.object(release_audit, 'ROOT', fake), patch.object(release_audit, 'WEB', fake / 'web'):
+                errors = release_audit.audit(release=True)
+            for engine in release_audit.SEGA_ENGINES:
+                self.assertTrue(any(f'{engine}: JS/WASM/manifest' in e for e in errors),
+                                f'{engine} missing-WASM guard did not trigger: {errors}')
         builder = (ROOT / 'scripts/build_sega.py').read_text(encoding='utf-8')
         self.assertIn("GEARSYSTEM_TAG = '3.9.21'", builder)
         self.assertIn("BLASTEM_REV = '625fa5a85505'", builder)
@@ -382,7 +393,11 @@ class PackageTests(unittest.TestCase):
             fake = pathlib.Path(tmp) / 'repo'
             shutil.copytree(ROOT, fake, ignore=shutil.ignore_patterns('.git', '__pycache__'))
             html = fake / 'web/index.html'
-            html.write_text(html.read_text().replace('v1.0.0-r2</span>', 'v0.1.0-r6</span>'))
+            source = html.read_text(encoding='utf-8')
+            current_badge = f'<span class="edition">v{release_audit.VERSION}</span>'
+            self.assertEqual(source.count(current_badge), 1, 'test must replace the current badge')
+            html.write_text(source.replace(current_badge, '<span class="edition">v0.1.0-r6</span>', 1),
+                            encoding='utf-8')
             with patch.object(release_audit, 'ROOT', fake), patch.object(release_audit, 'WEB', fake / 'web'):
                 self.assertTrue(any('header version badge must match' in error
                                     for error in release_audit.audit(release=True)))

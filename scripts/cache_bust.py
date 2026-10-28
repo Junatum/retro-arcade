@@ -25,6 +25,9 @@ def digest(path: Path) -> str:
 
 def expected_contents(web=WEB):
     """Return expected source contents after dependency hashes converge."""
+    # macOS exposes /var through /private/var. Resolve both sides of the
+    # containment check so pathlib never compares aliased and real paths.
+    web = Path(web).resolve()
     sources = {name: (web / name).read_text(encoding='utf-8') for name in MODULES}
     # A module graph is acyclic today; iterative computation also rejects a future cycle.
     for _ in range(len(MODULES) + 1):
@@ -34,7 +37,7 @@ def expected_contents(web=WEB):
             def update(match):
                 url = match.group('url')
                 target = (parent.parent / url).resolve()
-                if not target.is_relative_to(web.resolve()) or not target.is_file():
+                if not target.is_relative_to(web) or not target.is_file():
                     raise ValueError(f'invalid local JS dependency: {name}: {url}')
                 relative = target.relative_to(web).as_posix()
                 content = sources.get(relative)
@@ -60,6 +63,7 @@ def expected_contents(web=WEB):
 
 
 def check(update=False, web=WEB):
+    web = Path(web).resolve()
     changed = []
     for name, expected in expected_contents(web).items():
         file = web / name
