@@ -1,5 +1,5 @@
 /* Offline GPLv3 libretro/WASM adapter for Gearsystem and BlastEm. */
-import { NesAudio } from './nes-audio.js?v=51743d8da793';
+import { NesAudio } from './nes-audio.js?v=980e7224b90b';
 const ROM_KINDS=Object.freeze({'gearsystem-gg':1,'gearsystem-sms':2,'gearsystem-sg':3,blastem:4});
 export const SEGA_BUTTONS=Object.freeze({
   up:4,down:5,left:6,right:7,start:3,select:2,

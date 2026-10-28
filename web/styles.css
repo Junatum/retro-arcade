@@ -136,3 +136,16 @@ body.theater-open{overflow:hidden}
 
 /* Mega Drive six-button controller; preserves the standard two-button layouts. */
 .keypad--megadrive .controller-face{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;align-items:center}.keypad--megadrive .controller-face .controller-key{position:static;transform:none;min-width:38px}.keypad--megadrive .controller-main{gap:18px}@media(max-width:650px){.keypad--megadrive .controller-face{gap:4px}.keypad--megadrive .controller-face .controller-key{min-width:32px}}
+
+
+/* Audio status is next to the game title instead of below a large canvas.
+ * Browser-blocked playback has an explicit, high-contrast retry control. */
+.player-section>.section-heading{flex-wrap:wrap;align-items:center}
+.player-heading-actions{flex-wrap:wrap;justify-content:flex-end}
+.player-heading-actions .sound-button{border-color:#b9a7ff;color:#f0eaff;font-weight:800;white-space:nowrap}
+.player-heading-actions .sound-button--on{border-color:#4dbd93;background:#17372f;color:#b9fbe0}
+.player-heading-actions .sound-button--attention{border-color:#e1ae66;background:#42301f;color:#ffe0ae}
+/* Keep actionable sound feedback on the header button. The expanded
+ * explanation remains accessible to screen readers but takes no page space. */
+.sound-status{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+@media(max-width:560px){.player-heading-actions{width:100%;justify-content:flex-start}.player-heading-actions .sound-button{order:-1}}

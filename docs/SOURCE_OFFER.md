@@ -1,4 +1,4 @@
-# Source code offer — SmartSafeHub Retro Arcade 1.1.0-r2
+# Source code offer — SmartSafeHub Retro Arcade 1.1.0-r4
 
 프로젝트 자체 소스: https://github.com/Junatum/retro-arcade
 

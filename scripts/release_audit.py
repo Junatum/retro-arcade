@@ -13,10 +13,10 @@ except ModuleNotFoundError:  # python3 scripts/release_audit.py
 
 ROOT = Path(__file__).resolve().parents[1]
 WEB = ROOT / 'web'
-VERSION = '1.1.0-r2'
+VERSION = '1.1.0-r4'
 EXPECTED_WEB = {
     'index.html', 'styles.css', 'favicon.svg', 'favicon.ico', 'app.js', 'fullscreen.js', 'controller.js', 'chip8.js', 'systems.js',
-    'demo.js', 'open-source.html', 'battery-store.js', 'save-session.js', 'mgba-player.js', 'jsnes-player.js', 'nes-audio.js', 'sega-player.js',
+    'demo.js', 'open-source.html', 'battery-store.js', 'save-session.js', 'mgba-player.js', 'jsnes-player.js', 'nes-audio.js', 'sega-player.js', 'audio-controls.js',
 }
 MGBA_VENDOR = {'mgba/mgba.js', 'mgba/mgba.wasm', 'mgba/manifest.json'}
 SEGA_ENGINES = ('gearsystem', 'blastem')
@@ -50,7 +50,7 @@ def audit(release: bool = False, require_sega: bool = True) -> list[str]:
         errors.append('incorrect app version/license')
     if meta.get('included_systems') != ['CHIP-8', 'Game Boy', 'Game Boy Color', 'Game Boy Advance', 'NES', 'Famicom', 'Game Gear', 'Master System', 'SG-1000', 'Mega Drive', 'Genesis'] or meta.get('offline') is not True:
         errors.append('incorrect included platforms/offline policy')
-    for required in ('PKG_VERSION:=1.1.0', 'PKG_RELEASE:=2', 'PKG_LICENSE:=GPL-3.0-or-later MPL-2.0 Apache-2.0 MIT',
+    for required in ('PKG_VERSION:=1.1.0', 'PKG_RELEASE:=4', 'PKG_LICENSE:=GPL-3.0-or-later MPL-2.0 Apache-2.0 MIT',
                      'python3 $(CURDIR)/scripts/release_audit.py --release'):
         if required not in mk:
             errors.append(f'incorrect OpenWrt package config: {required}')
@@ -92,7 +92,7 @@ def audit(release: bool = False, require_sega: bool = True) -> list[str]:
         errors.append(f'missing source offer: {exc}')
     try:
         history = (ROOT / 'CHANGELOG.md').read_text(encoding='utf-8')
-        if re.findall(r'^## (\d+\.\d+\.\d+-r\d+)\b', history, re.M) != [VERSION, '1.1.0-r1', '1.0.0-r1', '0.1.0-r6', '0.1.0-r5', '0.1.0-r4', '0.1.0-r3', '0.1.0-r2', '0.1.0-r1']:
+        if re.findall(r'^## (\d+\.\d+\.\d+-r\d+)\b', history, re.M) != [VERSION, '1.1.0-r3', '1.1.0-r2', '1.1.0-r1', '1.0.0-r1', '0.1.0-r6', '0.1.0-r5', '0.1.0-r4', '0.1.0-r3', '0.1.0-r2', '0.1.0-r1']:
             errors.append('changelog must contain the current release and all previous versions')
     except OSError as exc:
         errors.append(f'missing changelog: {exc}')
@@ -145,7 +145,7 @@ def audit(release: bool = False, require_sega: bool = True) -> list[str]:
         if actual != expected:
             errors.append(f'unexpected source inventory in {directory}: {sorted(actual ^ expected)}')
     for script in ('web/app.js', 'web/fullscreen.js', 'web/controller.js', 'web/chip8.js', 'web/demo.js', 'web/systems.js',
-                   'web/battery-store.js', 'web/save-session.js', 'web/mgba-player.js', 'web/jsnes-player.js', 'web/nes-audio.js', 'web/sega-player.js'):
+                   'web/battery-store.js', 'web/save-session.js', 'web/mgba-player.js', 'web/jsnes-player.js', 'web/nes-audio.js', 'web/sega-player.js', 'web/audio-controls.js'):
         try:
             source = (ROOT / script).read_text(encoding='utf-8')
         except OSError as exc:

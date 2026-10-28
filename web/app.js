@@ -5,8 +5,10 @@ import { SYSTEMS, detectSystem, validateRom } from './systems.js?v=e17e43438dea'
 import { romStorageKey } from './battery-store.js?v=089100328af3';
 import { SaveSession } from './save-session.js?v=091750ebf000';
 import { MgbaPlayer } from './mgba-player.js?v=8d6c2b534ff6';
-import { JsnesPlayer } from './jsnes-player.js?v=8cc9646dc5e4';
-import { SegaPlayer } from './sega-player.js?v=e58353d0c2e8';
+import { JsnesPlayer } from './jsnes-player.js?v=546b95572681';
+import { SegaPlayer } from './sega-player.js?v=0d35cad20b44';
+import { NesAudio } from './nes-audio.js?v=980e7224b90b';
+import { supportsGameAudio, paintAudioState } from './audio-controls.js?v=b4321a145dca';
 import { setupFullscreen } from './fullscreen.js?v=27d207810633';
 import { renderController, CHIP8_KEYBOARD, CHIP8_MATRIX, HANDHELD_KEYS, SEGA_KEYS } from './controller.js?v=46c2b93d4a91';
 const $ = id => document.getElementById(id);
@@ -24,6 +26,20 @@ const GBKEY=new Map([['arrowup','up'],['arrowdown','down'],['arrowleft','left'],
 const MEGAKEY=new Map([['arrowup','up'],['arrowdown','down'],['arrowleft','left'],['arrowright','right'],['z','a'],['x','b'],['c','c'],['a','x'],['s','y'],['d','z'],['enter','start'],['shift','mode']]);
 let selected=SYSTEMS[0], game=null, running=false, loaded=false, frame=0, last=0,clock=0;
 let saveKey=null,framesSinceSave=0,loading=false,activeController=null,demoActive=false;
+let audioState='off',audioRequest=0;
+function setAudioState(state){
+  audioState=state;
+  paintAudioState($('sound'),$('sound-status'),state);
+}
+function observeAutoAudio(request,player){
+  const token=++audioRequest;
+  // AudioContext is opened in the original '게임 시작' gesture, before any
+  // asynchronous ROM reading / WASM imports. It may still be browser-blocked.
+  void request.then(enabled=>{
+    if(game!==player||!loaded||token!==audioRequest)return;
+    setAudioState(enabled?'on':'blocked');
+  });
+}
 const saves=new SaveSession({status:(type,message)=>{
   const label=$('save-status');
   label.textContent=message;
@@ -86,8 +102,10 @@ function showPlayer(system,label){
   $('player-title').textContent=`${system.label} · ${label}`;
   $('toggle').textContent='Ⅱ 일시정지';$('toggle').disabled=false;notice.classList.add('hidden');
   $('demo-result').classList.add('hidden');$('demo-result').classList.remove('demo-result--win');
-  $('sound').classList.toggle('hidden', !(system.id==='nes'||system.id.startsWith('gearsystem-')||system.id==='blastem'));
-  $('sound').textContent='♫ 사운드 켜기';$('sound').disabled=false;
+  const hasAudio=supportsGameAudio(system.id);
+  $('sound').classList.toggle('hidden',!hasAudio);
+  $('sound-status').classList.toggle('hidden',!hasAudio);
+  if(hasAudio)setAudioState('starting');
   const demoControls=$('demo-controls');
   demoControls.textContent=`${DEMO_CONTROLS} · 오른쪽 주황색 패들이 플레이어입니다. 왼쪽은 컴퓨터이며, 위쪽은 양쪽 점수입니다.`;
   demoControls.classList.toggle('hidden',!demoActive);
@@ -113,8 +131,8 @@ async function playMgba(bytes,label){
     showPlayer(system,label);
   }catch(error){player.destroy();if(game===player){game=null;saveKey=null;}throw error;}
 }
-async function playNes(bytes,label){
-  const player=await JsnesPlayer.create(canvas);
+async function playNes(bytes,label,audio,request){
+  const player=await JsnesPlayer.create(canvas,undefined,audio);
   try {
     player.load(bytes);
     const key=romStorageKey(bytes,'jsnes');
@@ -122,11 +140,12 @@ async function playNes(bytes,label){
     $('save-status').classList.add('hidden');
     await saves.restore(player,key);
     showPlayer(selected,label);
+    observeAutoAudio(request,player);
   }catch(error){player.destroy();if(game===player){game=null;saveKey=null;}throw error;}
 }
-async function playSega(bytes,label){
+async function playSega(bytes,label,audio,request){
   const system=selected;
-  const player=await SegaPlayer.create(canvas,system.id);
+  const player=await SegaPlayer.create(canvas,system.id,undefined,audio);
   try{
     player.load(bytes);
     const key=romStorageKey(bytes,system.id);
@@ -134,6 +153,7 @@ async function playSega(bytes,label){
     $('save-status').classList.add('hidden');
     await saves.restore(player,key);
     showPlayer(system,label);
+    observeAutoAudio(request,player);
   }catch(error){player.destroy();if(game===player){game=null;saveKey=null;}throw error;}
 }
 function renderKeypad(){
@@ -191,26 +211,44 @@ $('play').onclick=async()=>{
   const file=input.files[0];const error=validateRom(file,selected);
   if(error){announce(error);return;}
   loading=true;$('play').disabled=true;
+  // Begin audio synchronously inside the trusted user click. Starting it only
+  // after async file/WASM loading can miss the browser's playback permission.
+  const audio=supportsGameAudio(selected.id)?new NesAudio():null;
+  const audioRequestResult=audio?audio.enable().then(()=>true,()=>false):null;
   try{
     const bytes=new Uint8Array(await file.arrayBuffer());
     if(selected.id==='chip8')playChip8(bytes,file.name);
-    else if(selected.id==='nes')await playNes(bytes,file.name);
-    else if(selected.id.startsWith('gearsystem-')||selected.id==='blastem')await playSega(bytes,file.name);
+    else if(selected.id==='nes')await playNes(bytes,file.name,audio,audioRequestResult);
+    else if(selected.id.startsWith('gearsystem-')||selected.id==='blastem')await playSega(bytes,file.name,audio,audioRequestResult);
     else await playMgba(bytes,file.name);
-  }catch(error){announce(error.message);}
+  }catch(error){audio?.destroy();announce(error.message);}
   finally{loading=false;if(!loaded)$('play').disabled=false;}
 };
 $('demo').onclick=()=>{if(selected.id==='chip8')playChip8(DEMO_ROM,DEMO_TITLE,true);};
 $('demo-replay').onclick=()=>{if(demoActive)playChip8(DEMO_ROM,DEMO_TITLE,true);};
 $('sound').onclick=async()=>{
-  if(!(selected.id==='nes'||selected.id.startsWith('gearsystem-')||selected.id==='blastem')||!game)return;
-  try{await game.enableAudio();$('sound').textContent='♫ 사운드 켜짐';$('sound').disabled=true;}
-  catch(error){announce(error.message);}
+  if(!supportsGameAudio(selected.id)||!game)return;
+  const token=++audioRequest;
+  if(audioState==='on'){
+    game.pause();
+    setAudioState('off');
+    return;
+  }
+  setAudioState('starting');
+  try{
+    await game.enableAudio();
+    if(game&&token===audioRequest){
+      if(!running)game.pause();
+      setAudioState('on');
+    }
+  }catch(error){
+    if(token===audioRequest)setAudioState('blocked');
+  }
 };
 $('toggle').onclick=()=>{
   if(!loaded||(demoActive && chip8.v[14]))return;
   if(running){stop();void persistBattery();}
-  else{running=true;last=0;clock=0;game?.resume?.();$('toggle').textContent='Ⅱ 일시정지';frame=requestAnimationFrame(drawLoop);}
+  else{running=true;last=0;clock=0;if(audioState==='on')game?.resume?.();$('toggle').textContent='Ⅱ 일시정지';frame=requestAnimationFrame(drawLoop);}
 };
 async function exitGame(){
   activeController?.releaseAll();

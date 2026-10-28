@@ -22,11 +22,11 @@ export class NesAudio {
   async enable() {
     if (this.node) { await this.context.resume(); return true; }
     const AudioContext = this.scope.AudioContext || this.scope.webkitAudioContext;
-    if (!AudioContext) throw new Error('이 브라우저에서는 NES 오디오를 지원하지 않습니다.');
+    if (!AudioContext) throw new Error('이 브라우저에서는 게임 사운드를 지원하지 않습니다.');
     const context = new AudioContext();
     try {
       if (typeof context.createScriptProcessor !== 'function') {
-        throw new Error('이 브라우저는 HTTP 호환 NES 오디오 출력을 지원하지 않습니다.');
+        throw new Error('이 브라우저는 HTTP 환경에서 게임 사운드를 지원하지 않습니다.');
       }
       const node = context.createScriptProcessor(2048, 0, 2);
       node.onaudioprocess = event => {
@@ -44,7 +44,16 @@ export class NesAudio {
       await context.resume();
       return true;
     } catch (error) {
-      await context.close();
+      // A rejected resume must not leave a closed AudioContext attached:
+      // otherwise the visible '소리 켜기' retry button could never recover.
+      if (this.context === context) {
+        this.node?.disconnect();
+        if (this.node) this.node.onaudioprocess = null;
+        this.node = null;
+        this.context = null;
+        this.read = this.write = 0;
+      }
+      try { await context.close(); } catch { /* already closed during exit */ }
       throw error;
     }
   }

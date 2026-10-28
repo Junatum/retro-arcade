@@ -37,7 +37,7 @@ ROM은 브라우저에서만 처리합니다. 외부 CDN, 게임 서버, 상용 
 - CHIP-8: `.ch8`, `.c8` 최대 3,584바이트, 내장 데모 제공. 내장 데모 실행 버튼은 CHIP-8에서만 표시되며 다른 플랫폼에서는 숨깁니다.
 - Game Boy / Color: `.gb`, `.gbc`, 최대 8MiB, mGBA의 GB 코어, 160×144 화면.
 - Game Boy Advance: `.gba`, 최대 32MiB, mGBA의 GBA 코어, 240×160 화면.
-- NES/Famicom: `.nes`, 최대 8MiB, JSNES 코어, 256×240 화면. 십자키·A/B·SELECT/START, 브라우저 IndexedDB에 배터리 RAM 저장. 오디오 켜기는 사용자가 클릭해야 하며 Web Audio 지원 브라우저에 한합니다.
+- NES/Famicom: `.nes`, 최대 8MiB, JSNES 코어, 256×240 화면. 십자키·A/B·SELECT/START, 브라우저 IndexedDB에 배터리 RAM 저장. 게임 시작 클릭으로 Web Audio를 활성화합니다. 브라우저가 제한하면 게임 제목 옆의 소리 켜기 버튼으로 재시도할 수 있습니다.
 - 방향키, X(A)/Z(B), Enter(Start)/Shift(Select); GBA는 A(L)/S(R) 추가 지원.
 - 브라우저의 IndexedDB(`smartsafehub-retro-arcade`)에 `mgba:` 접두사로 배터리 저장 데이터를 보관합니다. ROM 파일은 업로드하지 않습니다.
 

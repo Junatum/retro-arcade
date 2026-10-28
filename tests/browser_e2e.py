@@ -95,6 +95,35 @@ class BrowserSmoke(unittest.TestCase):
         finally:
             context.close()
 
+    def test_nes_audio_is_visible_and_browser_blocking_is_actionable(self):
+        # A blocked AudioContext must not prevent the game from launching.
+        # The user must see a retry button next to the game title.
+        context = self.browser.new_context()
+        context.add_init_script("""
+          Object.defineProperty(window, 'AudioContext', {value: undefined, configurable: true});
+          Object.defineProperty(window, 'webkitAudioContext', {value: undefined, configurable: true});
+        """)
+        page = context.new_page()
+        try:
+            page.goto(self.url, wait_until='networkidle')
+            page.locator('#systems button').nth(3).click()
+            page.locator('#rom-file').set_input_files({
+                'name': 'silent.nes', 'mimeType': 'application/octet-stream',
+                'buffer': synthetic_nes_rom(),
+            })
+            page.locator('#play').click()
+            page.locator('#player-section').wait_for(state='visible', timeout=12000)
+            page.locator('#sound.sound-button--attention').wait_for(state='visible', timeout=12000)
+            self.assertIn('소리 켜기', page.locator('#sound').inner_text())
+            self.assertIn('브라우저가', page.locator('#sound-status').text_content())
+            self.assertIn('브라우저가', page.locator('#sound').get_attribute('title'))
+            # Descriptive status is still announced to assistive technology,
+            # but never consumes a row between the header and canvas.
+            self.assertLessEqual(page.locator('#sound-status').evaluate('(el) => el.getBoundingClientRect().height'), 1)
+            self.assertEqual(page.locator('#game canvas').evaluate('(c)=>[c.width,c.height]'), [256, 240])
+        finally:
+            context.close()
+
     def test_http_nes_rom_and_local_runtime(self):
         page = self.browser.new_page(viewport={'width': 1280, 'height': 850})
         failures = []
