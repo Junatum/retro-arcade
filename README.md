@@ -70,6 +70,8 @@ python3 scripts/cache_bust.py --update
 python3 scripts/release_audit.py --release
 ```
 
+BlastEm은 코어 전체에 `-Oz -flto`를 적용하고 기존 오브젝트를 강제로 재컴파일합니다. 브리지 C 컴파일과 최종 WASM 링크에도 `-Oz`를 사용합니다. **스크립트를 수정한 뒤에는 반드시 BlastEm을 다시 빌드**해야 하며, 이전 `-O2` WASM/매니페스트로는 `--release` 검사를 통과할 수 없습니다. 새 빌드 파일을 커밋하기 전에는 `python3 scripts/release_audit.py --release`가 실패하는 것이 정상입니다.
+
 Gearsystem의 upstream 빌드는 `gearsystem_libretro_emscripten.bc`라는 파일을 생성하지만, 내용은 **LLVM bitcode가 아닌 `emar` 정적 아카이브**입니다. 빌드 스크립트는 파일 형식을 검사한 뒤 링크 단계에서만 `.a` 이름을 사용합니다. 컴파일 또는 링크가 실패할 경우 오류 내용을 출력합니다. 빌드 성공 여부는 결과 JS/WASM 및 실제 브라우저 실행으로 확인해야 합니다.
 
 두 엔진 모두 BIOS를 패키지에 포함하지 않습니다. BlastEm v1.0.0 태그 자체에는 libretro 빌드 문제가 있어 바로 다음 공식 수정 커밋을 고정합니다. 빌드 코드만 포함한 상태에서는 릴리스 검사가 의도적으로 실패합니다. 별도 Libretro WASM 및 실제 게임 실행 검증이 필요하며 미검증 바이너리를 판매용 패키지에 포함하지 마세요. 빌드 스크립트는 해당 upstream 체크아웃과 Emscripten SDK를 요구하며, 이 소스 패치 자체에는 생성된 웹 빌드 파일이 없습니다.

@@ -1,4 +1,4 @@
-# Source code offer — SmartSafeHub Retro Arcade 1.1.0-r1
+# Source code offer — SmartSafeHub Retro Arcade 1.1.0-r2
 
 프로젝트 자체 소스: https://github.com/Junatum/retro-arcade
 
@@ -17,5 +17,7 @@ mGBA의 MPL-2.0 소스 제공 의무 및 GPLv3 프로그램의 배포 요건을 
 - 공통 Libretro 브리지: [`native/sega_libretro_bridge.c`](../native/sega_libretro_bridge.c)
 - 두 엔진의 로컬 빌드 명령: [`scripts/build_sega.py`](../scripts/build_sega.py)
 - SHA-256 및 대응 upstream 커밋: `web/gearsystem/manifest.json`, `web/blastem/manifest.json` (로컬 빌드 후 생성)
+
+BlastEm은 소스 컴파일부터 최종 WASM 링크까지 `-Oz`와 LTO를 사용합니다. 배포 시 `web/blastem/manifest.json`의 `optimization` 및 `build_script_sha256` 필드로 대응 빌드를 검증합니다.
 
 두 엔진의 바이너리를 배포할 때는 정확한 변경집합의 소스, 빌드 스크립트, 종속 라이브러리의 고지를 함께 제공해야 합니다.

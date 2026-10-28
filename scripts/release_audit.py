@@ -13,7 +13,7 @@ except ModuleNotFoundError:  # python3 scripts/release_audit.py
 
 ROOT = Path(__file__).resolve().parents[1]
 WEB = ROOT / 'web'
-VERSION = '1.1.0-r1'
+VERSION = '1.1.0-r2'
 EXPECTED_WEB = {
     'index.html', 'styles.css', 'favicon.svg', 'favicon.ico', 'app.js', 'fullscreen.js', 'controller.js', 'chip8.js', 'systems.js',
     'demo.js', 'open-source.html', 'battery-store.js', 'save-session.js', 'mgba-player.js', 'jsnes-player.js', 'nes-audio.js', 'sega-player.js',
@@ -50,7 +50,7 @@ def audit(release: bool = False, require_sega: bool = True) -> list[str]:
         errors.append('incorrect app version/license')
     if meta.get('included_systems') != ['CHIP-8', 'Game Boy', 'Game Boy Color', 'Game Boy Advance', 'NES', 'Famicom', 'Game Gear', 'Master System', 'SG-1000', 'Mega Drive', 'Genesis'] or meta.get('offline') is not True:
         errors.append('incorrect included platforms/offline policy')
-    for required in ('PKG_VERSION:=1.1.0', 'PKG_RELEASE:=1', 'PKG_LICENSE:=GPL-3.0-or-later MPL-2.0 Apache-2.0 MIT',
+    for required in ('PKG_VERSION:=1.1.0', 'PKG_RELEASE:=2', 'PKG_LICENSE:=GPL-3.0-or-later MPL-2.0 Apache-2.0 MIT',
                      'python3 $(CURDIR)/scripts/release_audit.py --release'):
         if required not in mk:
             errors.append(f'incorrect OpenWrt package config: {required}')
@@ -92,7 +92,7 @@ def audit(release: bool = False, require_sega: bool = True) -> list[str]:
         errors.append(f'missing source offer: {exc}')
     try:
         history = (ROOT / 'CHANGELOG.md').read_text(encoding='utf-8')
-        if re.findall(r'^## (\d+\.\d+\.\d+-r\d+)\b', history, re.M) != [VERSION, '1.0.0-r1', '0.1.0-r6', '0.1.0-r5', '0.1.0-r4', '0.1.0-r3', '0.1.0-r2', '0.1.0-r1']:
+        if re.findall(r'^## (\d+\.\d+\.\d+-r\d+)\b', history, re.M) != [VERSION, '1.1.0-r1', '1.0.0-r1', '0.1.0-r6', '0.1.0-r5', '0.1.0-r4', '0.1.0-r3', '0.1.0-r2', '0.1.0-r1']:
             errors.append('changelog must contain the current release and all previous versions')
     except OSError as exc:
         errors.append(f'missing changelog: {exc}')
@@ -261,6 +261,12 @@ def audit(release: bool = False, require_sega: bool = True) -> list[str]:
                 errors.append(f'{engine}: bridge changed since build; rebuild WASM')
             if engine == 'blastem' and sha256(ROOT / 'native/blastem_headless.h') != manifest.get('headless_stubs_sha256'):
                 errors.append('blastem: headless stubs changed since build; rebuild WASM')
+            # Allow source/legacy checks before rebuilding; reject old -O2
+            # artifacts in the actual APK release gate until -Oz is proven.
+            if engine == 'blastem' and require_sega and release:
+                if (manifest.get('optimization') != ['-Oz', '-flto'] or
+                        manifest.get('build_script_sha256') != sha256(ROOT / 'scripts/build_sega.py')):
+                    errors.append('blastem: -Oz/-flto build required; rebuild JS/WASM and manifest')
             for name in (f'{engine}.js', f'{engine}.wasm'):
                 target = WEB / engine / name
                 if sha256(target) != manifest.get('artifacts', {}).get(name):

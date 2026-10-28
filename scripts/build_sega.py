@@ -24,6 +24,9 @@ BLASTEM_TAG = 'v1.0.0'
 # v1.0.0 itself had a broken libretro target; upstream fixed it next commit.
 # Pin that exact post-tag repair rather than a mutable tip/nightly revision.
 BLASTEM_REV = '625fa5a85505'
+# Size-first WebAssembly build. BlastEm's default OPT=-O2 -flto is too large.
+BLASTEM_OPT = '-Oz'
+BLASTEM_LTO = '-flto'
 EXPORTS = [
     '_ssh_retro_init', '_ssh_retro_load', '_ssh_retro_run', '_ssh_retro_key',
     '_ssh_retro_width', '_ssh_retro_height', '_ssh_retro_pixels',
@@ -142,9 +145,12 @@ def build_core(engine: str, source: Path, tmp: Path) -> Path:
         # modifications are made to upstream source files.
         overlay = tmp / 'Makefile.libretro-ssh'
         overlay.write_text(blastem_makefile_overlay(), encoding='utf-8')
-        invoke('emmake', 'make', '-C', str(source), '-f', str(overlay), '-j2',
+        # -B is intentional: make does not track OPT changes when .o files
+        # already exist. Rebuild the complete libretro core with -Oz.
+        invoke('emmake', 'make', '-C', str(source), '-f', str(overlay), '-B', '-j2',
                'ssh-blastem.a', 'CC=emcc', 'CXX=em++', 'AR=emar',
-               'CPU=wasm', 'NOGL=1', 'Z80_DISPATCH=call')
+               'CPU=wasm', 'NOGL=1', 'Z80_DISPATCH=call',
+               f'OPT={BLASTEM_OPT} {BLASTEM_LTO}')
         core = source / 'ssh-blastem.a'
     if not core.is_file() or core.stat().st_size < 4096:
         raise ValueError(f'{engine}: compiler did not emit a libretro archive')
@@ -162,10 +168,12 @@ def link_web_core(engine: str, header_path: Path, core: Path, temp: Path) -> Pat
     # bridge object. This preserves existing Gearsystem binary/manifest hashes.
     # IS_LIB excludes the SDL desktop types in BlastEm's render.h.
     browser_stubs = ('-DIS_LIB', '-include', str(BLASTEM_HEADLESS)) if engine == 'blastem' else ()
-    invoke('emcc', '-O2', '-std=c11', '-I' + str(header_path), *browser_stubs,
+    opt = BLASTEM_OPT if engine == 'blastem' else '-O2'
+    invoke('emcc', opt, '-std=c11', '-I' + str(header_path), *browser_stubs,
            '-c', str(BRIDGE), '-o', str(bridge_object))
     js = temp / f'{engine}.js'
-    invoke('em++', '-O2', str(bridge_object), str(core), '-o', str(js),
+    link_flags = (BLASTEM_LTO,) if engine == 'blastem' else ()
+    invoke('em++', opt, *link_flags, str(bridge_object), str(core), '-o', str(js),
            '--no-entry', '-sMODULARIZE=1', '-sEXPORT_ES6=1',
            f'-sEXPORT_NAME=create{engine.title()}', '-sENVIRONMENT=web',
            '-sALLOW_MEMORY_GROWTH=1', '-sMAXIMUM_MEMORY=268435456',
@@ -211,6 +219,8 @@ def build(engine: str, source: Path) -> None:
         }
         if engine == 'blastem':
             manifest['headless_stubs_sha256'] = sha(BLASTEM_HEADLESS)
+            manifest['optimization'] = [BLASTEM_OPT, BLASTEM_LTO]
+            manifest['build_script_sha256'] = sha(Path(__file__).resolve())
         (outdir / 'manifest.json').write_text(json.dumps(manifest, indent=2) + '\n', encoding='utf-8')
     print(f'PASS: {engine} {manifest["tag"]} built; run scripts/cache_bust.py --update then release audit')
 
