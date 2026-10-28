@@ -95,6 +95,24 @@ class PackageTests(unittest.TestCase):
         self.assertIn('LICENSES/mGBA.txt', make)
         self.assertIn('LICENSES/JSNES.txt', make)
 
+    def test_readme_badges_reference_actual_project_metadata(self):
+        readme = (ROOT / 'README.md').read_text(encoding='utf-8')
+        workflow = ROOT / '.github/workflows/verify.yml'
+        license_file = ROOT / 'LICENSE'
+        self.assertTrue(workflow.is_file())
+        self.assertTrue(license_file.is_file())
+        self.assertIn(
+            '[![Verify](https://github.com/Junatum/retro-arcade/actions/workflows/verify.yml/badge.svg)]'
+            '(https://github.com/Junatum/retro-arcade/actions/workflows/verify.yml)', readme,
+        )
+        self.assertIn('![OpenWrt](https://img.shields.io/badge/OpenWrt-Compatible-blue)', readme)
+        self.assertIn('![Offline](https://img.shields.io/badge/Offline-Ready-brightgreen)', readme)
+        self.assertIn(
+            '[![License](https://img.shields.io/github/license/Junatum/retro-arcade?label=License)](LICENSE)',
+            readme,
+        )
+        self.assertLess(readme.index('[![Verify]'), readme.index('## 지원 게임기'))
+
     def test_license_and_browser_contract(self):
         readme = (ROOT / 'README.md').read_text()
         html = (ROOT / 'web/index.html').read_text()

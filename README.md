@@ -1,6 +1,19 @@
 # SmartSafeHub Retro Arcade
 
+[![CI](https://github.com/Junatum/retro-arcade/actions/workflows/verify.yml/badge.svg)](https://github.com/Junatum/retro-arcade/actions/workflows/verify.yml)
+![OpenWrt](https://img.shields.io/badge/OpenWrt-Compatible-blue)
+![Offline](https://img.shields.io/badge/Offline-Ready-brightgreen)
+[![License](https://img.shields.io/github/license/Junatum/retro-arcade?label=License)](LICENSE)
+
 SmartSafeHub Apps에서 제공하는 **로컬 레트로 게임 앱**입니다. 공유기는 웹 파일을 제공하며, 게임은 PC 또는 스마트폰 **브라우저에서 직접 실행**됩니다. 별도 계정이나 게임 서버는 필요하지 않습니다.
+
+## 패키지 버전
+
+아래 표는 SmartSafeHub 저장소에 배포된 Retro Arcade 패키지 버전입니다. Beta 배지는 최신 배포 버전을 자동으로 표시합니다.
+
+| 패키지 | Stable | Beta |
+| --- | --- | --- |
+| Retro Arcade | [![Stable Retro Arcade](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Frepo.smartsafehub.com%2Fstable%2Fversions.json&query=%24.packages%5B%22smartsafehub-app-retro-arcade%22%5D&label=&color=brightgreen&cacheSeconds=300)](https://repo.smartsafehub.com/stable/versions.json) | [![Beta Retro Arcade](https://img.shields.io/badge/dynamic/json?url=https%3A%2F%2Frepo.smartsafehub.com%2Fbeta%2Fversions.json&query=%24.packages%5B%22smartsafehub-app-retro-arcade%22%5D&label=&color=orange&cacheSeconds=300)](https://repo.smartsafehub.com/beta/versions.json) |
 
 ## 지원 게임기
 
