@@ -11,6 +11,16 @@ from scripts.release_audit import audit
 
 ROOT = pathlib.Path(__file__).resolve().parents[1]
 
+# Label-independent, but still verifies the real workflow image and target.
+CI_WORKFLOW_URL = 'https://github.com/Junatum/retro-arcade/actions/workflows/verify.yml'
+CI_STATUS_BADGE_RE = re.compile(
+    r'\[!\[(?P<label>[^\]\n]+)\]\('
+    + re.escape(CI_WORKFLOW_URL + '/badge.svg')
+    + r'\)\]\('
+    + re.escape(CI_WORKFLOW_URL)
+    + r'\)'
+)
+
 
 class PackageTests(unittest.TestCase):
     def test_openwrt_static_js_modules_have_supported_mime_extension(self):
@@ -101,17 +111,29 @@ class PackageTests(unittest.TestCase):
         license_file = ROOT / 'LICENSE'
         self.assertTrue(workflow.is_file())
         self.assertTrue(license_file.is_file())
-        self.assertIn(
-            '[![Verify](https://github.com/Junatum/retro-arcade/actions/workflows/verify.yml/badge.svg)]'
-            '(https://github.com/Junatum/retro-arcade/actions/workflows/verify.yml)', readme,
-        )
+        # The visible CI badge label is editorial (e.g. "CI" or "Verify").
+        # Verify the image and action URL instead of pinning the label.
+        status_badge = CI_STATUS_BADGE_RE.search(readme)
+        self.assertIsNotNone(status_badge, 'README CI badge must link to verify.yml')
+        self.assertTrue(status_badge.group('label').strip())
         self.assertIn('![OpenWrt](https://img.shields.io/badge/OpenWrt-Compatible-blue)', readme)
         self.assertIn('![Offline](https://img.shields.io/badge/Offline-Ready-brightgreen)', readme)
         self.assertIn(
             '[![License](https://img.shields.io/github/license/Junatum/retro-arcade?label=License)](LICENSE)',
             readme,
         )
-        self.assertLess(readme.index('[![Verify]'), readme.index('## 지원 게임기'))
+        self.assertLess(status_badge.start(), readme.index('## 지원 게임기'))
+
+    def test_ci_badge_label_can_be_changed_without_weakening_link_validation(self):
+        for label in ('CI', 'Verify', 'Build Status'):
+            with self.subTest(label=label):
+                badge = f'[![{label}]({CI_WORKFLOW_URL}/badge.svg)]({CI_WORKFLOW_URL})'
+                self.assertIsNotNone(CI_STATUS_BADGE_RE.fullmatch(badge))
+        # Changing the destination or image path must still fail verification.
+        wrong_target = f'[![CI]({CI_WORKFLOW_URL}/badge.svg)](https://example.com)'
+        wrong_image = f'[![CI]({CI_WORKFLOW_URL}/wrong.svg)]({CI_WORKFLOW_URL})'
+        self.assertIsNone(CI_STATUS_BADGE_RE.fullmatch(wrong_target))
+        self.assertIsNone(CI_STATUS_BADGE_RE.fullmatch(wrong_image))
 
     def test_license_and_browser_contract(self):
         readme = (ROOT / 'README.md').read_text()

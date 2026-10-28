@@ -9,7 +9,7 @@ SmartSafeHub Apps에서 제공하는 **로컬 레트로 게임 앱**입니다. �
 
 ## 패키지 버전
 
-아래 표는 SmartSafeHub 저장소에 배포된 Retro Arcade 패키지 버전입니다. Beta 배지는 최신 배포 버전을 자동으로 표시합니다.
+아래 표는 SmartSafeHub 저장소에 배포된 Retro Arcade 패키지 버전입니다. Stable 및 Beta 배지는 최신 배포 버전을 자동으로 표시합니다.
 
 | 패키지 | Stable | Beta |
 | --- | --- | --- |
