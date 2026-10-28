@@ -9,7 +9,9 @@ SmartSafeHub Apps → OpenWrt 정적 웹서버 (/www/retro-arcade/)
     └─ 사용자 브라우저 (HTML / JS / WASM)
         ├─ CHIP-8: 내장 JavaScript 코어
         ├─ GB/GBC/GBA: mGBA 0.10.5 C 코어 → Emscripten WASM
-        └─ NES/Famicom: JSNES 2.1.0 ES modules (no WASM)
+        ├─ NES/Famicom: JSNES 2.1.0 ES modules (no WASM)
+        ├─ Game Gear / Master System / SG-1000: Gearsystem WASM
+        └─ Mega Drive / Genesis: BlastEm WASM (`-Oz` / LTO)
 ```
 
 ROM은 브라우저에서만 처리합니다. 외부 CDN, 게임 서버, 상용 BIOS는 사용하지 않습니다.
@@ -29,6 +31,10 @@ ROM은 브라우저에서만 처리합니다. 외부 CDN, 게임 서버, 상용 
 | `native/mgba_bridge.c` | mGBA `mCore` 호출 (GB/GBC/GBA), 프레임버퍼/키/세이브 API |
 | `scripts/build_mgba.py` | 공식 소스로부터 로컬 WASM/매니페스트 빌드 |
 | `web/mgba/` | 고정된 `mgba.js`, `mgba.wasm`, `manifest.json` |
+| `web/sega-player.js`, `web/audio-controls.js`, `web/nes-audio.js` | Sega 게임 실행과 사운드 상태 버튼, NES/Sega Web Audio |
+| `web/gearsystem/`, `web/blastem/` | 검증된 Sega JS/WASM 및 빌드 출처 매니페스트 |
+| `native/sega_libretro_bridge.c`, `native/blastem_headless.h` | Libretro 연결 브리지와 BlastEm 브라우저용 선택적 디버그 기능 제거 |
+| `scripts/build_sega.py` | 고정된 Gearsystem/BlastEm 소스를 Emscripten으로 빌드 |
 | `scripts/release_audit.py` | 버전, 출처, 파일 해시, ABI 브리지 일치 검증 |
 | `Makefile`, `app-info.json` | OpenWrt APK 패키징 / SmartSafeHub Apps 메타데이터 |
 
@@ -37,9 +43,12 @@ ROM은 브라우저에서만 처리합니다. 외부 CDN, 게임 서버, 상용 
 - CHIP-8: `.ch8`, `.c8` 최대 3,584바이트, 내장 데모 제공. 내장 데모 실행 버튼은 CHIP-8에서만 표시되며 다른 플랫폼에서는 숨깁니다.
 - Game Boy / Color: `.gb`, `.gbc`, 최대 8MiB, mGBA의 GB 코어, 160×144 화면.
 - Game Boy Advance: `.gba`, 최대 32MiB, mGBA의 GBA 코어, 240×160 화면.
-- NES/Famicom: `.nes`, 최대 8MiB, JSNES 코어, 256×240 화면. 십자키·A/B·SELECT/START, 브라우저 IndexedDB에 배터리 RAM 저장. 게임 시작 클릭으로 Web Audio를 활성화합니다. 브라우저가 제한하면 게임 제목 옆의 소리 켜기 버튼으로 재시도할 수 있습니다.
+- NES/Famicom: `.nes`, 최대 8MiB, JSNES 코어, 256×240 화면. 십자키·A/B·SELECT/START, 브라우저 IndexedDB에 배터리 RAM 저장.
+- Game Gear / Master System / SG-1000: `.gg` / `.sms` / `.sg`, Gearsystem WASM. 십자키, A/B, SELECT/START.
+- Mega Drive / Genesis: `.md`, `.gen`, `.bin`, BlastEm WASM. 십자키, A/B/C, X/Y/Z, START/MODE.
+- NES와 Sega는 게임 시작 클릭 시 Web Audio를 활성화하려고 시도하고, 소리 상태는 게임 제목 옆 버튼으로 표시합니다. 브라우저가 차단하면 해당 버튼으로 재시도할 수 있습니다. 게임 화면 위의 별도 안내 바는 사용하지 않습니다.
 - 방향키, X(A)/Z(B), Enter(Start)/Shift(Select); GBA는 A(L)/S(R) 추가 지원.
-- 브라우저의 IndexedDB(`smartsafehub-retro-arcade`)에 `mgba:` 접두사로 배터리 저장 데이터를 보관합니다. ROM 파일은 업로드하지 않습니다.
+- 브라우저의 IndexedDB(`smartsafehub-retro-arcade`)에 ROM별 저장 데이터를 보관합니다. mGBA는 `mgba:` 접두사, NES와 Sega는 엔진별 저장 키를 사용하여 충돌을 피합니다. ROM 파일은 업로드하지 않습니다.
 
 **이전 별도 코어의 GB/GBC 배터리 파일은 mGBA 저장 형식과 호환이 보장되지 않습니다.** 자동으로 불러오거나 변환하지 않으며, 브라우저 데이터를 삭제하지 않고 보관할 것을 권장합니다.
 
@@ -101,5 +110,7 @@ JSNES는 `scripts/vendor_jsnes.py`로 npm 2.1.0 타르볼의 SHA-512를 검증�
 - BlastEm 1.0.0 직후 공식 libretro 빌드 오류 수정 커밋 `625fa5a85505`: Mega Drive / Genesis (`.md`, `.gen`, `.bin`). Sega CD/32X는 지원 대상이 아닙니다.
 - `scripts/build_sega.py`는 고정된 Git/Mercurial 소스, Emscripten SDK를 검증하여 각각 libretro 코어와 `native/sega_libretro_bridge.c`를 로컬에서 링크합니다. 공식 배포 바이너리를 무검증 복사하지 않습니다.
 - 실행 시 브라우저가 `web/<engine>/<engine>.js`와 WASM을 자기 공유기에서 읽습니다. ROM은 브라우저 메모리/가상 파일시스템에만 존재합니다. 저장 RAM은 기존 IndexedDB 경로를 사용합니다.
-- 개발자가 JS/WASM/매니페스트를 소스에 포함하기 전에는 `--release` 검사가 실패합니다. 소스 패치에서는 단위 테스트만 검증할 수 있고, **실제 에뮬레이터 실행이나 모바일 성능은 검증되지 않았습니다.**
-- OpenWrt 패키지에 포함하기 전에는 소스 코드 및 정적 링크된 모든 의존성에 대한 라이선스 감사와 실제 저작권 고지 검증이 필요합니다.
+- 현재 JS/WASM/매니페스트가 모두 포함되어 있으며 `release_audit.py --release`에서 해시·브리지·라이선스 출처를 검사합니다. 빌드 파일이 누락되거나 변경되면 APK 배포를 차단합니다.
+- BlastEm 코어는 `-Oz -flto`, C 브리지와 최종 링크는 `-Oz`를 사용합니다. `make -B`로 이전 `-O2` 오브젝트 재사용을 방지합니다. Gearsystem은 기존 `-O2` 경로를 유지합니다.
+- 정적 검증 통과는 실제 게임 구동을 보장하지 않습니다. 지원 공유기의 HTTP 환경 및 PC/모바일 브라우저에서 화면·키·사운드·저장·FPS를 별도로 확인해야 합니다.
+- 배포 시 정확한 대응 upstream 소스, 브리지·빌드 스크립트, 라이선스 및 수정 정보를 제공해야 합니다. [소스 제공 안내](SOURCE_OFFER.md)를 참조하세요.

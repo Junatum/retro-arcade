@@ -23,10 +23,10 @@ SmartSafeHub Apps에서 제공하는 **로컬 레트로 게임 앱**입니다. �
 | Game Boy / Game Boy Color | `.gb`, `.gbc` | mGBA 0.10.5 | 십자 방향키, A/B, SELECT/START |
 | Game Boy Advance | `.gba` | mGBA 0.10.5 | 십자 방향키, A/B, SELECT/START, L/R |
 | NES / Famicom | `.nes` | JSNES 2.1.0 | 십자 방향키, A/B, SELECT/START |
-| Game Gear | `.gg` | Gearsystem | 십자 방향키, A/B, SELECT/START |
-| Master System | `.sms` | Gearsystem | 십자 방향키, A/B, SELECT/START |
-| SG-1000 | `.sg` | Gearsystem | 십자 방향키, A/B, SELECT/START |
-| Mega Drive / Genesis | `.md`, `.gen`, `.bin` | BlastEm | 십자 방향키, A/B/C, X/Y/Z, START/MODE |
+| Game Gear | `.gg` | Gearsystem 3.9.21 | 십자 방향키, A/B, SELECT/START |
+| Master System | `.sms` | Gearsystem 3.9.21 | 십자 방향키, A/B, SELECT/START |
+| SG-1000 | `.sg` | Gearsystem 3.9.21 | 십자 방향키, A/B, SELECT/START |
+| Mega Drive / Genesis | `.md`, `.gen`, `.bin` | BlastEm 1.0.0 계열 | 십자 방향키, A/B/C, X/Y/Z, START/MODE |
 
 Game Boy, Game Boy Color, Game Boy Advance는 **하나의 mGBA 엔진**으로 실행됩니다. CHIP-8에는 직접 제작한 **패들 랠리** 미니게임이 포함되어 있으며, **데모 게임 플레이 버튼은 CHIP-8 선택 시에만 표시**됩니다.
 
@@ -36,10 +36,10 @@ Game Boy, Game Boy Color, Game Boy Advance는 **하나의 mGBA 엔진**으로 �
 - 실제 휴대용 게임기와 유사한 **터치 버튼 배치**, 키보드 조작 및 멀티터치
 - 화면 비율을 유지하는 **전체화면** 및 모바일 화면 확장 모드
 - 게임 시작 후 선택 화면 자동 숨김, 종료 시 복귀
-- GB/GBC/GBA 게임의 **배터리 저장 데이터를 브라우저에 보관**하고 재실행 시 복원
+- 지원 게임의 **배터리 저장 데이터(GB/GBC/GBA·NES·Sega)를 브라우저에 보관**하고 재실행 시 복원
 - 실행에 외부 인터넷 연결이 필요 없고, **ROM 데이터는 공유기나 외부 서버로 전송되지 않음**
 
-**제한 사항:** CHIP-8과 mGBA 오디오 및 세이브 스테이트는 지원하지 않습니다. NES 및 Sega 게임은 게임 시작 클릭 시 오디오 활성화를 시도합니다. 브라우저가 제한하면 게임 제목 옆의 소리 켜기 버튼을 누르세요. 게임 ROM과 상용 BIOS는 포함하지 않습니다. 지원 모델은 ipTIME AX3000SM/AX3000SE/A3004T 및 Xiaomi AX3000T이며, GL-MT300N-V2는 이 앱의 지원 대상에서 제외됩니다.
+**제한 사항:** CHIP-8과 mGBA 오디오 및 세이브 스테이트는 지원하지 않습니다. NES 및 Sega 게임은 게임 시작 시 소리를 자동으로 켜려고 시도합니다. 제목 옆에서 현재 소리 상태를 확인하거나 음소거할 수 있고, 브라우저가 차단하면 같은 버튼으로 다시 켤 수 있습니다. 게임 ROM과 상용 BIOS는 포함하지 않습니다. 지원 모델은 ipTIME AX3000SM/AX3000SE/A3004T 및 Xiaomi AX3000T이며, GL-MT300N-V2는 이 앱의 지원 대상에서 제외됩니다.
 
 ## 실행해 보기
 
@@ -52,11 +52,11 @@ python3 scripts/release_audit.py --release
 python3 -m http.server 8080 --directory web
 ```
 
-브라우저에서 <http://127.0.0.1:8080/>로 접속하세요. 게임 파일은 직접 준비해야 합니다. mGBA JS/WASM과 JSNES 원본 소스는 정식 릴리스 저장소에 포함되어야 하므로 **일반적인 실행이나 OpenWrt APK 빌드에서는 다시 컴파일하지 않습니다.**
+브라우저에서 <http://127.0.0.1:8080/>로 접속하세요. 게임 파일은 직접 준비해야 합니다. mGBA·Gearsystem·BlastEm의 JS/WASM과 JSNES 원본 모듈은 현재 소스에 포함되어 있으므로 **일반적인 실행이나 OpenWrt APK 빌드에서는 다시 컴파일하지 않습니다.**
 
 ## Gearsystem · BlastEm 로컬 빌드
 
-Gearsystem과 BlastEm은 **별도 외부 코어**입니다. 이 패치에는 에뮬레이터 바이너리가 포함되지 않으며, 개발 PC에서 대응 소스를 확보해 Emscripten으로 빌드한 JS/WASM과 매니페스트를 소스 저장소에 커밋해야 오프라인 APK를 배포할 수 있습니다.
+현재 저장소에는 **Gearsystem과 BlastEm의 로컬 빌드 결과물(JS/WASM), 매니페스트, 라이선스 고지**가 포함되어 있습니다. 따라서 일반적인 Retro Arcade 실행 및 OpenWrt APK 빌드에는 Emscripten이나 원본 소스의 재다운로드가 필요하지 않습니다. 아래 절차는 **엔진 소스·브리지·빌드 옵션 변경 또는 재현 빌드가 필요할 때만** 개발 PC에서 수행하세요. 이 절차가 게임 호환성을 자동으로 보증하지는 않습니다.
 
 ```sh
 # 개발 PC의 emsdk 환경을 먼저 활성화합니다.
@@ -70,11 +70,11 @@ python3 scripts/cache_bust.py --update
 python3 scripts/release_audit.py --release
 ```
 
-BlastEm은 코어 전체에 `-Oz -flto`를 적용하고 기존 오브젝트를 강제로 재컴파일합니다. 브리지 C 컴파일과 최종 WASM 링크에도 `-Oz`를 사용합니다. **스크립트를 수정한 뒤에는 반드시 BlastEm을 다시 빌드**해야 하며, 이전 `-O2` WASM/매니페스트로는 `--release` 검사를 통과할 수 없습니다. 새 빌드 파일을 커밋하기 전에는 `python3 scripts/release_audit.py --release`가 실패하는 것이 정상입니다.
+BlastEm은 코어 컴파일에 `-Oz -flto`를 적용하고 `make -B`로 기존 오브젝트 재사용을 방지합니다. 브리지와 최종 링크에도 크기 최적화를 적용합니다. Gearsystem은 기존 `-O2` 빌드를 유지합니다. 각 엔진의 정확한 upstream 리비전, Emscripten 버전, JS/WASM 해시 및 BlastEm 최적화 옵션은 `web/gearsystem/manifest.json`, `web/blastem/manifest.json`에 기록됩니다. **빌드 스크립트를 수정한 경우 BlastEm 재빌드가 필요**하며, 매니페스트가 이전 빌드와 일치하지 않으면 `--release` 검사가 실패합니다.
 
-Gearsystem의 upstream 빌드는 `gearsystem_libretro_emscripten.bc`라는 파일을 생성하지만, 내용은 **LLVM bitcode가 아닌 `emar` 정적 아카이브**입니다. 빌드 스크립트는 파일 형식을 검사한 뒤 링크 단계에서만 `.a` 이름을 사용합니다. 컴파일 또는 링크가 실패할 경우 오류 내용을 출력합니다. 빌드 성공 여부는 결과 JS/WASM 및 실제 브라우저 실행으로 확인해야 합니다.
+Gearsystem이 출력하는 `.bc` 파일은 실제로 `emar` 정적 아카이브이며 빌드 스크립트가 형식을 확인해 `.a`로 링크합니다. BlastEm의 macOS용 `sed` 처리와 브라우저 전용 비게임 디버그 기능도 빌드 스크립트에서 처리합니다. 게임 ROM과 상용 BIOS는 포함하지 않습니다.
 
-두 엔진 모두 BIOS를 패키지에 포함하지 않습니다. BlastEm v1.0.0 태그 자체에는 libretro 빌드 문제가 있어 바로 다음 공식 수정 커밋을 고정합니다. 빌드 코드만 포함한 상태에서는 릴리스 검사가 의도적으로 실패합니다. 별도 Libretro WASM 및 실제 게임 실행 검증이 필요하며 미검증 바이너리를 판매용 패키지에 포함하지 마세요. 빌드 스크립트는 해당 upstream 체크아웃과 Emscripten SDK를 요구하며, 이 소스 패치 자체에는 생성된 웹 빌드 파일이 없습니다.
+**상용 APK 배포 전:** 각 JS/WASM의 대응 소스(정확한 리비전), 빌드 스크립트와 필요한 변경분, 라이선스 고지에 접근할 수 있어야 합니다. GitHub의 최신 브랜치 주소만으로는 배포된 바이너리와 동일한 소스를 보장하지 않습니다. [소스 제공 안내](docs/SOURCE_OFFER.md)와 [출시 체크리스트](docs/RELEASE_CHECKLIST.md)를 확인하세요.
 
 ## JSNES 소스 최초 준비
 

@@ -63,11 +63,9 @@ class PackageTests(unittest.TestCase):
         # missing-WASM release gate in an isolated copy, not against a stale
         # assumption that the real checkout is still source-only.
         self.assertEqual(audit(), [])
-        # The old -O2 BlastEm bundle remains in the source snapshot until
-        # the developer rebuilds it; do not mistake that for a valid APK.
-        self.assertEqual(
-            [e for e in audit(release=True) if 'blastem: -Oz/-flto build required' not in e], []
-        )
+        # The bundled BlastEm WASM is already the -Oz/-flto release build.
+        # Never hide an optimization mismatch in the release gate.
+        self.assertEqual(audit(release=True), [])
         with tempfile.TemporaryDirectory() as tmp:
             fake = pathlib.Path(tmp) / 'repo'
             shutil.copytree(ROOT, fake, ignore=shutil.ignore_patterns('.git', '__pycache__'))
@@ -125,9 +123,9 @@ class PackageTests(unittest.TestCase):
     def test_revision_platforms_and_licenses(self):
         info = json.loads((ROOT / 'app-info.json').read_text())
         make = (ROOT / 'Makefile').read_text()
-        self.assertEqual(info['version'], '1.1.0-r4')
+        self.assertEqual(info['version'], '1.1.0-r5')
         self.assertIn('PKG_VERSION:=1.1.0', make)
-        self.assertIn('PKG_RELEASE:=4', make)
+        self.assertIn('PKG_RELEASE:=5', make)
         self.assertEqual(info['license'], 'GPL-3.0-or-later AND MPL-2.0 AND Apache-2.0 AND MIT')
         self.assertEqual(info['included_systems'], ['CHIP-8', 'Game Boy', 'Game Boy Color', 'Game Boy Advance', 'NES', 'Famicom', 'Game Gear', 'Master System', 'SG-1000', 'Mega Drive', 'Genesis'])
         self.assertNotIn('GL-MT300N-V2', info['supported_models'])
@@ -385,12 +383,12 @@ class PackageTests(unittest.TestCase):
         history = (ROOT / 'CHANGELOG.md').read_text()
         for heading in ('### 추가', '### 개선', '### 수정', '### 호환성', '### 테스트'):
             self.assertIn(heading, history)
-        self.assertIn('1.1.0-r4', (ROOT / 'docs/SOURCE_OFFER.md').read_text())
+        self.assertIn('1.1.0-r5', (ROOT / 'docs/SOURCE_OFFER.md').read_text())
         for path in ('README.md', 'docs/ARCHITECTURE.md', 'docs/RELEASE_CHECKLIST.md',
                      'docs/THIRD_PARTY.md', 'web/open-source.html'):
             source = (ROOT / path).read_text()
             self.assertIsNone(re.search(r'\b\d+\.\d+\.\d+-r\d+\b', source), path)
-        self.assertIn('<span class="edition">v1.1.0-r4</span>', (ROOT / 'web/index.html').read_text())
+        self.assertIn('<span class="edition">v1.1.0-r5</span>', (ROOT / 'web/index.html').read_text())
 
     def test_release_guard_requires_correct_header_badge(self):
         with tempfile.TemporaryDirectory() as tmp:
