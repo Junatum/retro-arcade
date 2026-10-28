@@ -1,0 +1,16 @@
+{
+  "engine": "blastem",
+  "tag": "v1.0.0",
+  "pin": "upstream-post-tag-libretro-fix",
+  "revision": "625fa5a85505",
+  "upstream": "https://www.retrodev.com/repos/blastem",
+  "license": "GPL-3.0-or-later",
+  "license_sha256": "8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903",
+  "bridge_sha256": "141254dd7cf86958b5b0588f077ffc4c8c80ebf5a5f232115b94f20bfce66d49",
+  "emcc": "emcc (Emscripten gcc/clang-like replacement + linker emulating GNU ld) 6.0.13-git",
+  "artifacts": {
+    "blastem.js": "5c6fa61de94aa1ba6cf9141ceb2464b09f4dd432e5091000ab3c6c3b38f983cd",
+    "blastem.wasm": "bc7df2f410d060ca4c815df90915e1c73a2b67c13447f31848fdcde9948042ea"
+  },
+  "headless_stubs_sha256": "b3e97b223b73dbfca2995c59da6de147024c571fcb2e4408019cfd80cc3397fb"
+}

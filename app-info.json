@@ -1,10 +1,10 @@
 {
   "id": "retro-arcade",
   "package": "smartsafehub-app-retro-arcade",
-  "version": "1.0.0-r1",
+  "version": "1.1.0-r1",
   "name": "SmartSafeHub Retro Arcade",
   "category": "entertainment",
-  "summary": "브라우저에서 실행하는 CHIP-8, GB/GBC/GBA, NES/Famicom 게임",
+  "summary": "CHIP-8, GB/GBC/GBA, NES, Sega 8비트·16비트 게임을 브라우저에서 실행",
   "launch_path": "/retro-arcade/",
   "requires_packages": [
     "luci-app-smartsafehub"
@@ -25,8 +25,13 @@
     "Game Boy Color",
     "Game Boy Advance",
     "NES",
-    "Famicom"
+    "Famicom",
+    "Game Gear",
+    "Master System",
+    "SG-1000",
+    "Mega Drive",
+    "Genesis"
   ],
-  "license": "GPL-3.0-or-later AND MPL-2.0 AND Apache-2.0",
-  "notes": "mGBA 0.10.5는 GB/GBC/GBA, JSNES 2.1.0은 NES/Famicom을 브라우저에서 실행합니다. ROM은 공유기로 전송되지 않습니다."
+  "license": "GPL-3.0-or-later AND MPL-2.0 AND Apache-2.0 AND MIT",
+  "notes": "Gearsystem(Game Gear/Master System/SG-1000)과 BlastEm(Mega Drive/Genesis)은 브라우저에서 로컬 WASM으로 실행합니다. ROM은 공유기로 전송되지 않습니다."
 }

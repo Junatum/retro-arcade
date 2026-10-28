@@ -55,8 +55,8 @@ test('Retro Arcade initializes platforms and highlights only the bundled demo pl
   globalThis.window = {addEventListener() {}};
   try {
     await import('../web/app.js?startup-test');
-    assert.equal(doc.getElementById('systems').children.length, 4);
-    assert.deepEqual(doc.getElementById('systems').children.map(b => b.dataset.system), ['chip8','mgba-gb','mgba','nes']);
+    assert.equal(doc.getElementById('systems').children.length, 8);
+    assert.deepEqual(doc.getElementById('systems').children.map(b => b.dataset.system), ['chip8','mgba-gb','mgba','nes','gearsystem-gg','gearsystem-sms','gearsystem-sg','blastem']);
     const demo = doc.getElementById('demo');
     const actions = doc.getElementById('load-buttons');
     assert.equal(demo.disabled, false, 'CHIP-8 starts with a visible demo');

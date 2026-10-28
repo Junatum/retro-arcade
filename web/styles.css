@@ -133,3 +133,6 @@ body.theater-open{overflow:hidden}
 
 /* Battery-save feedback stays visible while playing, including on mobile. */
 .save-status{color:#b9fbc2;font-size:12px;font-weight:700;margin:10px 0}.save-status--error{color:#ffba83}
+
+/* Mega Drive six-button controller; preserves the standard two-button layouts. */
+.keypad--megadrive .controller-face{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:7px;align-items:center}.keypad--megadrive .controller-face .controller-key{position:static;transform:none;min-width:38px}.keypad--megadrive .controller-main{gap:18px}@media(max-width:650px){.keypad--megadrive .controller-face{gap:4px}.keypad--megadrive .controller-face .controller-key{min-width:32px}}

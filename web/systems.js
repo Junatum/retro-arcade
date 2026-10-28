@@ -1,9 +1,13 @@
-// Offline CHIP-8, JSNES (NES/Famicom), and mGBA (GB/GBC/GBA).
+// Offline CHIP-8, JSNES, mGBA and two Sega libretro cores (built locally).
 export const SYSTEMS = Object.freeze([
   Object.freeze({id:'chip8', label:'CHIP-8', extensions:['ch8','c8'], icon:'8BIT', description:'내장 가상 콘솔', maxSize:3584}),
   Object.freeze({id:'mgba-gb', label:'Game Boy / Color', extensions:['gb','gbc'], icon:'GB', description:'mGBA · 로컬 WASM', maxSize:8*1024*1024}),
   Object.freeze({id:'mgba', label:'Game Boy Advance', extensions:['gba'], icon:'GBA', description:'mGBA · 로컬 WASM', maxSize:32*1024*1024}),
   Object.freeze({id:'nes', label:'NES / Famicom', extensions:['nes'], icon:'NES', description:'JSNES 2.1.0 · 로컬 JavaScript', maxSize:8*1024*1024}),
+  Object.freeze({id:'gearsystem-gg', label:'Game Gear', extensions:['gg'], icon:'GG', description:'Gearsystem · 로컬 WASM', maxSize:4*1024*1024}),
+  Object.freeze({id:'gearsystem-sms', label:'Master System', extensions:['sms'], icon:'SMS', description:'Gearsystem · 로컬 WASM', maxSize:4*1024*1024}),
+  Object.freeze({id:'gearsystem-sg', label:'SG-1000', extensions:['sg'], icon:'SG', description:'Gearsystem · 로컬 WASM', maxSize:2*1024*1024}),
+  Object.freeze({id:'blastem', label:'Mega Drive / Genesis', extensions:['md','gen','bin'], icon:'MD', description:'BlastEm · 로컬 WASM', maxSize:8*1024*1024}),
 ]);
 export function extension(name) { return String(name || '').trim().toLowerCase().split('.').pop(); }
 export function detectSystem(name) { return SYSTEMS.find(s => s.extensions.includes(extension(name))) || null; }
@@ -14,6 +18,7 @@ export function validateRom(file, system) {
   if (system.id==='mgba-gb' && file.size < 0x150) return 'GB/GBC ROM 파일이 너무 작거나 잘못되었습니다.';
   if (system.id==='mgba' && file.size < 0xC0) return 'GBA ROM 파일이 너무 작거나 잘못되었습니다.';
   if (system.id==='nes' && file.size < 16+16384) return 'NES ROM 파일이 너무 작거나 잘못되었습니다.';
-  if (file.size > system.maxSize) return system.id === 'chip8' ? 'CHIP-8 ROM은 3,584바이트 이하만 지원합니다.' : system.id === 'mgba-gb' ? 'GB/GBC ROM은 8MiB 이하만 지원합니다.' : system.id === 'nes' ? 'NES ROM은 8MiB 이하만 지원합니다.' : 'GBA ROM은 32MiB 이하만 지원합니다.';
+  if (file.size > system.maxSize) return system.id==='chip8' ? 'CHIP-8 ROM은 3,584바이트 이하만 지원합니다.' : `${system.label} ROM은 ${system.maxSize/1024/1024}MiB 이하만 지원합니다.`;
+  if ((system.id.startsWith('gearsystem-') || system.id==='blastem') && file.size < 64) return 'Sega ROM 파일이 너무 작거나 잘못되었습니다.';
   return null;
 }

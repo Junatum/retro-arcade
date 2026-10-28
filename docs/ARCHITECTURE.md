@@ -94,3 +94,12 @@ JSNES는 `scripts/vendor_jsnes.py`로 npm 2.1.0 타르볼의 SHA-512를 검증�
 - 서드파티 JSNES 원본 코드는 변조하지 않고 벤더 매니페스트로 검증합니다. 업데이트 시 벤더 모듈 경로를 포함한 캐시 정책 재검증이 필요합니다.
 - `tests/browser_e2e.py`: 테스트 PC 또는 GitHub CI에서 Chromium/Playwright로 실제 HTTP, 320/390/1280px 화면, NES 합성 테스트 ROM 및 mGBA WASM 초기화를 검사합니다. 별도 상용 게임 ROM은 사용하지 않습니다.
 - OpenWrt APK 자체는 오프라인으로 검증된 JS/WASM 자산만 설치하며 `vendor_jsnes.py`, `build_mgba.py`를 재실행하지 않습니다.
+
+## Sega 8-bit / Mega Drive (개발 PC 빌드 필수)
+
+- Gearsystem 3.9.21: Game Gear (`.gg`), Master System (`.sms`), SG-1000 (`.sg`).
+- BlastEm 1.0.0 직후 공식 libretro 빌드 오류 수정 커밋 `625fa5a85505`: Mega Drive / Genesis (`.md`, `.gen`, `.bin`). Sega CD/32X는 지원 대상이 아닙니다.
+- `scripts/build_sega.py`는 고정된 Git/Mercurial 소스, Emscripten SDK를 검증하여 각각 libretro 코어와 `native/sega_libretro_bridge.c`를 로컬에서 링크합니다. 공식 배포 바이너리를 무검증 복사하지 않습니다.
+- 실행 시 브라우저가 `web/<engine>/<engine>.js`와 WASM을 자기 공유기에서 읽습니다. ROM은 브라우저 메모리/가상 파일시스템에만 존재합니다. 저장 RAM은 기존 IndexedDB 경로를 사용합니다.
+- 개발자가 JS/WASM/매니페스트를 소스에 포함하기 전에는 `--release` 검사가 실패합니다. 소스 패치에서는 단위 테스트만 검증할 수 있고, **실제 에뮬레이터 실행이나 모바일 성능은 검증되지 않았습니다.**
+- OpenWrt 패키지에 포함하기 전에는 소스 코드 및 정적 링크된 모든 의존성에 대한 라이선스 감사와 실제 저작권 고지 검증이 필요합니다.

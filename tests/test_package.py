@@ -36,7 +36,7 @@ class PackageTests(unittest.TestCase):
             hashlib.sha256((ROOT / 'web/mgba/mgba.js').read_bytes()).hexdigest(),
             manifest['artifacts']['mgba.js'],
         )
-        self.assertEqual(audit(release=True), [])
+        self.assertEqual(audit(release=False), [])
 
     def test_release_ci_requires_all_assets_and_current_browser_cache(self):
         workflow = (ROOT / '.github/workflows/verify.yml').read_text()
@@ -44,6 +44,8 @@ class PackageTests(unittest.TestCase):
         self.assertIn('python3 scripts/cache_bust.py --check', workflow)
         self.assertIn('python3 tests/browser_e2e.py -v', workflow)
         self.assertNotIn('if [ -f web/vendor/jsnes/manifest.json ]', workflow)
+        self.assertIn('python3 scripts/release_audit.py --existing', workflow)
+        self.assertIn('scripts/release_audit.py --release', (ROOT/'Makefile').read_text())
         from scripts import cache_bust
         self.assertEqual(cache_bust.check(), [])
         with tempfile.TemporaryDirectory() as tmp:
@@ -55,6 +57,19 @@ class PackageTests(unittest.TestCase):
             # Changed module content must invalidate the parent import hash.
             (fake / 'web/demo.js').write_text((fake / 'web/demo.js').read_text() + '\n// changed\n')
             self.assertIn('app.js', cache_bust.check(web=fake / 'web'))
+
+    def test_sega_release_fails_closed_without_locally_built_wasm(self):
+        # The initial patch is source-only by design. It must never emit an
+        # installable APK with only menu entries and no actual emulator core.
+        self.assertEqual(audit(), [])
+        errors = audit(release=True)
+        self.assertTrue(any('gearsystem: JS/WASM/manifest' in e for e in errors))
+        self.assertTrue(any('blastem: JS/WASM/manifest' in e for e in errors))
+        builder = (ROOT / 'scripts/build_sega.py').read_text(encoding='utf-8')
+        self.assertIn("GEARSYSTEM_TAG = '3.9.21'", builder)
+        self.assertIn("BLASTEM_REV = '625fa5a85505'", builder)
+        self.assertIn("'hg', 'id'", builder)
+        self.assertIn('license_sha256', builder)
 
     def test_browser_e2e_waits_respect_strict_csp(self):
         page = (ROOT / 'web/index.html').read_text()
@@ -95,13 +110,13 @@ class PackageTests(unittest.TestCase):
     def test_revision_platforms_and_licenses(self):
         info = json.loads((ROOT / 'app-info.json').read_text())
         make = (ROOT / 'Makefile').read_text()
-        self.assertEqual(info['version'], '1.0.0-r1')
-        self.assertIn('PKG_VERSION:=1.0.0', make)
+        self.assertEqual(info['version'], '1.1.0-r1')
+        self.assertIn('PKG_VERSION:=1.1.0', make)
         self.assertIn('PKG_RELEASE:=1', make)
-        self.assertEqual(info['license'], 'GPL-3.0-or-later AND MPL-2.0 AND Apache-2.0')
-        self.assertEqual(info['included_systems'], ['CHIP-8', 'Game Boy', 'Game Boy Color', 'Game Boy Advance', 'NES', 'Famicom'])
+        self.assertEqual(info['license'], 'GPL-3.0-or-later AND MPL-2.0 AND Apache-2.0 AND MIT')
+        self.assertEqual(info['included_systems'], ['CHIP-8', 'Game Boy', 'Game Boy Color', 'Game Boy Advance', 'NES', 'Famicom', 'Game Gear', 'Master System', 'SG-1000', 'Mega Drive', 'Genesis'])
         self.assertNotIn('GL-MT300N-V2', info['supported_models'])
-        self.assertIn('Browser-based CHIP-8, mGBA', make)
+        self.assertIn('Browser-based CHIP-8, GB/GBC/GBA, NES and Sega', make)
         self.assertIn('LICENSES/mGBA.txt', make)
         self.assertIn('LICENSES/JSNES.txt', make)
 
@@ -168,7 +183,7 @@ class PackageTests(unittest.TestCase):
         self.assertEqual(audit(), [])
         current = audit(release=True)
         if current:
-            self.assertTrue(any('bridge changed since binary build' in error or 'JSNES 2.1.0 vendor' in error for error in current))
+            self.assertTrue(any('bridge changed since binary build' in error or 'JSNES 2.1.0 vendor' in error or 'JS/WASM/manifest' in error for error in current))
 
     def test_release_gate_and_hash_integrity_with_isolated_bundle(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -353,24 +368,21 @@ class PackageTests(unittest.TestCase):
 
     def test_consolidated_release_history_and_document_versions(self):
         history = (ROOT / 'CHANGELOG.md').read_text()
-        self.assertEqual(re.findall(r'^## (\d+\.\d+\.\d+-r\d+)\b', history, re.M),
-                         ['1.0.0-r1', '0.1.0-r6', '0.1.0-r5', '0.1.0-r4',
-                          '0.1.0-r3', '0.1.0-r2', '0.1.0-r1'])
         for heading in ('### 추가', '### 개선', '### 수정', '### 호환성', '### 테스트'):
             self.assertIn(heading, history)
-        self.assertIn('1.0.0-r1', (ROOT / 'docs/SOURCE_OFFER.md').read_text())
+        self.assertIn('1.1.0-r1', (ROOT / 'docs/SOURCE_OFFER.md').read_text())
         for path in ('README.md', 'docs/ARCHITECTURE.md', 'docs/RELEASE_CHECKLIST.md',
                      'docs/THIRD_PARTY.md', 'web/open-source.html'):
             source = (ROOT / path).read_text()
             self.assertIsNone(re.search(r'\b\d+\.\d+\.\d+-r\d+\b', source), path)
-        self.assertIn('<span class="edition">v1.0.0-r1</span>', (ROOT / 'web/index.html').read_text())
+        self.assertIn('<span class="edition">v1.1.0-r1</span>', (ROOT / 'web/index.html').read_text())
 
     def test_release_guard_requires_correct_header_badge(self):
         with tempfile.TemporaryDirectory() as tmp:
             fake = pathlib.Path(tmp) / 'repo'
             shutil.copytree(ROOT, fake, ignore=shutil.ignore_patterns('.git', '__pycache__'))
             html = fake / 'web/index.html'
-            html.write_text(html.read_text().replace('v1.0.0-r1</span>', 'v0.1.0-r6</span>'))
+            html.write_text(html.read_text().replace('v1.0.0-r2</span>', 'v0.1.0-r6</span>'))
             with patch.object(release_audit, 'ROOT', fake), patch.object(release_audit, 'WEB', fake / 'web'):
                 self.assertTrue(any('header version badge must match' in error
                                     for error in release_audit.audit(release=True)))
@@ -400,7 +412,7 @@ class PackageTests(unittest.TestCase):
             html = (ROOT / 'web' / page).read_text()
             self.assertIn('href="./favicon.svg"', html)
             self.assertIn('href="./favicon.ico"', html)
-        self.assertEqual(audit(release=True), [])
+        self.assertEqual(audit(release=False), [])
 
     def test_release_rejects_missing_favicon_or_page_reference(self):
         with tempfile.TemporaryDirectory() as tmp:

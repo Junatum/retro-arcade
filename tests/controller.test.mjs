@@ -86,3 +86,14 @@ test('NES controller matches original Famicom/NES layout with no L/R',()=>{
   hit(a,'pointerdown');hit(a,'pointerup');
   assert.deepEqual(records,[['a',true],['a',false]]);
 });
+test('Sega 8-bit uses two buttons; Mega Drive has six buttons and MODE',()=>{
+  const el=root();renderController(el,'gearsystem-gg',()=>{});
+  assert.deepEqual(buttons(el).map(b=>b.dataset.position),['up','left','down','right','b','a','select','start']);
+  const events=[];renderController(el,'blastem',(k,v)=>events.push([k,v]));
+  assert.match(el.className,/keypad--megadrive/);
+  assert.deepEqual(buttons(el).map(b=>b.dataset.position),
+    ['up','left','down','right','x','y','z','a','b','c','mode','start']);
+  hit(buttons(el).find(b=>b.dataset.position==='c'),'pointerdown');
+  hit(buttons(el).find(b=>b.dataset.position==='c'),'pointerup');
+  assert.deepEqual(events,[['c',true],['c',false]]);
+});

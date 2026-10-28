@@ -13,7 +13,7 @@ WEB = ROOT / 'web'
 # Only first-party source modules are rewritten. Vendor code remains byte-for-byte pinned.
 MODULES = ('app.js', 'demo.js', 'chip8.js', 'controller.js', 'systems.js',
            'battery-store.js', 'fullscreen.js', 'mgba-player.js',
-           'jsnes-player.js', 'nes-audio.js')
+           'jsnes-player.js', 'nes-audio.js', 'sega-player.js')
 IMPORT = re.compile(r"(?P<prefix>(?:\bfrom\s*|\bimport\s*\(\s*)['\"])(?P<url>\.{1,2}/[^'\"\s)]+\.js)(?:\?v=[^'\"]+)?(?P<suffix>['\"])")
 CSS = re.compile(r'(?P<pre>href="\./styles\.css)(?:\?v=[a-f0-9]{12})?(?P<post>")')
 ENTRY = re.compile(r'(?P<pre>src="\./app\.js)(?:\?v=[^\"]+)?(?P<post>")')

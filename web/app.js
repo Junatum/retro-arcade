@@ -1,13 +1,14 @@
 /* SmartSafeHub Retro Arcade — GPL-3.0-or-later; entirely local browser playback. */
 import { Chip8, DISPLAY_WIDTH, DISPLAY_HEIGHT } from './chip8.js?v=24c3002c045b';
 import { DEMO_ROM, DEMO_TITLE, DEMO_CONTROLS, DEMO_FINISHED_PC, DEMO_WIN_SCORE } from './demo.js?v=d5358e9686ba';
-import { SYSTEMS, detectSystem, validateRom } from './systems.js?v=9345ceb268df';
+import { SYSTEMS, detectSystem, validateRom } from './systems.js?v=e17e43438dea';
 import { romStorageKey } from './battery-store.js?v=089100328af3';
 import { SaveSession } from './save-session.js?v=091750ebf000';
 import { MgbaPlayer } from './mgba-player.js?v=8d6c2b534ff6';
 import { JsnesPlayer } from './jsnes-player.js?v=8cc9646dc5e4';
+import { SegaPlayer } from './sega-player.js?v=e58353d0c2e8';
 import { setupFullscreen } from './fullscreen.js?v=27d207810633';
-import { renderController, CHIP8_KEYBOARD, CHIP8_MATRIX, HANDHELD_KEYS } from './controller.js?v=1ae1c797e532';
+import { renderController, CHIP8_KEYBOARD, CHIP8_MATRIX, HANDHELD_KEYS, SEGA_KEYS } from './controller.js?v=46c2b93d4a91';
 const $ = id => document.getElementById(id);
 const input=$('rom-file'), notice=$('notice'), stage=$('game');
 const fullscreen=setupFullscreen($('player-section'),$('fullscreen'),document,document.body);
@@ -20,6 +21,7 @@ const ctx=canvas.getContext('2d',{alpha:false});
 const chip8=new Chip8();
 const KEYMAP=new Map([...CHIP8_KEYBOARD].map((key,index)=>[key,CHIP8_MATRIX[index]]));
 const GBKEY=new Map([['arrowup','up'],['arrowdown','down'],['arrowleft','left'],['arrowright','right'],['x','a'],['z','b'],['enter','start'],['shift','select'],['a','l'],['s','r']]);
+const MEGAKEY=new Map([['arrowup','up'],['arrowdown','down'],['arrowleft','left'],['arrowright','right'],['z','a'],['x','b'],['c','c'],['a','x'],['s','y'],['d','z'],['enter','start'],['shift','mode']]);
 let selected=SYSTEMS[0], game=null, running=false, loaded=false, frame=0, last=0,clock=0;
 let saveKey=null,framesSinceSave=0,loading=false,activeController=null,demoActive=false;
 const saves=new SaveSession({status:(type,message)=>{
@@ -59,7 +61,7 @@ function drawLoop(time){
       if(demoActive && chip8.v[14] && chip8.pc===DEMO_FINISHED_PC){finishDemo();return;}
     } else if(game){
       let count=0;
-      while(clock>=1000/59.7275 && count++<5){clock-=1000/59.7275;game.frame();framesSinceSave++;}
+      while(clock>=1000/(game.fps||59.7275) && count++<5){clock-=1000/(game.fps||59.7275);game.frame();framesSinceSave++;}
       if(framesSinceSave>=1800){framesSinceSave=0;void persistBattery();}
     }
   }catch(error){stop(`실행 중 오류: ${error.message}`);return;}
@@ -84,7 +86,8 @@ function showPlayer(system,label){
   $('player-title').textContent=`${system.label} · ${label}`;
   $('toggle').textContent='Ⅱ 일시정지';$('toggle').disabled=false;notice.classList.add('hidden');
   $('demo-result').classList.add('hidden');$('demo-result').classList.remove('demo-result--win');
-  $('sound').classList.toggle('hidden', system.id!=='nes');
+  $('sound').classList.toggle('hidden', !(system.id==='nes'||system.id.startsWith('gearsystem-')||system.id==='blastem'));
+  $('sound').textContent='♫ 사운드 켜기';$('sound').disabled=false;
   const demoControls=$('demo-controls');
   demoControls.textContent=`${DEMO_CONTROLS} · 오른쪽 주황색 패들이 플레이어입니다. 왼쪽은 컴퓨터이며, 위쪽은 양쪽 점수입니다.`;
   demoControls.classList.toggle('hidden',!demoActive);
@@ -121,6 +124,18 @@ async function playNes(bytes,label){
     showPlayer(selected,label);
   }catch(error){player.destroy();if(game===player){game=null;saveKey=null;}throw error;}
 }
+async function playSega(bytes,label){
+  const system=selected;
+  const player=await SegaPlayer.create(canvas,system.id);
+  try{
+    player.load(bytes);
+    const key=romStorageKey(bytes,system.id);
+    game=player;saveKey=key;
+    $('save-status').classList.add('hidden');
+    await saves.restore(player,key);
+    showPlayer(system,label);
+  }catch(error){player.destroy();if(game===player){game=null;saveKey=null;}throw error;}
+}
 function renderKeypad(){
   activeController?.releaseAll();
   activeController=renderController($('keypad'),selected.id,(key,pressed)=>{
@@ -135,8 +150,8 @@ function choose(system){
   input.value='';input.accept=system.extensions.map(x=>'.'+x).join(',');
   $('play').disabled=true;
   $('rom-label').textContent=`${system.label} ROM 파일`;
-  $('rom-help').textContent= system.id==='chip8' ? '권리를 보유한 .ch8 / .c8 ROM을 선택하세요 (최대 3,584바이트).' : system.id==='mgba-gb' ? '권리를 보유한 .gb / .gbc ROM을 선택하세요 (최대 8MiB). 게임 데이터는 공유기로 전송되지 않습니다.' : system.id==='nes' ? '권리를 보유한 .nes 파일을 선택하세요 (최대 8MiB). 게임 데이터는 공유기로 전송되지 않습니다.' : '권리를 보유한 .gba ROM을 선택하세요 (최대 32MiB). BIOS는 필요하지 않으며 ROM은 전송되지 않습니다.';
-  $('control-help').textContent=system.id==='chip8' ? DEMO_CONTROLS + ' · 외부 CHIP-8 ROM은 게임마다 조작이 다릅니다.' : '방향키 이동 · X(A) / Z(B) · Enter(START) / Shift(SELECT)' + (system.id==='mgba' ? ' · A(L) / S(R)' : '') + ' · 모바일 터치 지원';
+  $('rom-help').textContent= system.id==='chip8' ? '권리를 보유한 .ch8 / .c8 ROM을 선택하세요 (최대 3,584바이트).' : system.id==='mgba-gb' ? '권리를 보유한 .gb / .gbc ROM을 선택하세요 (최대 8MiB). 게임 데이터는 공유기로 전송되지 않습니다.' : system.id==='nes' ? '권리를 보유한 .nes 파일을 선택하세요 (최대 8MiB). 게임 데이터는 공유기로 전송되지 않습니다.' : system.id.startsWith('gearsystem-') || system.id==='blastem' ? `권리를 보유한 ${system.extensions.map(x=>'.'+x).join(' / ')} ROM을 선택하세요 (최대 ${system.maxSize/1024/1024}MiB). ROM은 공유기로 전송되지 않습니다.` : '권리를 보유한 .gba ROM을 선택하세요 (최대 32MiB). BIOS는 필요하지 않으며 ROM은 전송되지 않습니다.';
+  $('control-help').textContent=system.id==='chip8' ? DEMO_CONTROLS + ' · 외부 CHIP-8 ROM은 게임마다 조작이 다릅니다.' : system.id==='blastem' ? '방향키 이동 · Z(A) / X(B) / C(C) · A(X) / S(Y) / D(Z) · Enter(START) / Shift(MODE) · 모바일 터치 지원' : '방향키 이동 · X(A) / Z(B) · Enter(START) / Shift(SELECT)' + (system.id==='mgba' ? ' · A(L) / S(R)' : '') + ' · 모바일 터치 지원';
   const hasDemo=system.id==='chip8';
   $('demo').disabled=!hasDemo;
   $('demo').classList.toggle('hidden',!hasDemo);
@@ -149,6 +164,10 @@ const PLATFORM_ICONS = Object.freeze({
   chip8: '<svg viewBox="0 0 48 48" aria-hidden="true" focusable="false"><rect x="12" y="12" width="24" height="24" rx="5"/><path d="M17 7v5m7-5v5m7-5v5M17 36v5m7-5v5m7-5v5M7 17h5m-5 7h5m-5 7h5m24-14h5m-5 7h5m-5 7h5"/><path d="M19 20h10m-10 5h10m-10 5h6"/></svg>',
   'mgba-gb': '<svg viewBox="0 0 48 48" aria-hidden="true" focusable="false"><rect x="14" y="4" width="20" height="40" rx="6"/><rect x="18" y="10" width="12" height="14" rx="2"/><path d="M19 31h8m-4-4v8"/><circle cx="29" cy="30" r="1.5"/><circle cx="31" cy="34" r="1.5"/><path d="M21 39h6"/></svg>',
   mgba: '<svg viewBox="0 0 48 48" aria-hidden="true" focusable="false"><path d="M11 15h26c4 0 6 4 6 8v9c0 5-3 7-8 7H13c-5 0-8-2-8-7v-9c0-4 2-8 6-8Z"/><rect x="17" y="17" width="14" height="12" rx="2"/><path d="M10 12h10m8 0h10M13 31h7m-3.5-3.5v7"/><circle cx="34" cy="30" r="1.6"/><circle cx="37" cy="33.5" r="1.6"/></svg>',
+  'gearsystem-gg': '<svg viewBox="0 0 48 48" aria-hidden="true"><rect x="13" y="6" width="22" height="36" rx="8"/><rect x="17" y="12" width="14" height="13" rx="2"/><path d="M18 32h7m-3.5-3.5v7"/><circle cx="30" cy="32" r="2"/></svg>',
+  'gearsystem-sms': '<svg viewBox="0 0 48 48" aria-hidden="true"><rect x="5" y="15" width="38" height="18" rx="3"/><path d="M10 21h15m-15 5h15"/><circle cx="34" cy="24" r="3"/></svg>',
+  'gearsystem-sg': '<svg viewBox="0 0 48 48" aria-hidden="true"><rect x="6" y="12" width="36" height="24" rx="3"/><rect x="13" y="16" width="22" height="5" rx="1"/><path d="M13 29h22"/></svg>',
+  blastem: '<svg viewBox="0 0 48 48" aria-hidden="true"><ellipse cx="24" cy="24" rx="19" ry="14"/><ellipse cx="24" cy="24" rx="12" ry="8"/><path d="M16 24h16"/></svg>',
   nes: '<svg viewBox="0 0 48 48" aria-hidden="true" focusable="false"><rect x="5" y="17" width="38" height="17" rx="6"/><path d="M13 25h9m-4.5-4.5v9"/><circle cx="32" cy="23.5" r="2"/><circle cx="36" cy="27.5" r="2"/><path d="M22 29h3m2-2h3"/></svg>',
 });
 
@@ -176,6 +195,7 @@ $('play').onclick=async()=>{
     const bytes=new Uint8Array(await file.arrayBuffer());
     if(selected.id==='chip8')playChip8(bytes,file.name);
     else if(selected.id==='nes')await playNes(bytes,file.name);
+    else if(selected.id.startsWith('gearsystem-')||selected.id==='blastem')await playSega(bytes,file.name);
     else await playMgba(bytes,file.name);
   }catch(error){announce(error.message);}
   finally{loading=false;if(!loaded)$('play').disabled=false;}
@@ -183,7 +203,7 @@ $('play').onclick=async()=>{
 $('demo').onclick=()=>{if(selected.id==='chip8')playChip8(DEMO_ROM,DEMO_TITLE,true);};
 $('demo-replay').onclick=()=>{if(demoActive)playChip8(DEMO_ROM,DEMO_TITLE,true);};
 $('sound').onclick=async()=>{
-  if(selected.id!=='nes'||!game)return;
+  if(!(selected.id==='nes'||selected.id.startsWith('gearsystem-')||selected.id==='blastem')||!game)return;
   try{await game.enableAudio();$('sound').textContent='♫ 사운드 켜짐';$('sound').disabled=true;}
   catch(error){announce(error.message);}
 };
@@ -205,13 +225,13 @@ $('reset').onclick=exitGame;$('return').onclick=exitGame;
 function onKey(event,pressed){
   if(event.target instanceof HTMLInputElement || !loaded)return;
   const name=event.key.toLowerCase();
-  const key=selected.id==='chip8'?KEYMAP.get(name):GBKEY.get(name);
+  const key=selected.id==='chip8'?KEYMAP.get(name):selected.id==='blastem'?MEGAKEY.get(name):GBKEY.get(name);
   if(key===undefined)return;
   event.preventDefault();
   if(selected.id==='chip8')chip8.key(key,pressed);else game?.key(key,pressed);
 }
 window.addEventListener('keydown',event=>onKey(event,true));
 window.addEventListener('keyup',event=>onKey(event,false));
-window.addEventListener('blur',()=>{activeController?.releaseAll();chip8.keys.fill(0);if(game)for(const key of HANDHELD_KEYS)game.key(key,false);});
+window.addEventListener('blur',()=>{activeController?.releaseAll();chip8.keys.fill(0);if(game)for(const key of SEGA_KEYS)game.key(key,false);});
 document.addEventListener('visibilitychange',()=>{if(document.hidden){activeController?.releaseAll();stop();void persistBattery();}});
 paintChip8();

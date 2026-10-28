@@ -1,0 +1,15 @@
+{
+  "engine": "gearsystem",
+  "tag": "3.9.21",
+  "pin": "tag",
+  "revision": "d4a86dfa0a6493020d64af6816ecc35461407c67",
+  "upstream": "https://github.com/drhelius/Gearsystem",
+  "license": "GPL-3.0-or-later",
+  "license_sha256": "8ceb4b9ee5adedde47b31e975c1d90c73ad27b6b165a1dcd80c7c545eb65b903",
+  "bridge_sha256": "141254dd7cf86958b5b0588f077ffc4c8c80ebf5a5f232115b94f20bfce66d49",
+  "emcc": "emcc (Emscripten gcc/clang-like replacement + linker emulating GNU ld) 6.0.13-git",
+  "artifacts": {
+    "gearsystem.js": "4c34762ac8a5ef970279fa27a9e9675d7e1fc88d36c664456a2adbf2add54811",
+    "gearsystem.wasm": "a83fcf68e99af90f6bb19fe749524927f29cf490f283badac92bc8eca052fa53"
+  }
+}

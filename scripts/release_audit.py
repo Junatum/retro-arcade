@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Verify offline Retro Arcade inventory mGBA and JSNES provenance before release."""
+"""Verify offline Retro Arcade inventory and provenance before release."""
 from __future__ import annotations
 import argparse
 import hashlib
@@ -13,20 +13,28 @@ except ModuleNotFoundError:  # python3 scripts/release_audit.py
 
 ROOT = Path(__file__).resolve().parents[1]
 WEB = ROOT / 'web'
-VERSION = '1.0.0-r1'
+VERSION = '1.1.0-r1'
 EXPECTED_WEB = {
     'index.html', 'styles.css', 'favicon.svg', 'favicon.ico', 'app.js', 'fullscreen.js', 'controller.js', 'chip8.js', 'systems.js',
-    'demo.js', 'open-source.html', 'battery-store.js', 'save-session.js', 'mgba-player.js', 'jsnes-player.js', 'nes-audio.js',
+    'demo.js', 'open-source.html', 'battery-store.js', 'save-session.js', 'mgba-player.js', 'jsnes-player.js', 'nes-audio.js', 'sega-player.js',
 }
 MGBA_VENDOR = {'mgba/mgba.js', 'mgba/mgba.wasm', 'mgba/manifest.json'}
+SEGA_ENGINES = ('gearsystem', 'blastem')
+SEGA_VENDOR = {f'{name}/{file}' for name in SEGA_ENGINES
+               for file in (f'{name}.js', f'{name}.wasm', 'manifest.json')}
+SEGA_LICENSE = {'gearsystem': 'Gearsystem.txt', 'blastem': 'BlastEm.txt'}
 EXPECTED_SOURCE_COMPONENTS = {
-    'native': {'mgba_bridge.c'},
-    'scripts': {'build_mgba.py', 'cache_bust.py', 'release_audit.py', 'vendor_jsnes.py'},
-    'LICENSES': {'mGBA.txt', 'JSNES.txt'},
+    'native': {'mgba_bridge.c', 'sega_libretro_bridge.c', 'blastem_headless.h'},
+    'scripts': {'build_mgba.py', 'build_sega.py', 'cache_bust.py', 'release_audit.py', 'vendor_jsnes.py'},
+    'LICENSES': {'mGBA.txt', 'JSNES.txt', 'Gearsystem.txt', 'BlastEm.txt', 'Libretro.txt'},
 }
 
 
-def audit(release: bool = False) -> list[str]:
+def sha256(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def audit(release: bool = False, require_sega: bool = True) -> list[str]:
     errors = []
     try:
         meta = json.loads((ROOT / 'app-info.json').read_text(encoding='utf-8'))
@@ -38,11 +46,11 @@ def audit(release: bool = False) -> list[str]:
         mgba_license = (ROOT / 'LICENSES/mGBA.txt').read_text(encoding='utf-8')
     except (OSError, ValueError) as exc:
         return [f'missing or invalid release source: {exc}']
-    if meta.get('version') != VERSION or meta.get('license') != 'GPL-3.0-or-later AND MPL-2.0 AND Apache-2.0':
+    if meta.get('version') != VERSION or meta.get('license') != 'GPL-3.0-or-later AND MPL-2.0 AND Apache-2.0 AND MIT':
         errors.append('incorrect app version/license')
-    if meta.get('included_systems') != ['CHIP-8', 'Game Boy', 'Game Boy Color', 'Game Boy Advance', 'NES', 'Famicom'] or meta.get('offline') is not True:
+    if meta.get('included_systems') != ['CHIP-8', 'Game Boy', 'Game Boy Color', 'Game Boy Advance', 'NES', 'Famicom', 'Game Gear', 'Master System', 'SG-1000', 'Mega Drive', 'Genesis'] or meta.get('offline') is not True:
         errors.append('incorrect included platforms/offline policy')
-    for required in ('PKG_VERSION:=1.0.0', 'PKG_RELEASE:=1', 'PKG_LICENSE:=GPL-3.0-or-later MPL-2.0 Apache-2.0',
+    for required in ('PKG_VERSION:=1.1.0', 'PKG_RELEASE:=1', 'PKG_LICENSE:=GPL-3.0-or-later MPL-2.0 Apache-2.0 MIT',
                      'python3 $(CURDIR)/scripts/release_audit.py --release'):
         if required not in mk:
             errors.append(f'incorrect OpenWrt package config: {required}')
@@ -84,7 +92,7 @@ def audit(release: bool = False) -> list[str]:
         errors.append(f'missing source offer: {exc}')
     try:
         history = (ROOT / 'CHANGELOG.md').read_text(encoding='utf-8')
-        if re.findall(r'^## (\d+\.\d+\.\d+-r\d+)\b', history, re.M) != [VERSION, '0.1.0-r6', '0.1.0-r5', '0.1.0-r4', '0.1.0-r3', '0.1.0-r2', '0.1.0-r1']:
+        if re.findall(r'^## (\d+\.\d+\.\d+-r\d+)\b', history, re.M) != [VERSION, '1.0.0-r1', '0.1.0-r6', '0.1.0-r5', '0.1.0-r4', '0.1.0-r3', '0.1.0-r2', '0.1.0-r1']:
             errors.append('changelog must contain the current release and all previous versions')
     except OSError as exc:
         errors.append(f'missing changelog: {exc}')
@@ -92,12 +100,23 @@ def audit(release: bool = False) -> list[str]:
         errors.append('GPL license missing')
     if 'Mozilla Public License Version 2.0' not in mgba_license:
         errors.append('mGBA MPL-2.0 license missing')
+    try:
+        if 'Permission is hereby granted' not in (ROOT / 'LICENSES/Libretro.txt').read_text():
+            errors.append('Libretro API MIT license missing')
+    except OSError as exc:
+        errors.append(f'missing Libretro MIT notice: {exc}')
     if 'mGBA' not in readme or 'mGBA' not in notice:
         errors.append('mGBA attribution missing')
     if not (ROOT / 'LICENSES/JSNES.txt').is_file() or 'Apache License' not in (ROOT / 'LICENSES/JSNES.txt').read_text(encoding='utf-8'):
         errors.append('JSNES Apache-2.0 license missing')
     if 'JSNES' not in readme or 'JSNES' not in notice:
         errors.append('JSNES attribution missing')
+    for engine in SEGA_ENGINES:
+        lic = ROOT / 'LICENSES' / SEGA_LICENSE[engine]
+        if not lic.is_file() or 'GNU GENERAL PUBLIC LICENSE' not in lic.read_text(errors='replace').upper():
+            errors.append(f'{engine}: GPL license missing')
+        if engine.lower() not in readme.lower() or engine.lower() not in notice.lower():
+            errors.append(f'{engine} attribution missing')
     web_files = {p.relative_to(WEB).as_posix() for p in WEB.rglob('*') if p.is_file()}
     # Stock OpenWrt uhttpd maps .js to text/javascript but does not recognize .mjs.
     # Module scripts served with its fallback MIME are rejected by browsers.
@@ -113,8 +132,8 @@ def audit(release: bool = False) -> list[str]:
         errors.append(f'cannot verify browser asset hashes: {exc}')
     vendor_files = {name for name in web_files if name.startswith('vendor/jsnes/')}
     ordinary_web = web_files - vendor_files
-    if ordinary_web not in (EXPECTED_WEB, EXPECTED_WEB | MGBA_VENDOR):
-        errors.append(f'unexpected/incomplete web inventory: {sorted(ordinary_web ^ (EXPECTED_WEB | MGBA_VENDOR))}')
+    if (ordinary_web - SEGA_VENDOR) not in (EXPECTED_WEB, EXPECTED_WEB | MGBA_VENDOR):
+        errors.append(f'unexpected/incomplete web inventory: {sorted((ordinary_web - SEGA_VENDOR) ^ (EXPECTED_WEB | MGBA_VENDOR))}')
     if any(name.startswith('vendor/') and not name.startswith('vendor/jsnes/') for name in web_files):
         errors.append('unreviewed vendor files')
     # Keep the shipped emulation sources limited to the audited mGBA bridge.
@@ -126,7 +145,7 @@ def audit(release: bool = False) -> list[str]:
         if actual != expected:
             errors.append(f'unexpected source inventory in {directory}: {sorted(actual ^ expected)}')
     for script in ('web/app.js', 'web/fullscreen.js', 'web/controller.js', 'web/chip8.js', 'web/demo.js', 'web/systems.js',
-                   'web/battery-store.js', 'web/save-session.js', 'web/mgba-player.js', 'web/jsnes-player.js', 'web/nes-audio.js'):
+                   'web/battery-store.js', 'web/save-session.js', 'web/mgba-player.js', 'web/jsnes-player.js', 'web/nes-audio.js', 'web/sega-player.js'):
         try:
             source = (ROOT / script).read_text(encoding='utf-8')
         except OSError as exc:
@@ -141,14 +160,14 @@ def audit(release: bool = False) -> list[str]:
             continue
         if path.is_symlink():
             errors.append(f'symlink forbidden: {path.relative_to(ROOT)}')
-        if path.is_file() and path.suffix.lower() in ('.apk', '.ipk', '.gb', '.gbc', '.gba', '.ch8', '.c8', '.nes'):
+        if path.is_file() and path.suffix.lower() in ('.apk', '.ipk', '.gb', '.gbc', '.gba', '.ch8', '.c8', '.nes', '.gg', '.sms', '.sg', '.gen', '.rom'):
             errors.append(f'ROM/compiled package in source: {path.relative_to(ROOT)}')
         if path.is_file() and path.suffix.lower() in ('.wasm', '.data'):
-            if WEB not in path.parents or path.relative_to(WEB).as_posix() not in MGBA_VENDOR:
+            if WEB not in path.parents or path.relative_to(WEB).as_posix() not in MGBA_VENDOR | SEGA_VENDOR:
                 errors.append(f'unreviewed binary: {path.relative_to(ROOT)}')
     for required in ('docs/THIRD_PARTY.md', 'docs/ARCHITECTURE.md', 'docs/SOURCE_OFFER.md',
                      'docs/INSTALLATION_INFO.md', 'docs/RELEASE_CHECKLIST.md',
-                     'native/mgba_bridge.c', 'scripts/build_mgba.py', 'scripts/vendor_jsnes.py', 'LICENSES/mGBA.txt', 'LICENSES/JSNES.txt'):
+                     'native/mgba_bridge.c', 'native/sega_libretro_bridge.c', 'scripts/build_mgba.py', 'scripts/build_sega.py', 'scripts/vendor_jsnes.py', 'LICENSES/mGBA.txt', 'LICENSES/JSNES.txt', 'LICENSES/Gearsystem.txt', 'LICENSES/BlastEm.txt', 'LICENSES/Libretro.txt'):
         if not (ROOT / required).is_file():
             errors.append(f'missing required source: {required}')
     if any((ROOT / name).exists() for name in
@@ -214,6 +233,42 @@ def audit(release: bool = False) -> list[str]:
                     errors.append('mGBA bridge changed since binary build; rebuild mGBA WASM for GB/GBC/GBA')
             except (OSError, ValueError, TypeError, AttributeError) as exc:
                 errors.append(f'invalid mGBA manifest: {exc}')
+    # New engines are built by the developer, never downloaded at runtime.
+    # A source-only check is allowed before build, but a package release cannot
+    # omit either core or substitute precompiled, unreviewed third-party assets.
+    for engine in SEGA_ENGINES:
+        names = {f'{engine}/{engine}.js', f'{engine}/{engine}.wasm', f'{engine}/manifest.json'}
+        present = names & web_files
+        if not present and (not release or not require_sega):
+            continue
+        if present != names:
+            errors.append(f'{engine}: JS/WASM/manifest must be bundled together before release')
+            continue
+        try:
+            manifest = json.loads((WEB / engine / 'manifest.json').read_text(encoding='utf-8'))
+            tag, upstream = (('3.9.21', 'https://github.com/drhelius/Gearsystem')
+                             if engine == 'gearsystem' else ('v1.0.0', 'https://www.retrodev.com/repos/blastem'))
+            revision = manifest.get('revision')
+            good_rev = (re.fullmatch(r'[0-9a-f]{40}', str(revision)) if engine == 'gearsystem'
+                        else str(revision).startswith('625fa5a85505'))
+            if (manifest.get('engine') != engine or manifest.get('tag') != tag or
+                manifest.get('upstream') != upstream or manifest.get('license') != 'GPL-3.0-or-later' or not good_rev or
+                manifest.get('pin') != ('tag' if engine == 'gearsystem' else 'upstream-post-tag-libretro-fix')):
+                errors.append(f'{engine}: unapproved upstream revision/license')
+            if sha256(ROOT / 'LICENSES' / SEGA_LICENSE[engine]) != manifest.get('license_sha256'):
+                errors.append(f'{engine}: GPL notice hash mismatch')
+            if sha256(ROOT / 'native/sega_libretro_bridge.c') != manifest.get('bridge_sha256'):
+                errors.append(f'{engine}: bridge changed since build; rebuild WASM')
+            if engine == 'blastem' and sha256(ROOT / 'native/blastem_headless.h') != manifest.get('headless_stubs_sha256'):
+                errors.append('blastem: headless stubs changed since build; rebuild WASM')
+            for name in (f'{engine}.js', f'{engine}.wasm'):
+                target = WEB / engine / name
+                if sha256(target) != manifest.get('artifacts', {}).get(name):
+                    errors.append(f'{engine}: invalid artifact hash {name}')
+            if (WEB / engine / f'{engine}.wasm').read_bytes()[:8] != b'\x00asm\x01\x00\x00\x00':
+                errors.append(f'{engine}: invalid WebAssembly header')
+        except (OSError, ValueError, TypeError, AttributeError) as exc:
+            errors.append(f'{engine}: invalid release manifest ({exc})')
     return errors
 
 
@@ -221,15 +276,16 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument('--check', action='store_true', help='check source layout before local WASM rebuild')
-    mode.add_argument('--release', action='store_true', help='require up-to-date pinned mGBA JS/WASM + manifest')
+    mode.add_argument('--release', action='store_true', help='require all 4 pinned engine bundles')
+    mode.add_argument('--existing', action='store_true', help='check previously released mGBA/JSNES only, with new cores still blocked for APK')
     args = parser.parse_args()
-    errors = audit(release=args.release)
+    errors = audit(release=args.release or args.existing, require_sega=not args.existing)
     if errors:
         print('FAIL: Retro Arcade inventory')
         for err in errors:
             print(' - ' + err)
         return 1
-    print('PASS: ' + ('APK assets and license provenance verified' if args.release else 'source inventory verified (WASM build separate)'))
+    print('PASS: ' + ('APK assets and license provenance verified' if args.release else 'existing release engines verified (Sega release still blocked)' if args.existing else 'source inventory verified (WASM build separate)'))
     return 0
 
 

@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { SYSTEMS,detectSystem,validateRom } from '../web/systems.js';
 
 test('CHIP-8 and one mGBA engine provide GB/GBC/GBA platforms',()=>{
-  assert.deepEqual(SYSTEMS.map(s=>s.id),['chip8','mgba-gb','mgba','nes']);
+  assert.deepEqual(SYSTEMS.map(s=>s.id),['chip8','mgba-gb','mgba','nes','gearsystem-gg','gearsystem-sms','gearsystem-sg','blastem']);
   assert.equal(detectSystem('puzzle.CH8'),SYSTEMS[0]);
   assert.equal(detectSystem('game.gb'),SYSTEMS[1]);
   assert.equal(detectSystem('game.GBC'),SYSTEMS[1]);
@@ -33,4 +33,24 @@ test('NES/Famicom is the fourth platform and validates size',()=>{
   assert.equal(validateRom({name:'game.nes',size:32768},nes),null);
   assert.match(validateRom({name:'short.nes',size:100},nes),/너무 작/);
   assert.match(validateRom({name:'huge.nes',size:8*1024*1024+1},nes),/8MiB/);
+});
+
+test('Gearsystem and BlastEm cartridge limits and mappings',()=>{
+  const gg=SYSTEMS.find(s=>s.id==='gearsystem-gg');
+  const sms=SYSTEMS.find(s=>s.id==='gearsystem-sms');
+  const sg=SYSTEMS.find(s=>s.id==='gearsystem-sg');
+  const md=SYSTEMS.find(s=>s.id==='blastem');
+  assert.equal(detectSystem('game.gg'),gg);
+  assert.equal(detectSystem('game.sms'),sms);
+  assert.equal(detectSystem('game.sg'),sg);
+  assert.equal(detectSystem('game.MD'),md);
+  assert.equal(detectSystem('game.gen'),md);
+  assert.equal(detectSystem('game.bin'),md);
+  assert.equal(validateRom({name:'game.gg',size:32768},gg),null);
+  assert.equal(validateRom({name:'game.sms',size:131072},sms),null);
+  assert.equal(validateRom({name:'game.sg',size:4096},sg),null);
+  assert.equal(validateRom({name:'game.md',size:2*1024*1024},md),null);
+  assert.match(validateRom({name:'game.md',size:9*1024*1024},md),/8MiB/);
+  assert.match(validateRom({name:'tiny.gg',size:20},gg),/너무 작/);
+  assert.match(validateRom({name:'wrong.gg',size:256},md),/\.md/);
 });
