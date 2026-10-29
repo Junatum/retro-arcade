@@ -1,5 +1,6 @@
 /* Local, isolated arcade loader. ROM bytes arrive from the same-origin parent only.
- * The official Emscripten MAME build must expose FS as a runtime method.
+ * The pinned MAME 0.289 runtime exports FS_createPath / FS_createDataFile,
+ * not Module.FS.  Keep the fallback for other compatible FS exports.
  * No ROMs are fetched from a server; only mame.js/mame.wasm are loaded locally. */
 const SYSTEMS = Object.freeze({ 'pacman.zip': 'pacman', 'galaxian.zip': 'galaxian' });
 let started = false;
@@ -7,6 +8,26 @@ let moduleRef = null;
 const notify = (type, message = '') => window.parent.postMessage({mame:type,message}, location.origin);
 export function driverName(filename) {
   return Object.hasOwn(SYSTEMS, String(filename).toLowerCase()) ? SYSTEMS[filename.toLowerCase()] : null;
+}
+/** Store the explicitly selected local ROM before the MAME main() call.
+ * MAME 0.289 exposes legacy file helpers, not necessarily Module.FS. */
+export function installRom(module, driver, contents) {
+  if (!['pacman', 'galaxian'].includes(driver) || !(contents instanceof Uint8Array))
+    throw new Error('지원하지 않는 아케이드 ROM입니다.');
+  if (typeof module?.FS_createPath === 'function' &&
+      typeof module?.FS_createDataFile === 'function') {
+    module.FS_createPath('/', 'roms', true, true);
+    module.FS_createDataFile('/roms', driver + '.zip', contents, true, false, true);
+    return;
+  }
+  const fs = module?.FS;
+  if (fs && typeof fs.mkdir === 'function' && typeof fs.writeFile === 'function') {
+    try { fs.mkdir('/roms'); }
+    catch (error) { if (error?.code !== 'EEXIST' && error?.errno !== 20) throw error; }
+    fs.writeFile('/roms/' + driver + '.zip', contents);
+    return;
+  }
+  throw new Error('아케이드 ROM 메모리 파일시스템 API가 없습니다. MAME 빌드 출력을 확인하세요.');
 }
 export function makeConfiguration(filename, contents, canvas, onReady, onError) {
   const driver = driverName(filename);
@@ -17,10 +38,7 @@ export function makeConfiguration(filename, contents, canvas, onReady, onError) 
     arguments:[driver,'-rompath','/roms','-skip_gameinfo','-noreadconfig','-nowriteconfig'],
     locateFile: name => new URL(name.endsWith('.wasm')?'./mame.wasm':'./'+name, import.meta.url).href,
     preRun:[function() {
-      const fs = moduleRef?.FS;
-      if (!fs || typeof fs.writeFile !== 'function') throw new Error('아케이드 엔진의 메모리 파일시스템이 없습니다. MAME 빌드의 FS export를 확인하세요.');
-      try { fs.mkdir('/roms'); } catch (error) { if (error?.code !== 'EEXIST') throw error; }
-      fs.writeFile('/roms/'+driver+'.zip', contents);
+      installRom(moduleRef, driver, contents);
     }],
     onRuntimeInitialized:onReady,
     onAbort:reason=>onError('아케이드 엔진 실행 실패: '+reason),

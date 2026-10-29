@@ -50,5 +50,25 @@ class ReleaseDocumentationTests(unittest.TestCase):
         self.assertNotIn('background:#193229', styles)
 
 
+class MameReleaseDocumentationTests(unittest.TestCase):
+    def test_bundled_mame_and_license_notice_match_release(self):
+        readme=(ROOT/'README.md').read_text(encoding='utf-8')
+        notices=(ROOT/'docs/THIRD_PARTY.md').read_text(encoding='utf-8')
+        offer=(ROOT/'docs/SOURCE_OFFER.md').read_text(encoding='utf-8')
+        checklist=(ROOT/'docs/RELEASE_CHECKLIST.md').read_text(encoding='utf-8')
+        mf=json.loads((ROOT/'web/mame/manifest.json').read_text(encoding='utf-8'))
+        for item in ('mame.js', 'mame.wasm', 'manifest.json'):
+            self.assertTrue((ROOT/'web/mame'/item).is_file())
+        self.assertNotIn('현재 MAME WASM 미포함', notices)
+        self.assertNotIn('바이너리를 포함하지 않습니다', readme)
+        self.assertIn(mf['revision'], offer)
+        self.assertIn('OPTIMIZE=z', offer)
+        self.assertIn('LICENSES/MAME-GPL2.txt', offer)
+        self.assertIn('BSD', notices)
+        self.assertIn('BSD', checklist)
+        self.assertIn('runner.css', offer)
+        self.assertIn('FS_createDataFile', readme)
+
+
 if __name__ == '__main__':
     unittest.main()

@@ -1,4 +1,4 @@
-# 대응 소스 및 라이선스 안내 — SmartSafeHub Retro Arcade 1.2.0-r1
+# 대응 소스 및 라이선스 안내 — SmartSafeHub Retro Arcade 1.2.0-r2
 
 이 문서는 OpenWrt APK에 포함된 **HTML/JavaScript/WebAssembly 바이너리의 대응 소스 확인 방법**을 설명합니다. 실제 배포자가 원본 소스와 빌드 방법을 정확하게 제공해야 하며, 문서의 링크만 기재했다고 모든 배포 의무가 충족되는 것은 아닙니다.
 
@@ -6,7 +6,7 @@
 
 - 프로젝트: https://github.com/Junatum/retro-arcade (UI·CHIP-8·연결 브리지·빌드 스크립트, `GPL-3.0-or-later`)
 - 배포본과 일치하는 **릴리스 커밋 또는 고정 태그**를 기준으로 소스 전체를 제공합니다. 기본 브랜치의 최신 상태는 배포된 APK의 대응 소스가 아닐 수 있습니다.
-- 포함되는 빌드 관련 파일: `native/mgba_bridge.c`, `native/sega_libretro_bridge.c`, `native/blastem_headless.h`, `scripts/build_mgba.py`, `scripts/build_sega.py`, `scripts/vendor_jsnes.py`, `Makefile` 및 관련 문서·라이선스.
+- 포함되는 빌드 관련 파일: `native/mgba_bridge.c`, `native/sega_libretro_bridge.c`, `native/blastem_headless.h`, `scripts/build_mgba.py`, `scripts/build_sega.py`, `scripts/build_mame.py`, `scripts/vendor_jsnes.py`, `Makefile` 및 관련 문서·라이선스.
 
 ## 포함된 외부 에뮬레이터
 
@@ -32,8 +32,9 @@
 - 공식 고정 소스: https://github.com/mamedev/mame 태그 `mame0289` (빌드 매니페스트에 정확한 Git 커밋 기록).
 - MAME 프로젝트 전체는 `GPL-2.0-or-later`, 다수 파일은 `BSD-3-Clause` 등 별도 조건을 갖습니다. MAME 상표권은 별도로 보호됩니다.
 - `scripts/build_mame.py`는 개발 PC에서 pacman/galaxian **드라이버만** 공식 Emscripten으로 빌드하고 JS/WASM/manifest를 생성합니다.
-- 실제 배포할 MAME 산출물이 준비되기 전에는 `--release`와 APK 빌드가 실패합니다. 빌드 이전 소스 제공 안내는 완성된 바이너리의 소스 제공을 대신하지 않습니다.
-- MAME 빌드에서 선택된 파일과 링크 의존성의 모든 SPDX/라이선스 고지, Emscripten 빌드 옵션 및 수정 내역을 배포자가 보관·제공해야 합니다. ROM/BIOS는 포함하지 않습니다.
+- **현재 배포 소스에 JS/WASM/매니페스트가 포함**되어 있습니다: `web/mame/mame.js`, `web/mame/mame.wasm`, `web/mame/manifest.json`. 정확한 MAME 소스 커밋은 `f34f02505e32c1993c6a782b6814232cbfc74e36`이며, Emscripten 6.0.13, `OPTIMIZE=z` (`-Oz`), `BUILDDIR=build-ssharcade-oz`가 기록되어 있습니다. `--release`는 해당 빌드의 해시 일치를 확인합니다.
+- 번들된 JS에는 `Module.FS`가 없고 `FS_createPath` 및 `FS_createDataFile`이 있습니다. 별도 실행기 `web/mame/runner.js`가 이 API를 사용해 로컬 ROM을 메모리에 배치합니다. CSP 스타일은 `web/mame/runner.css`에 있습니다. 이러한 브라우저 실행기 파일도 대응 소스에 포함합니다.
+- 정확한 버전의 MAME 전체 소스 및 링크 의존성의 개별 SPDX/라이선스 고지(BSD 등 포함), Emscripten 빌드 옵션, 도구 버전 및 수정 내역을 배포자가 보관·제공해야 합니다. `LICENSES/MAME-GPL2.txt` 단독 제공만으로 모든 라이선스 고지가 충족되는 것은 아닙니다. ROM/BIOS는 포함하지 않습니다.
 
 ## 대응 바이너리 재빌드
 
@@ -51,6 +52,12 @@ python3 scripts/build_sega.py blastem --source /tmp/blastem
 # mGBA 코어 또는 브리지 변경 시에만 재빌드
 git clone --branch 0.10.5 https://github.com/mgba-emu/mgba.git /tmp/mgba-0.10.5
 python3 scripts/build_mgba.py --source /tmp/mgba-0.10.5
+
+# MAME는 공식 태그에서 선택된 드라이버만 빌드합니다.
+git clone --depth 1 --branch mame0289 https://github.com/mamedev/mame.git /tmp/mame
+# 필요 시: git -C /tmp/mame rev-parse HEAD 로 위 커밋과 일치하는지 확인
+python3 scripts/build_mame.py --source /tmp/mame --jobs 2
+# 기존 동일 산출물만 재포장하는 경우에는 --package-only (로컬 영수증 필요)
 
 # JSNES는 원본 npm 패키지 무결성 검증 후 필요한 모듈만 포함
 # python3 scripts/vendor_jsnes.py

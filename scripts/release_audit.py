@@ -13,10 +13,10 @@ except ModuleNotFoundError:  # python3 scripts/release_audit.py
 
 ROOT = Path(__file__).resolve().parents[1]
 WEB = ROOT / 'web'
-VERSION = '1.2.0-r1'
+VERSION = '1.2.0-r2'
 EXPECTED_WEB = {
     'index.html', 'styles.css', 'favicon.svg', 'favicon.ico', 'app.js', 'fullscreen.js', 'controller.js', 'chip8.js', 'systems.js',
-    'mame-player.js', 'mame/runner.html', 'mame/runner.js', 'demo.js', 'open-source.html', 'battery-store.js', 'save-session.js', 'mgba-player.js', 'jsnes-player.js', 'nes-audio.js', 'sega-player.js', 'audio-controls.js',
+    'mame-player.js', 'mame/runner.html', 'mame/runner.js', 'mame/runner.css', 'demo.js', 'open-source.html', 'battery-store.js', 'save-session.js', 'mgba-player.js', 'jsnes-player.js', 'nes-audio.js', 'sega-player.js', 'audio-controls.js',
 }
 MGBA_VENDOR = {'mgba/mgba.js', 'mgba/mgba.wasm', 'mgba/manifest.json'}
 SEGA_ENGINES = ('gearsystem', 'blastem')
@@ -54,7 +54,7 @@ def audit(release: bool = False, require_sega: bool = True, require_mame: bool =
         errors.append('incorrect app version/license')
     if meta.get('included_systems') != ['CHIP-8', 'Game Boy', 'Game Boy Color', 'Game Boy Advance', 'NES', 'Famicom', 'Game Gear', 'Master System', 'SG-1000', 'Mega Drive', 'Genesis', 'Arcade (MAME 0.289 selected drivers)'] or meta.get('offline') is not True:
         errors.append('incorrect included platforms/offline policy')
-    for required in ('PKG_VERSION:=1.2.0', 'PKG_RELEASE:=1', 'PKG_LICENSE:=GPL-3.0-or-later GPL-2.0-or-later MPL-2.0 Apache-2.0 MIT',
+    for required in ('PKG_VERSION:=1.2.0', 'PKG_RELEASE:=2', 'PKG_LICENSE:=GPL-3.0-or-later GPL-2.0-or-later MPL-2.0 Apache-2.0 MIT',
                      'python3 $(CURDIR)/scripts/release_audit.py --release'):
         if required not in mk:
             errors.append(f'incorrect OpenWrt package config: {required}')
@@ -96,7 +96,7 @@ def audit(release: bool = False, require_sega: bool = True, require_mame: bool =
         errors.append(f'missing source offer: {exc}')
     try:
         history = (ROOT / 'CHANGELOG.md').read_text(encoding='utf-8')
-        if re.findall(r'^## (\d+\.\d+\.\d+-r\d+)\b', history, re.M) != [VERSION, '1.1.0-r5', '1.1.0-r4', '1.1.0-r3', '1.1.0-r2', '1.1.0-r1', '1.0.0-r1', '0.1.0-r6', '0.1.0-r5', '0.1.0-r4', '0.1.0-r3', '0.1.0-r2', '0.1.0-r1']:
+        if re.findall(r'^## (\d+\.\d+\.\d+-r\d+)\b', history, re.M) != [VERSION, '1.2.0-r1', '1.1.0-r5', '1.1.0-r4', '1.1.0-r3', '1.1.0-r2', '1.1.0-r1', '1.0.0-r1', '0.1.0-r6', '0.1.0-r5', '0.1.0-r4', '0.1.0-r3', '0.1.0-r2', '0.1.0-r1']:
             errors.append('changelog must contain the current release and all previous versions')
     except OSError as exc:
         errors.append(f'missing changelog: {exc}')
@@ -119,6 +119,14 @@ def audit(release: bool = False, require_sega: bool = True, require_mame: bool =
         errors.append('MAME GPLv2 license missing')
     if 'MAME' not in readme or 'MAME' not in notice:
         errors.append('MAME attribution missing')
+    try:
+        runner_html = (WEB / 'mame/runner.html').read_text(encoding='utf-8')
+        if ("style-src 'self'" not in runner_html or
+                '<link rel="stylesheet" href="./runner.css">' not in runner_html or
+                re.search(r'<style(?:\s|>)|\sstyle\s*=', runner_html, re.I)):
+            errors.append('mame: runner CSP requires external local stylesheet')
+    except OSError as exc:
+        errors.append(f'mame: runner HTML unavailable ({exc})')
     for engine in SEGA_ENGINES:
         lic = ROOT / 'LICENSES' / SEGA_LICENSE[engine]
         if not lic.is_file() or 'GNU GENERAL PUBLIC LICENSE' not in lic.read_text(errors='replace').upper():
@@ -315,6 +323,12 @@ def audit(release: bool = False, require_sega: bool = True, require_mame: bool =
                     errors.append(f'mame: invalid artifact hash {name}')
             if not (WEB / 'mame/mame.wasm').read_bytes().startswith(b'\x00asm\x01\x00\x00\x00'):
                 errors.append('mame: invalid WebAssembly header')
+            runtime = (WEB / 'mame/mame.js').read_text(encoding='utf-8')
+            has_helpers = ('Module["FS_createPath"]' in runtime and
+                           'Module["FS_createDataFile"]' in runtime)
+            has_fs = 'Module["FS"]' in runtime or 'Module.FS=' in runtime
+            if not (has_helpers or has_fs):
+                errors.append('mame: no compatible exported ROM filesystem API')
         except (OSError, ValueError, TypeError, AttributeError) as exc:
             errors.append(f'mame: invalid release manifest ({exc})')
     return errors

@@ -27,7 +27,7 @@ SmartSafeHub Apps에서 제공하는 **로컬 레트로 게임 앱**입니다. �
 | Master System | `.sms` | Gearsystem 3.9.21 | 십자 방향키, A/B, SELECT/START |
 | SG-1000 | `.sg` | Gearsystem 3.9.21 | 십자 방향키, A/B, SELECT/START |
 | Mega Drive / Genesis | `.md`, `.gen`, `.bin` | BlastEm 1.0.0 계열 | 십자 방향키, A/B/C, X/Y/Z, START/MODE |
-| Arcade (선택 드라이버) | `pacman.zip`, `galaxian.zip` | MAME 0.289 (개발 PC 빌드 필요) | 십자 방향키, 버튼 1/2, COIN/START |
+| Arcade (선택 드라이버) | `pacman.zip`, `galaxian.zip` | MAME 0.289 (로컬 JS/WASM 번들) | 십자 방향키, 버튼 1/2, COIN/START |
 
 Game Boy, Game Boy Color, Game Boy Advance는 **하나의 mGBA 엔진**으로 실행됩니다. CHIP-8에는 직접 제작한 **패들 랠리** 미니게임이 포함되어 있으며, **데모 게임 플레이 버튼은 CHIP-8 선택 시에만 표시**됩니다.
 
@@ -35,10 +35,11 @@ Game Boy, Game Boy Color, Game Boy Advance는 **하나의 mGBA 엔진**으로 �
 
 아케이드 화면은 **Pac-Man·Galaxian 드라이버만** 포함하는 소규모 MAME Emscripten 빌드를 사용하도록 설계되었습니다. 사용자가 적법하게 소유한 **`pacman.zip` 또는 `galaxian.zip`** 을 직접 선택합니다. 다른 ZIP, 클론, BIOS·CHD, 상용 ROM 및 자동 다운로드는 지원하지 않습니다. 아케이드 ROM 세트는 MAME 0.289와 일치해야 합니다.
 
-**중요:** 소스 패치에는 새 MAME JS/WASM 바이너리를 포함하지 않습니다. 현지 개발 환경에서 실제 빌드 후 오디오·화면·입력·모바일 성능을 검증해야 하며, 빌드 전에는 `release_audit.py --release`가 실패하므로 이 상태 그대로 APK를 출시할 수 없습니다. MAME 공식 웹 빌드와 SDL/브라우저 통합은 **아직 실기 검증 전**입니다.
+현재 저장소에는 개발 PC에서 빌드한 **MAME 0.289 `mame.js`·`mame.wasm`·`manifest.json`이 포함**되어 있습니다. 일반 실행 또는 OpenWrt APK 빌드를 위해 MAME를 다시 컴파일할 필요는 없습니다. `release_audit.py --release`는 파일 누락, 바뀐 바이너리 해시, 빌드 출처 불일치를 검사합니다. 다만 실제 아케이드 게임의 화면·입력·오디오·모바일 성능은 별도로 확인해야 하며, 자동 검사 통과만으로 실기 호환성을 보장하지 않습니다.
 
 ```sh
-# 개발 PC에서 Emscripten 6.0.2+ (SDL3 지원), Git, Python 준비
+# 다음 단계는 엔진 변경 또는 대응 소스 재빌드가 필요할 때에만 실행합니다.
+# 개발 PC에서 Emscripten 6.0.13 (SDL3 지원), Git, Python 준비
 # 빌드 명령 실행 위치는 Retro Arcade 저장소 루트
 
 git clone --depth 1 --branch mame0289 https://github.com/mamedev/mame.git /tmp/mame
@@ -53,7 +54,7 @@ python3 scripts/release_audit.py --release
 
 MAME의 **`OPTIMIZE=z` (`-Oz`)** 빌드는 `BUILDDIR=build-ssharcade-oz`에 새 중간 산출물을 생성하므로 기존 `-Os` 오브젝트를 재사용하지 않습니다. `--package-only`는 앞서 성공한 `-Oz` 빌드의 로컬 영수증과 JS/WASM 해시가 일치할 때에만 허용합니다. 이전 빌드에 적용하면 실패하므로 먼저 위 빌드 명령을 실행하세요. `-Oz`는 성능과 브라우저 호환성에 영향을 줄 수 있어 실제 게임 테스트가 필요합니다.
 
-MAME 공식 Emscripten 런타임은 **`Module.FS` 접근이 가능한 빌드**여야 합니다. 빌드 도구는 `OPTIMIZE=z`, `BUILDDIR=build-ssharcade-oz`, `LDOPTS=-sEXPORTED_RUNTIME_METHODS=FS`를 전달합니다. 그렇지 않으면 사용자 ROM을 브라우저 메모리 파일시스템에 배치할 수 없어 실행이 차단됩니다. 이 설정이 공식 Makefile에서 그대로 전달되는지는 실제 빌드 결과로 확인해야 합니다. 조작: 방향키, Z(버튼 1), X(버튼 2), 5(COIN), 1(1P START). MAME의 별도 실행기 내부 오디오/일시정지 지원은 실기 검증이 필요합니다. 상표상 앱 화면에서는 **Arcade**로 표시합니다.
+실제 번들된 MAME 0.289 JS에서는 `Module.FS` 대신 **`FS_createPath`·`FS_createDataFile`** 런타임 함수를 제공합니다. Arcade 실행기는 이 API로 사용자가 선택한 ROM ZIP을 `/roms/`에 기록하며, 향후 `Module.FS`를 제공하는 호환 빌드도 처리합니다. 이 기능은 외부 다운로드를 사용하지 않습니다. 빌드 설정은 `OPTIMIZE=z` (`-Oz`), `BUILDDIR=build-ssharcade-oz`이며, 실제 JS/WASM 해시와 고정 커밋은 `web/mame/manifest.json`에 기록됩니다. 화면 스타일은 CSP를 유지하도록 로컬 `runner.css`로 분리돼 있습니다. 조작: 방향키, Z(버튼 1), X(버튼 2), 5(COIN), 1(1P START). MAME의 별도 실행기 내부 오디오/일시정지 지원은 실기 검증이 필요합니다. 상표상 앱 화면에서는 **Arcade**로 표시합니다.
 
 ## 주요 기능
 
@@ -77,7 +78,7 @@ python3 scripts/release_audit.py --release
 python3 -m http.server 8080 --directory web
 ```
 
-브라우저에서 <http://127.0.0.1:8080/>로 접속하세요. 게임 파일은 직접 준비해야 합니다. mGBA·Gearsystem·BlastEm의 JS/WASM과 JSNES 원본 모듈은 현재 소스에 포함되어 있으므로 **일반적인 실행이나 OpenWrt APK 빌드에서는 다시 컴파일하지 않습니다.**
+브라우저에서 <http://127.0.0.1:8080/>로 접속하세요. 게임 파일은 직접 준비해야 합니다. mGBA·Gearsystem·BlastEm·MAME의 JS/WASM과 JSNES 원본 모듈은 현재 소스에 포함되어 있으므로 **일반적인 실행이나 OpenWrt APK 빌드에서는 다시 컴파일하지 않습니다.**
 
 ## Gearsystem · BlastEm 로컬 빌드
 
@@ -138,6 +139,7 @@ node --test tests/*.test.mjs
 - [JSNES 라이선스](LICENSES/JSNES.txt)
 - [Gearsystem 라이선스](LICENSES/Gearsystem.txt)
 - [BlastEm 라이선스](LICENSES/BlastEm.txt)
+- [MAME GPLv2 라이선스](LICENSES/MAME-GPL2.txt)
 - [변경 이력](CHANGELOG.md)
 
-프로젝트 UI와 CHIP-8 코드는 **GPL-3.0-or-later**, mGBA 코어는 **MPL-2.0**, JSNES는 **Apache-2.0**, Gearsystem과 BlastEm은 **GPLv3 계열**이며 Libretro API 헤더는 **MIT** 라이선스를 따릅니다. 자세한 배포·소스 제공 조건은 위 문서에서 확인하세요.
+프로젝트 UI와 CHIP-8 코드는 **GPL-3.0-or-later**, mGBA 코어는 **MPL-2.0**, JSNES는 **Apache-2.0**, Gearsystem과 BlastEm은 **GPLv3 계열**, MAME는 프로젝트 전체 기준 **GPL-2.0-or-later**이며 Libretro API 헤더는 **MIT** 라이선스를 따릅니다. 자세한 배포·소스 제공 조건은 위 문서에서 확인하세요.

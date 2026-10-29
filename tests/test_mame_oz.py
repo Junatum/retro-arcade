@@ -18,7 +18,7 @@ class MameOzTests(unittest.TestCase):
             source = Path(folder)
             js = source / 'ssharcade.js'
             wasm = source / 'ssharcade.wasm'
-            js.write_text('Module FS ' + 'x' * 2500)
+            js.write_text('Module[\"FS_createPath\"] Module[\"FS_createDataFile\"] ' + 'x' * 2500)
             wasm.write_bytes(b'\x00asm\x01\x00\x00\x00' + b'fake test body')
             with (patch('sys.argv', ['build_mame.py', '--source', str(source)]),
                   patch.object(build_mame, 'verify_source', return_value='a' * 40),
@@ -65,7 +65,7 @@ class MameOzTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as folder:
             source = Path(folder)
             js, wasm = source / 'ssharcade.js', source / 'ssharcade.wasm'
-            js.write_text('Module FS ' + 'x' * 2500)
+            js.write_text('Module[\"FS_createPath\"] Module[\"FS_createDataFile\"] ' + 'x' * 2500)
             wasm.write_bytes(b'\x00asm\x01\x00\x00\x00')
             with (patch('sys.argv', ['build_mame.py', '--source', str(source), '--package-only']),
                   patch.object(build_mame, 'verify_source', return_value='a' * 40),
@@ -100,7 +100,7 @@ class MameOzTests(unittest.TestCase):
             engine = fake / 'web/mame'
             engine.mkdir(exist_ok=True)
             js, wasm = engine / 'mame.js', engine / 'mame.wasm'
-            js.write_text('Module FS ' + 'x' * 2500)
+            js.write_text('Module[\"FS_createPath\"] Module[\"FS_createDataFile\"] ' + 'x' * 2500)
             wasm.write_bytes(b'\x00asm\x01\x00\x00\x00')
             manifest = {
                 'engine': 'mame', 'version': '0.289', 'tag': 'mame0289',
