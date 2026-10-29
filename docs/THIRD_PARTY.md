@@ -7,6 +7,7 @@
 | JSNES 2.1.0 NES/Famicom 에뮬레이터 | Ben Firshman 및 JSNES 기여자, Apache-2.0 | 검증된 ES 모듈 소스 |
 | Gearsystem Game Gear / Master System / SG-1000 | Nacho Sanchez 및 기여자, GPL-3.0 | JS/WASM 및 매니페스트 포함 |
 | BlastEm Mega Drive / Genesis | Michael Pavone 및 기여자, GPL-3.0-or-later | `-Oz` 빌드 JS/WASM 및 매니페스트 포함 |
+| MAME 0.289 (Pac-Man/Galaxian 선택 드라이버) | MAMEDev 및 기여자, GPL-2.0-or-later; 소스별 BSD-3-Clause 등 | **로컬 빌드 필요**, 현재 MAME WASM 미포함 |
 | Libretro API 헤더 | Libretro 프로젝트, MIT | 대응 소스에서 빌드 시 사용 |
 | EmulatorJS 및 기타 코어 | 원저작자 | 아니요 |
 | 게임 ROM / 상용 BIOS | 각 저작권자 | 아니요 |
@@ -20,3 +21,5 @@ JSNES 공식 출처: https://github.com/bfirsh/jsnes (`2.1.0`). Apache-2.0 원�
 libretro API header: MIT — 원문 `LICENSES/Libretro.txt`에 포함.
 
 Gearsystem: https://github.com/drhelius/Gearsystem, `3.9.21` 태그·`d4a86dfa0a6493020d64af6816ecc35461407c67`. BlastEm: https://www.retrodev.com/repos/blastem, `v1.0.0` 직후 Libretro 수정 변경집합 `625fa5a85505`. 두 코어는 Emscripten으로 로컬 빌드한 JS/WASM이 **이미 포함**되어 있으며, 해시와 빌드 설정은 각각의 `manifest.json`에서 확인합니다. BlastEm의 데스크톱 전용 디버그·오실로스코프 호출은 `native/blastem_headless.h`에서 브라우저용으로 처리합니다. GPLv3 라이선스 전문은 `LICENSES/Gearsystem.txt`, `LICENSES/BlastEm.txt`로 제공합니다. Libretro 헤더의 MIT 고지와 정확한 대응 소스·빌드 파일도 배포 시 유지해야 합니다. [소스 제공 안내](SOURCE_OFFER.md)는 출처·재현 절차를 설명하며, APK 배포자의 실제 소스 제공 의무를 대신하지 않습니다.
+
+MAME: https://github.com/mamedev/mame, 고정 태그 `mame0289`. 전체 프로젝트 GPL-2.0-or-later, 일부 개별 파일은 BSD-3-Clause 등 별도 라이선스. `LICENSES/MAME-GPL2.txt`는 GPLv2 원문이며 소스 파일별 고지 전체를 대체하지 않습니다. MAME 이름·로고 상표 사용 허가는 별도입니다. 완성된 MAME JS/WASM의 구체적 소스는 로컬 빌드 뒤 `web/mame/manifest.json`에서 확인합니다. 현재 소스 패치에는 새 바이너리를 포함하지 않습니다.

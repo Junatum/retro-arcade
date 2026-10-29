@@ -27,6 +27,10 @@ const MEGA_FACE = Object.freeze([
   {key:'b',label:'B',position:'b',name:'B 버튼'},
   {key:'c',label:'C',position:'c',name:'C 버튼'},
 ]);
+const ARCADE_META = Object.freeze([
+  {key:'coin', label:'COIN', position:'select', name:'아케이드 동전 투입 (키보드 5)'},
+  {key:'start', label:'1P START', position:'start', name:'아케이드 1인 플레이 시작 (키보드 1)'},
+]);
 const SHOULDERS = Object.freeze([
   {key:'l', label:'L', position:'l', name:'L 어깨 버튼'},
   {key:'r', label:'R', position:'r', name:'R 어깨 버튼'},
@@ -39,6 +43,7 @@ export function renderController(root, systemId, press) {
   const isGba = systemId === 'mgba';
   const isNes = systemId === 'nes';
   const isMega = systemId === 'blastem';
+  const isArcade = systemId === 'mame';
   const isSega8 = systemId.startsWith('gearsystem-');
   const held = new Set();
   const releaseAll = () => {
@@ -46,7 +51,7 @@ export function renderController(root, systemId, press) {
   };
   root.replaceChildren();
   root.className = `keypad ${isChip8 ? 'keypad--chip8' : isMega ? 'keypad--handheld keypad--megadrive' : 'keypad--handheld'}`;
-  root.setAttribute('aria-label', isChip8 ? 'CHIP-8 16키 터치 키패드' : `${isGba ? 'Game Boy Advance' : isNes ? 'NES / Famicom' : isMega ? 'Mega Drive / Genesis' : isSega8 ? 'Sega 8-bit' : 'Game Boy / Color'} 터치 컨트롤러`);
+  root.setAttribute('aria-label', isChip8 ? 'CHIP-8 16키 터치 키패드' : `${isGba ? 'Game Boy Advance' : isArcade ? 'Arcade' : isNes ? 'NES / Famicom' : isMega ? 'Mega Drive / Genesis' : isSega8 ? 'Sega 8-bit' : 'Game Boy / Color'} 터치 컨트롤러`);
 
   function makeButton(item, groupClass) {
     const btn = doc.createElement('button');
@@ -112,6 +117,6 @@ export function renderController(root, systemId, press) {
   main.appendChild(dpad);
   main.appendChild(makeGroup('controller-face', isMega ? MEGA_FACE : FACE));
   root.appendChild(main);
-  root.appendChild(makeGroup('controller-meta', isMega ? [{key:'mode', label:'MODE', position:'mode', name:'MODE 버튼'}, SYSTEM[1]] : SYSTEM));
+  root.appendChild(makeGroup('controller-meta', isArcade ? ARCADE_META : isMega ? [{key:'mode', label:'MODE', position:'mode', name:'MODE 버튼'}, SYSTEM[1]] : SYSTEM));
   return {releaseAll};
 }

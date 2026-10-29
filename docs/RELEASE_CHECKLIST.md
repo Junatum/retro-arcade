@@ -1,5 +1,12 @@
 # Retro Arcade 공개 / APK 배포 확인
 
+- [ ] MAME 0.289의 **정확한 태그**와 pacman/galaxian 2개 드라이버만 사용했는지 확인
+- [ ] `web/mame/mame.js`, `mame.wasm`, `manifest.json`을 로컬에서 빌드·포함하고 해시·라이선스를 검증
+- [ ] MAME WASM 빌드에 `Module.FS` 접근 제공 여부 및 브라우저 SDL 캔버스/입력/오디오 확인
+- [ ] 라이선스/상표 검토 및 Pac-Man/Galaxian 게임 ROM/BIOS **미포함** 확인
+- [ ] 실기에서 사용자가 제공한 적법한 두 ROM 세트의 실행과 브라우저 메모리·Flash 사용량 확인
+
+
 - [ ] 포함된 mGBA 0.10.5 JS/WASM과 매니페스트의 빌드 출처·해시 확인 (브리지 또는 코어 변경 시에만 재빌드)
 - [ ] `web/mgba/mgba.js`, `mgba.wasm`, `manifest.json` 세 파일 커밋
 - [ ] 개발 PC에서 `python3 scripts/vendor_jsnes.py` 한 번 실행하고 `web/vendor/jsnes/` 모듈·manifest 커밋 (OpenWrt 빌드 시 다운로드 금지)

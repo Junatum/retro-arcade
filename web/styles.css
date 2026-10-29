@@ -149,3 +149,6 @@ body.theater-open{overflow:hidden}
  * explanation remains accessible to screen readers but takes no page space. */
 .sound-status{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
 @media(max-width:560px){.player-heading-actions{width:100%;justify-content:flex-start}.player-heading-actions .sound-button{order:-1}}
+
+/* MAME owns an independent SDL canvas inside an iframe. */
+.mame-frame{display:block;border:0;width:100%;aspect-ratio:4/3;background:#000;border-radius:8px;max-height:78vh}

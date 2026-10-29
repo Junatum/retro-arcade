@@ -13,20 +13,24 @@ except ModuleNotFoundError:  # python3 scripts/release_audit.py
 
 ROOT = Path(__file__).resolve().parents[1]
 WEB = ROOT / 'web'
-VERSION = '1.1.0-r5'
+VERSION = '1.2.0-r1'
 EXPECTED_WEB = {
     'index.html', 'styles.css', 'favicon.svg', 'favicon.ico', 'app.js', 'fullscreen.js', 'controller.js', 'chip8.js', 'systems.js',
-    'demo.js', 'open-source.html', 'battery-store.js', 'save-session.js', 'mgba-player.js', 'jsnes-player.js', 'nes-audio.js', 'sega-player.js', 'audio-controls.js',
+    'mame-player.js', 'mame/runner.html', 'mame/runner.js', 'demo.js', 'open-source.html', 'battery-store.js', 'save-session.js', 'mgba-player.js', 'jsnes-player.js', 'nes-audio.js', 'sega-player.js', 'audio-controls.js',
 }
 MGBA_VENDOR = {'mgba/mgba.js', 'mgba/mgba.wasm', 'mgba/manifest.json'}
 SEGA_ENGINES = ('gearsystem', 'blastem')
 SEGA_VENDOR = {f'{name}/{file}' for name in SEGA_ENGINES
                for file in (f'{name}.js', f'{name}.wasm', 'manifest.json')}
+MAME_TAG = 'mame0289'
+MAME_VERSION = '0.289'
+MAME_SOURCES = 'src/mame/pacman/pacman.cpp,src/mame/galaxian/galaxian.cpp'
+MAME_VENDOR = {'mame/mame.js', 'mame/mame.wasm', 'mame/manifest.json'}
 SEGA_LICENSE = {'gearsystem': 'Gearsystem.txt', 'blastem': 'BlastEm.txt'}
 EXPECTED_SOURCE_COMPONENTS = {
     'native': {'mgba_bridge.c', 'sega_libretro_bridge.c', 'blastem_headless.h'},
-    'scripts': {'build_mgba.py', 'build_sega.py', 'cache_bust.py', 'release_audit.py', 'vendor_jsnes.py'},
-    'LICENSES': {'mGBA.txt', 'JSNES.txt', 'Gearsystem.txt', 'BlastEm.txt', 'Libretro.txt'},
+    'scripts': {'build_mgba.py', 'build_sega.py', 'build_mame.py', 'cache_bust.py', 'release_audit.py', 'vendor_jsnes.py'},
+    'LICENSES': {'mGBA.txt', 'JSNES.txt', 'Gearsystem.txt', 'BlastEm.txt', 'Libretro.txt', 'MAME-GPL2.txt'},
 }
 
 
@@ -34,7 +38,7 @@ def sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def audit(release: bool = False, require_sega: bool = True) -> list[str]:
+def audit(release: bool = False, require_sega: bool = True, require_mame: bool = True) -> list[str]:
     errors = []
     try:
         meta = json.loads((ROOT / 'app-info.json').read_text(encoding='utf-8'))
@@ -46,11 +50,11 @@ def audit(release: bool = False, require_sega: bool = True) -> list[str]:
         mgba_license = (ROOT / 'LICENSES/mGBA.txt').read_text(encoding='utf-8')
     except (OSError, ValueError) as exc:
         return [f'missing or invalid release source: {exc}']
-    if meta.get('version') != VERSION or meta.get('license') != 'GPL-3.0-or-later AND MPL-2.0 AND Apache-2.0 AND MIT':
+    if meta.get('version') != VERSION or meta.get('license') != 'GPL-3.0-or-later AND GPL-2.0-or-later AND MPL-2.0 AND Apache-2.0 AND MIT':
         errors.append('incorrect app version/license')
-    if meta.get('included_systems') != ['CHIP-8', 'Game Boy', 'Game Boy Color', 'Game Boy Advance', 'NES', 'Famicom', 'Game Gear', 'Master System', 'SG-1000', 'Mega Drive', 'Genesis'] or meta.get('offline') is not True:
+    if meta.get('included_systems') != ['CHIP-8', 'Game Boy', 'Game Boy Color', 'Game Boy Advance', 'NES', 'Famicom', 'Game Gear', 'Master System', 'SG-1000', 'Mega Drive', 'Genesis', 'Arcade (MAME 0.289 selected drivers)'] or meta.get('offline') is not True:
         errors.append('incorrect included platforms/offline policy')
-    for required in ('PKG_VERSION:=1.1.0', 'PKG_RELEASE:=5', 'PKG_LICENSE:=GPL-3.0-or-later MPL-2.0 Apache-2.0 MIT',
+    for required in ('PKG_VERSION:=1.2.0', 'PKG_RELEASE:=1', 'PKG_LICENSE:=GPL-3.0-or-later GPL-2.0-or-later MPL-2.0 Apache-2.0 MIT',
                      'python3 $(CURDIR)/scripts/release_audit.py --release'):
         if required not in mk:
             errors.append(f'incorrect OpenWrt package config: {required}')
@@ -92,7 +96,7 @@ def audit(release: bool = False, require_sega: bool = True) -> list[str]:
         errors.append(f'missing source offer: {exc}')
     try:
         history = (ROOT / 'CHANGELOG.md').read_text(encoding='utf-8')
-        if re.findall(r'^## (\d+\.\d+\.\d+-r\d+)\b', history, re.M) != [VERSION, '1.1.0-r4', '1.1.0-r3', '1.1.0-r2', '1.1.0-r1', '1.0.0-r1', '0.1.0-r6', '0.1.0-r5', '0.1.0-r4', '0.1.0-r3', '0.1.0-r2', '0.1.0-r1']:
+        if re.findall(r'^## (\d+\.\d+\.\d+-r\d+)\b', history, re.M) != [VERSION, '1.1.0-r5', '1.1.0-r4', '1.1.0-r3', '1.1.0-r2', '1.1.0-r1', '1.0.0-r1', '0.1.0-r6', '0.1.0-r5', '0.1.0-r4', '0.1.0-r3', '0.1.0-r2', '0.1.0-r1']:
             errors.append('changelog must contain the current release and all previous versions')
     except OSError as exc:
         errors.append(f'missing changelog: {exc}')
@@ -111,6 +115,10 @@ def audit(release: bool = False, require_sega: bool = True) -> list[str]:
         errors.append('JSNES Apache-2.0 license missing')
     if 'JSNES' not in readme or 'JSNES' not in notice:
         errors.append('JSNES attribution missing')
+    if 'GNU GENERAL PUBLIC LICENSE' not in (ROOT / 'LICENSES/MAME-GPL2.txt').read_text():
+        errors.append('MAME GPLv2 license missing')
+    if 'MAME' not in readme or 'MAME' not in notice:
+        errors.append('MAME attribution missing')
     for engine in SEGA_ENGINES:
         lic = ROOT / 'LICENSES' / SEGA_LICENSE[engine]
         if not lic.is_file() or 'GNU GENERAL PUBLIC LICENSE' not in lic.read_text(errors='replace').upper():
@@ -131,7 +139,7 @@ def audit(release: bool = False, require_sega: bool = True) -> list[str]:
     except (OSError, ValueError) as exc:
         errors.append(f'cannot verify browser asset hashes: {exc}')
     vendor_files = {name for name in web_files if name.startswith('vendor/jsnes/')}
-    ordinary_web = web_files - vendor_files
+    ordinary_web = web_files - vendor_files - MAME_VENDOR
     if (ordinary_web - SEGA_VENDOR) not in (EXPECTED_WEB, EXPECTED_WEB | MGBA_VENDOR):
         errors.append(f'unexpected/incomplete web inventory: {sorted((ordinary_web - SEGA_VENDOR) ^ (EXPECTED_WEB | MGBA_VENDOR))}')
     if any(name.startswith('vendor/') and not name.startswith('vendor/jsnes/') for name in web_files):
@@ -145,7 +153,7 @@ def audit(release: bool = False, require_sega: bool = True) -> list[str]:
         if actual != expected:
             errors.append(f'unexpected source inventory in {directory}: {sorted(actual ^ expected)}')
     for script in ('web/app.js', 'web/fullscreen.js', 'web/controller.js', 'web/chip8.js', 'web/demo.js', 'web/systems.js',
-                   'web/battery-store.js', 'web/save-session.js', 'web/mgba-player.js', 'web/jsnes-player.js', 'web/nes-audio.js', 'web/sega-player.js', 'web/audio-controls.js'):
+                   'web/battery-store.js', 'web/save-session.js', 'web/mgba-player.js', 'web/jsnes-player.js', 'web/nes-audio.js', 'web/sega-player.js', 'web/audio-controls.js', 'web/mame-player.js', 'web/mame/runner.js'):
         try:
             source = (ROOT / script).read_text(encoding='utf-8')
         except OSError as exc:
@@ -163,11 +171,11 @@ def audit(release: bool = False, require_sega: bool = True) -> list[str]:
         if path.is_file() and path.suffix.lower() in ('.apk', '.ipk', '.gb', '.gbc', '.gba', '.ch8', '.c8', '.nes', '.gg', '.sms', '.sg', '.gen', '.rom'):
             errors.append(f'ROM/compiled package in source: {path.relative_to(ROOT)}')
         if path.is_file() and path.suffix.lower() in ('.wasm', '.data'):
-            if WEB not in path.parents or path.relative_to(WEB).as_posix() not in MGBA_VENDOR | SEGA_VENDOR:
+            if WEB not in path.parents or path.relative_to(WEB).as_posix() not in MGBA_VENDOR | SEGA_VENDOR | MAME_VENDOR:
                 errors.append(f'unreviewed binary: {path.relative_to(ROOT)}')
     for required in ('docs/THIRD_PARTY.md', 'docs/ARCHITECTURE.md', 'docs/SOURCE_OFFER.md',
                      'docs/INSTALLATION_INFO.md', 'docs/RELEASE_CHECKLIST.md',
-                     'native/mgba_bridge.c', 'native/sega_libretro_bridge.c', 'scripts/build_mgba.py', 'scripts/build_sega.py', 'scripts/vendor_jsnes.py', 'LICENSES/mGBA.txt', 'LICENSES/JSNES.txt', 'LICENSES/Gearsystem.txt', 'LICENSES/BlastEm.txt', 'LICENSES/Libretro.txt'):
+                     'native/mgba_bridge.c', 'native/sega_libretro_bridge.c', 'scripts/build_mgba.py', 'scripts/build_sega.py', 'scripts/vendor_jsnes.py', 'scripts/build_mame.py', 'LICENSES/MAME-GPL2.txt', 'LICENSES/mGBA.txt', 'LICENSES/JSNES.txt', 'LICENSES/Gearsystem.txt', 'LICENSES/BlastEm.txt', 'LICENSES/Libretro.txt'):
         if not (ROOT / required).is_file():
             errors.append(f'missing required source: {required}')
     if any((ROOT / name).exists() for name in
@@ -275,6 +283,40 @@ def audit(release: bool = False, require_sega: bool = True) -> list[str]:
                 errors.append(f'{engine}: invalid WebAssembly header')
         except (OSError, ValueError, TypeError, AttributeError) as exc:
             errors.append(f'{engine}: invalid release manifest ({exc})')
+    # Every published 1.2.0 APK must contain a locally built, provenance-pinned
+    # MAME JS/WASM pair. Never accept a stub or a partial bundle.
+    mame_present = MAME_VENDOR & web_files
+    if mame_present != MAME_VENDOR:
+        if release and require_mame:
+            errors.append('mame: JS/WASM/manifest required before 1.2.0 APK release')
+        elif mame_present:
+            errors.append('mame: incomplete JS/WASM/manifest bundle')
+    else:
+        try:
+            manifest = json.loads((WEB / 'mame/manifest.json').read_text(encoding='utf-8'))
+            good = (manifest.get('engine') == 'mame' and
+                    manifest.get('version') == MAME_VERSION and manifest.get('tag') == MAME_TAG and
+                    manifest.get('upstream') == 'https://github.com/mamedev/mame' and
+                    re.fullmatch(r'[0-9a-f]{40}', str(manifest.get('revision', ''))) and
+                    manifest.get('license') == 'GPL-2.0-or-later' and
+                    manifest.get('drivers') == ['pacman', 'galaxian'] and
+                    manifest.get('optimization') == 'z' and
+                    manifest.get('build_dir') == 'build-ssharcade-oz' and
+                    manifest.get('runtime_exports') == ['FS'] and
+                    manifest.get('sources') == MAME_SOURCES.split(','))
+            if not good:
+                errors.append('mame: unapproved release, driver set, or license')
+            if manifest.get('license_sha256') != sha256(ROOT / 'LICENSES/MAME-GPL2.txt'):
+                errors.append('mame: license checksum mismatch')
+            if manifest.get('build_script_sha256') != sha256(ROOT / 'scripts/build_mame.py'):
+                errors.append('mame: build script changed; rebuild required')
+            for name in ('mame.js', 'mame.wasm'):
+                if manifest.get('artifacts', {}).get(name) != sha256(WEB / 'mame' / name):
+                    errors.append(f'mame: invalid artifact hash {name}')
+            if not (WEB / 'mame/mame.wasm').read_bytes().startswith(b'\x00asm\x01\x00\x00\x00'):
+                errors.append('mame: invalid WebAssembly header')
+        except (OSError, ValueError, TypeError, AttributeError) as exc:
+            errors.append(f'mame: invalid release manifest ({exc})')
     return errors
 
 
@@ -282,16 +324,16 @@ def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     mode = parser.add_mutually_exclusive_group(required=True)
     mode.add_argument('--check', action='store_true', help='check source layout before local WASM rebuild')
-    mode.add_argument('--release', action='store_true', help='require all 4 pinned engine bundles')
-    mode.add_argument('--existing', action='store_true', help='check previously released mGBA/JSNES only, with new cores still blocked for APK')
+    mode.add_argument('--release', action='store_true', help='require all pinned engines including MAME' )
+    mode.add_argument('--existing', action='store_true', help='check previously built engines without requiring MAME')
     args = parser.parse_args()
-    errors = audit(release=args.release or args.existing, require_sega=not args.existing)
+    errors = audit(release=args.release or args.existing, require_sega=not args.existing, require_mame=not args.existing)
     if errors:
         print('FAIL: Retro Arcade inventory')
         for err in errors:
             print(' - ' + err)
         return 1
-    print('PASS: ' + ('APK assets and license provenance verified' if args.release else 'existing release engines verified (Sega release still blocked)' if args.existing else 'source inventory verified (WASM build separate)'))
+    print('PASS: ' + ('APK assets and license provenance verified' if args.release else 'existing released engines verified (MAME release not implied)' if args.existing else 'source inventory verified (WASM build separate)'))
     return 0
 
 

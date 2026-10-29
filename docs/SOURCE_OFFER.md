@@ -1,4 +1,4 @@
-# 대응 소스 및 라이선스 안내 — SmartSafeHub Retro Arcade 1.1.0-r5
+# 대응 소스 및 라이선스 안내 — SmartSafeHub Retro Arcade 1.2.0-r1
 
 이 문서는 OpenWrt APK에 포함된 **HTML/JavaScript/WebAssembly 바이너리의 대응 소스 확인 방법**을 설명합니다. 실제 배포자가 원본 소스와 빌드 방법을 정확하게 제공해야 하며, 문서의 링크만 기재했다고 모든 배포 의무가 충족되는 것은 아닙니다.
 
@@ -26,6 +26,14 @@
 - `web/blastem/manifest.json`: BlastEm upstream 변경집합, 브리지·브라우저 전용 shim 해시, `-Oz`/`-flto`, 빌드 스크립트와 JS/WASM 해시.
 
 정확한 JS/WASM 파일과 매니페스트는 **현재 소스에 포함되어 있습니다**. 원본 프로젝트 전체의 체크아웃은 이 저장소에 복사하지 않았으므로, 배포자는 고정 리비전의 upstream 소스가 실제로 계속 제공되도록 별도 보관하거나 배포물과 함께 내려받을 수 있도록 제공해야 합니다.
+
+## Arcade — MAME 0.289 선택 드라이버
+
+- 공식 고정 소스: https://github.com/mamedev/mame 태그 `mame0289` (빌드 매니페스트에 정확한 Git 커밋 기록).
+- MAME 프로젝트 전체는 `GPL-2.0-or-later`, 다수 파일은 `BSD-3-Clause` 등 별도 조건을 갖습니다. MAME 상표권은 별도로 보호됩니다.
+- `scripts/build_mame.py`는 개발 PC에서 pacman/galaxian **드라이버만** 공식 Emscripten으로 빌드하고 JS/WASM/manifest를 생성합니다.
+- 실제 배포할 MAME 산출물이 준비되기 전에는 `--release`와 APK 빌드가 실패합니다. 빌드 이전 소스 제공 안내는 완성된 바이너리의 소스 제공을 대신하지 않습니다.
+- MAME 빌드에서 선택된 파일과 링크 의존성의 모든 SPDX/라이선스 고지, Emscripten 빌드 옵션 및 수정 내역을 배포자가 보관·제공해야 합니다. ROM/BIOS는 포함하지 않습니다.
 
 ## 대응 바이너리 재빌드
 

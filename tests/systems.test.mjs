@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import { SYSTEMS,detectSystem,validateRom } from '../web/systems.js';
 
 test('CHIP-8 and one mGBA engine provide GB/GBC/GBA platforms',()=>{
-  assert.deepEqual(SYSTEMS.map(s=>s.id),['chip8','mgba-gb','mgba','nes','gearsystem-gg','gearsystem-sms','gearsystem-sg','blastem']);
+  assert.deepEqual(SYSTEMS.map(s=>s.id),['chip8','mgba-gb','mgba','nes','gearsystem-gg','gearsystem-sms','gearsystem-sg','blastem','mame']);
   assert.equal(detectSystem('puzzle.CH8'),SYSTEMS[0]);
   assert.equal(detectSystem('game.gb'),SYSTEMS[1]);
   assert.equal(detectSystem('game.GBC'),SYSTEMS[1]);
@@ -53,4 +53,15 @@ test('Gearsystem and BlastEm cartridge limits and mappings',()=>{
   assert.match(validateRom({name:'game.md',size:9*1024*1024},md),/8MiB/);
   assert.match(validateRom({name:'tiny.gg',size:20},gg),/너무 작/);
   assert.match(validateRom({name:'wrong.gg',size:256},md),/\.md/);
+});
+
+test('MAME 0.289 accepts only the two selected arcade parent ROM ZIPs',()=>{
+  const arcade=SYSTEMS.find(s=>s.id==='mame');
+  assert.equal(detectSystem('pacman.zip'),arcade);
+  assert.equal(validateRom({name:'pacman.zip',size:6000},arcade),null);
+  assert.equal(validateRom({name:'GALAXIAN.ZIP',size:20000},arcade),null);
+  assert.match(validateRom({name:'tetris.zip',size:10000},arcade),/pacman.zip/);
+  assert.match(validateRom({name:'pacman.zip',size:20},arcade),/ZIP/);
+  assert.match(validateRom({name:'pacman.zip',size:13*1024*1024},arcade),/12MiB/);
+  assert.match(validateRom({name:'pacman.nes',size:20000},arcade),/pacman.zip/);
 });

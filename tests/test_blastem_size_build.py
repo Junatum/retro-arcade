@@ -71,7 +71,7 @@ class BlastEmSizeBuildTests(unittest.TestCase):
             with patch.object(release_audit, 'ROOT', fake), patch.object(release_audit, 'WEB', fake / 'web'):
                 self.assertEqual(release_audit.audit(release=False), [])
                 self.assertIn('blastem: -Oz/-flto build required; rebuild JS/WASM and manifest',
-                              release_audit.audit(release=True))
+                              release_audit.audit(release=True, require_mame=False))
                 # Locally rebuilt output receives both fields. Do not weaken
                 # ordinary hash/source checks to accommodate old artifacts.
                 manifest['optimization'] = ['-Oz', '-flto']
@@ -79,16 +79,16 @@ class BlastEmSizeBuildTests(unittest.TestCase):
                     (fake / 'scripts/build_sega.py').read_bytes()
                 ).hexdigest()
                 manifest_file.write_text(json.dumps(manifest))
-                self.assertEqual(release_audit.audit(release=True), [])
+                self.assertEqual(release_audit.audit(release=True, require_mame=False), [])
                 manifest['optimization'] = ['-O2', '-flto']
                 manifest_file.write_text(json.dumps(manifest))
                 self.assertIn('blastem: -Oz/-flto build required; rebuild JS/WASM and manifest',
-                              release_audit.audit(release=True))
+                              release_audit.audit(release=True, require_mame=False))
                 manifest['optimization'] = ['-Oz', '-flto']
                 manifest['build_script_sha256'] = '0' * 64
                 manifest_file.write_text(json.dumps(manifest))
                 self.assertIn('blastem: -Oz/-flto build required; rebuild JS/WASM and manifest',
-                              release_audit.audit(release=True))
+                              release_audit.audit(release=True, require_mame=False))
 
 
 if __name__ == '__main__':

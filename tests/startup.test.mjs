@@ -2,7 +2,7 @@ import test from 'node:test';
 import assert from 'node:assert/strict';
 
 // Stock OpenWrt uhttpd recognizes .js, not .mjs. Check that the browser
-// entrypoint can initialize the four platform cards without an HTTP server.
+// entrypoint can initialize the supported platform cards without an HTTP server.
 test('Retro Arcade initializes platforms and highlights only the bundled demo player on the right', async () => {
   let lastImage = null;
   let nextFrame = null;
@@ -55,8 +55,8 @@ test('Retro Arcade initializes platforms and highlights only the bundled demo pl
   globalThis.window = {addEventListener() {}};
   try {
     await import('../web/app.js?startup-test');
-    assert.equal(doc.getElementById('systems').children.length, 8);
-    assert.deepEqual(doc.getElementById('systems').children.map(b => b.dataset.system), ['chip8','mgba-gb','mgba','nes','gearsystem-gg','gearsystem-sms','gearsystem-sg','blastem']);
+    assert.equal(doc.getElementById('systems').children.length, 9);
+    assert.deepEqual(doc.getElementById('systems').children.map(b => b.dataset.system), ['chip8','mgba-gb','mgba','nes','gearsystem-gg','gearsystem-sms','gearsystem-sg','blastem','mame']);
     const demo = doc.getElementById('demo');
     const actions = doc.getElementById('load-buttons');
     assert.equal(demo.disabled, false, 'CHIP-8 starts with a visible demo');

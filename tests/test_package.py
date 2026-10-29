@@ -53,7 +53,7 @@ class PackageTests(unittest.TestCase):
             shutil.copytree(ROOT, fake, ignore=shutil.ignore_patterns('.git', '__pycache__'))
             (fake / 'web/vendor/jsnes/manifest.json').unlink()
             with patch.object(release_audit, 'ROOT', fake), patch.object(release_audit, 'WEB', fake / 'web'):
-                self.assertTrue(any('JSNES 2.1.0 vendor' in e for e in release_audit.audit(release=True)))
+                self.assertTrue(any('JSNES 2.1.0 vendor' in e for e in release_audit.audit(release=True, require_mame=False)))
             # Changed module content must invalidate the parent import hash.
             (fake / 'web/demo.js').write_text((fake / 'web/demo.js').read_text() + '\n// changed\n')
             self.assertIn('app.js', cache_bust.check(web=fake / 'web'))
@@ -65,7 +65,7 @@ class PackageTests(unittest.TestCase):
         self.assertEqual(audit(), [])
         # The bundled BlastEm WASM is already the -Oz/-flto release build.
         # Never hide an optimization mismatch in the release gate.
-        self.assertEqual(audit(release=True), [])
+        self.assertEqual(audit(release=True, require_mame=False), [])
         with tempfile.TemporaryDirectory() as tmp:
             fake = pathlib.Path(tmp) / 'repo'
             shutil.copytree(ROOT, fake, ignore=shutil.ignore_patterns('.git', '__pycache__'))
@@ -74,7 +74,7 @@ class PackageTests(unittest.TestCase):
                 self.assertTrue(wasm.is_file(), f'expected bundled WASM: {engine}')
                 wasm.unlink()
             with patch.object(release_audit, 'ROOT', fake), patch.object(release_audit, 'WEB', fake / 'web'):
-                errors = release_audit.audit(release=True)
+                errors = release_audit.audit(release=True, require_mame=False)
             for engine in release_audit.SEGA_ENGINES:
                 self.assertTrue(any(f'{engine}: JS/WASM/manifest' in e for e in errors),
                                 f'{engine} missing-WASM guard did not trigger: {errors}')
@@ -118,18 +118,18 @@ class PackageTests(unittest.TestCase):
             extra.write_text('// unreviewed core')
             with patch.object(release_audit, 'ROOT', fake), patch.object(release_audit, 'WEB', fake / 'web'):
                 self.assertTrue(any('unexpected source inventory in native' in e
-                                    for e in release_audit.audit(release=True)))
+                                    for e in release_audit.audit(release=True, require_mame=False)))
 
     def test_revision_platforms_and_licenses(self):
         info = json.loads((ROOT / 'app-info.json').read_text())
         make = (ROOT / 'Makefile').read_text()
-        self.assertEqual(info['version'], '1.1.0-r5')
-        self.assertIn('PKG_VERSION:=1.1.0', make)
-        self.assertIn('PKG_RELEASE:=5', make)
-        self.assertEqual(info['license'], 'GPL-3.0-or-later AND MPL-2.0 AND Apache-2.0 AND MIT')
-        self.assertEqual(info['included_systems'], ['CHIP-8', 'Game Boy', 'Game Boy Color', 'Game Boy Advance', 'NES', 'Famicom', 'Game Gear', 'Master System', 'SG-1000', 'Mega Drive', 'Genesis'])
+        self.assertEqual(info['version'], '1.2.0-r1')
+        self.assertIn('PKG_VERSION:=1.2.0', make)
+        self.assertIn('PKG_RELEASE:=1', make)
+        self.assertEqual(info['license'], 'GPL-3.0-or-later AND GPL-2.0-or-later AND MPL-2.0 AND Apache-2.0 AND MIT')
+        self.assertEqual(info['included_systems'], ['CHIP-8', 'Game Boy', 'Game Boy Color', 'Game Boy Advance', 'NES', 'Famicom', 'Game Gear', 'Master System', 'SG-1000', 'Mega Drive', 'Genesis', 'Arcade (MAME 0.289 selected drivers)'])
         self.assertNotIn('GL-MT300N-V2', info['supported_models'])
-        self.assertIn('Browser-based CHIP-8, GB/GBC/GBA, NES and Sega', make)
+        self.assertIn('Browser-based CHIP-8, GB/GBC/GBA, NES, Sega', make)
         self.assertIn('LICENSES/mGBA.txt', make)
         self.assertIn('LICENSES/JSNES.txt', make)
 
@@ -194,7 +194,7 @@ class PackageTests(unittest.TestCase):
     def test_release_gate_requires_rebuild_when_abi_changes(self):
         # Source check works before local emcc rebuild; release check never accepts stale ABI.
         self.assertEqual(audit(), [])
-        current = audit(release=True)
+        current = audit(release=True, require_mame=False)
         if current:
             self.assertTrue(any('bridge changed since binary build' in error or 'JSNES 2.1.0 vendor' in error or 'JS/WASM/manifest' in error or 'blastem: -Oz/-flto build required' in error for error in current))
 
@@ -209,12 +209,12 @@ class PackageTests(unittest.TestCase):
             manifest_file.write_text(json.dumps(manifest))
             with patch.object(release_audit, 'ROOT', fake), patch.object(release_audit, 'WEB', fake / 'web'):
                 self.assertFalse(any('invalid mGBA binary hash' in e
-                                     for e in release_audit.audit(release=True)))
+                                     for e in release_audit.audit(release=True, require_mame=False)))
                 wasm = fake / 'web/mgba/mgba.wasm'
                 wasm.write_bytes(b'bad bytes')
-                self.assertTrue(any('invalid mGBA binary hash' in e for e in release_audit.audit(release=True)))
+                self.assertTrue(any('invalid mGBA binary hash' in e for e in release_audit.audit(release=True, require_mame=False)))
                 wasm.unlink()
-                self.assertTrue(any('mGBA 0.10.5' in e for e in release_audit.audit(release=True)))
+                self.assertTrue(any('mGBA 0.10.5' in e for e in release_audit.audit(release=True, require_mame=False)))
 
     def test_bridge_change_requires_matching_binary_manifest(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -226,9 +226,9 @@ class PackageTests(unittest.TestCase):
             mf.write_text(json.dumps(info))
             with patch.object(release_audit, 'ROOT', fake), patch.object(release_audit, 'WEB', fake / 'web'):
                 self.assertFalse(any('mGBA bridge changed' in e
-                                     for e in release_audit.audit(release=True)))
+                                     for e in release_audit.audit(release=True, require_mame=False)))
                 (fake / 'native/mgba_bridge.c').write_text('// modified')
-                self.assertTrue(any('mGBA bridge changed' in e for e in release_audit.audit(release=True)))
+                self.assertTrue(any('mGBA bridge changed' in e for e in release_audit.audit(release=True, require_mame=False)))
 
     def test_chip8_paddle_rally_has_original_game_and_controls(self):
         demo = (ROOT / 'web/demo.js').read_text()
@@ -383,12 +383,12 @@ class PackageTests(unittest.TestCase):
         history = (ROOT / 'CHANGELOG.md').read_text()
         for heading in ('### 추가', '### 개선', '### 수정', '### 호환성', '### 테스트'):
             self.assertIn(heading, history)
-        self.assertIn('1.1.0-r5', (ROOT / 'docs/SOURCE_OFFER.md').read_text())
+        self.assertIn('1.2.0-r1', (ROOT / 'docs/SOURCE_OFFER.md').read_text())
         for path in ('README.md', 'docs/ARCHITECTURE.md', 'docs/RELEASE_CHECKLIST.md',
                      'docs/THIRD_PARTY.md', 'web/open-source.html'):
             source = (ROOT / path).read_text()
             self.assertIsNone(re.search(r'\b\d+\.\d+\.\d+-r\d+\b', source), path)
-        self.assertIn('<span class="edition">v1.1.0-r5</span>', (ROOT / 'web/index.html').read_text())
+        self.assertIn('<span class="edition">v1.2.0-r1</span>', (ROOT / 'web/index.html').read_text())
 
     def test_release_guard_requires_correct_header_badge(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -402,7 +402,7 @@ class PackageTests(unittest.TestCase):
                             encoding='utf-8')
             with patch.object(release_audit, 'ROOT', fake), patch.object(release_audit, 'WEB', fake / 'web'):
                 self.assertTrue(any('header version badge must match' in error
-                                    for error in release_audit.audit(release=True)))
+                                    for error in release_audit.audit(release=True, require_mame=False)))
 
     def test_release_guard_rejects_unnecessary_visible_version(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -412,7 +412,7 @@ class PackageTests(unittest.TestCase):
             readme.write_text(readme.read_text() + '\n버전: 1.0.0-r1\n')
             with patch.object(release_audit, 'ROOT', fake), patch.object(release_audit, 'WEB', fake / 'web'):
                 self.assertTrue(any('unnecessary product version shown in README.md' in error
-                                    for error in release_audit.audit(release=True)))
+                                    for error in release_audit.audit(release=True, require_mame=False)))
 
 
     def test_local_favicons_are_packaged_for_both_pages(self):
@@ -437,11 +437,11 @@ class PackageTests(unittest.TestCase):
             shutil.copytree(ROOT, fake, ignore=shutil.ignore_patterns('.git', '__pycache__'))
             with patch.object(release_audit, 'ROOT', fake), patch.object(release_audit, 'WEB', fake / 'web'):
                 (fake / 'web/favicon.ico').unlink()
-                self.assertTrue(any('favicon' in error for error in audit(release=True)))
+                self.assertTrue(any('favicon' in error for error in audit(release=True, require_mame=False)))
                 (fake / 'web/favicon.ico').write_bytes((ROOT / 'web/favicon.ico').read_bytes())
                 source = fake / 'web/open-source.html'
                 source.write_text(source.read_text().replace('href="./favicon.svg"', 'href="./missing.svg"'))
-                self.assertTrue(any('missing favicon link' in error for error in audit(release=True)))
+                self.assertTrue(any('missing favicon link' in error for error in audit(release=True, require_mame=False)))
 
 
     def test_jsnes_release_blocks_missing_modules_and_detects_tamper(self):
@@ -452,7 +452,7 @@ class PackageTests(unittest.TestCase):
             # developer has already installed and committed JSNES modules.
             shutil.rmtree(fake / 'web/vendor', ignore_errors=True)
             with patch.object(release_audit, 'ROOT', fake), patch.object(release_audit, 'WEB', fake / 'web'):
-                self.assertTrue(any('JSNES 2.1.0 vendor' in error for error in audit(release=True)))
+                self.assertTrue(any('JSNES 2.1.0 vendor' in error for error in audit(release=True, require_mame=False)))
                 vendor = fake / 'web/vendor/jsnes'
                 (vendor / 'src').mkdir(parents=True)
                 fake_module = b'export default class NES {}\n'
@@ -466,9 +466,9 @@ class PackageTests(unittest.TestCase):
                               for name in ('nes.js', 'controller.js', 'utils.js')},
                 }
                 (vendor / 'manifest.json').write_text(json.dumps(manifest))
-                self.assertFalse(any('JSNES' in e for e in audit(release=True)))
+                self.assertFalse(any('JSNES' in e for e in audit(release=True, require_mame=False)))
                 (vendor / 'src/nes.js').write_bytes(b'altered')
-                self.assertTrue(any('invalid JSNES source hash' in e for e in audit(release=True)))
+                self.assertTrue(any('invalid JSNES source hash' in e for e in audit(release=True, require_mame=False)))
 
 if __name__ == '__main__':
     unittest.main()

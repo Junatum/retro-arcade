@@ -27,8 +27,33 @@ SmartSafeHub Apps에서 제공하는 **로컬 레트로 게임 앱**입니다. �
 | Master System | `.sms` | Gearsystem 3.9.21 | 십자 방향키, A/B, SELECT/START |
 | SG-1000 | `.sg` | Gearsystem 3.9.21 | 십자 방향키, A/B, SELECT/START |
 | Mega Drive / Genesis | `.md`, `.gen`, `.bin` | BlastEm 1.0.0 계열 | 십자 방향키, A/B/C, X/Y/Z, START/MODE |
+| Arcade (선택 드라이버) | `pacman.zip`, `galaxian.zip` | MAME 0.289 (개발 PC 빌드 필요) | 십자 방향키, 버튼 1/2, COIN/START |
 
 Game Boy, Game Boy Color, Game Boy Advance는 **하나의 mGBA 엔진**으로 실행됩니다. CHIP-8에는 직접 제작한 **패들 랠리** 미니게임이 포함되어 있으며, **데모 게임 플레이 버튼은 CHIP-8 선택 시에만 표시**됩니다.
+
+## Arcade (MAME 0.289, 선택 드라이버)
+
+아케이드 화면은 **Pac-Man·Galaxian 드라이버만** 포함하는 소규모 MAME Emscripten 빌드를 사용하도록 설계되었습니다. 사용자가 적법하게 소유한 **`pacman.zip` 또는 `galaxian.zip`** 을 직접 선택합니다. 다른 ZIP, 클론, BIOS·CHD, 상용 ROM 및 자동 다운로드는 지원하지 않습니다. 아케이드 ROM 세트는 MAME 0.289와 일치해야 합니다.
+
+**중요:** 소스 패치에는 새 MAME JS/WASM 바이너리를 포함하지 않습니다. 현지 개발 환경에서 실제 빌드 후 오디오·화면·입력·모바일 성능을 검증해야 하며, 빌드 전에는 `release_audit.py --release`가 실패하므로 이 상태 그대로 APK를 출시할 수 없습니다. MAME 공식 웹 빌드와 SDL/브라우저 통합은 **아직 실기 검증 전**입니다.
+
+```sh
+# 개발 PC에서 Emscripten 6.0.2+ (SDL3 지원), Git, Python 준비
+# 빌드 명령 실행 위치는 Retro Arcade 저장소 루트
+
+git clone --depth 1 --branch mame0289 https://github.com/mamedev/mame.git /tmp/mame
+[ ! -f /tmp/mame/ssharcade.wasm ] || cp /tmp/mame/ssharcade.wasm /tmp/mame-before.wasm
+python3 scripts/build_mame.py --source /tmp/mame --jobs 2
+# -Oz 빌드 후 이전 파일과 비교: ls -lh /tmp/mame-before.wasm web/mame/mame.wasm
+# 기본 산출물: /tmp/mame/ssharcade.js + /tmp/mame/ssharcade.wasm
+# 다른 위치에 생성된 경우 --js /path/to/file.js --wasm /path/to/file.wasm 지정
+python3 scripts/cache_bust.py --update
+python3 scripts/release_audit.py --release
+```
+
+MAME의 **`OPTIMIZE=z` (`-Oz`)** 빌드는 `BUILDDIR=build-ssharcade-oz`에 새 중간 산출물을 생성하므로 기존 `-Os` 오브젝트를 재사용하지 않습니다. `--package-only`는 앞서 성공한 `-Oz` 빌드의 로컬 영수증과 JS/WASM 해시가 일치할 때에만 허용합니다. 이전 빌드에 적용하면 실패하므로 먼저 위 빌드 명령을 실행하세요. `-Oz`는 성능과 브라우저 호환성에 영향을 줄 수 있어 실제 게임 테스트가 필요합니다.
+
+MAME 공식 Emscripten 런타임은 **`Module.FS` 접근이 가능한 빌드**여야 합니다. 빌드 도구는 `OPTIMIZE=z`, `BUILDDIR=build-ssharcade-oz`, `LDOPTS=-sEXPORTED_RUNTIME_METHODS=FS`를 전달합니다. 그렇지 않으면 사용자 ROM을 브라우저 메모리 파일시스템에 배치할 수 없어 실행이 차단됩니다. 이 설정이 공식 Makefile에서 그대로 전달되는지는 실제 빌드 결과로 확인해야 합니다. 조작: 방향키, Z(버튼 1), X(버튼 2), 5(COIN), 1(1P START). MAME의 별도 실행기 내부 오디오/일시정지 지원은 실기 검증이 필요합니다. 상표상 앱 화면에서는 **Arcade**로 표시합니다.
 
 ## 주요 기능
 

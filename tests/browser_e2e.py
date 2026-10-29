@@ -68,7 +68,7 @@ class BrowserSmoke(unittest.TestCase):
                 page.on('request', lambda req: failures.append(f'external request: {req.url}') if not req.url.startswith(self.url) else None)
                 try:
                     page.goto(self.url, wait_until='networkidle')
-                    self.assertEqual(page.locator('#systems button').count(), 8)
+                    self.assertEqual(page.locator('#systems button').count(), 9)
                     self.assertEqual(page.locator('#demo').is_visible(), True)
                     page.locator('#systems button').nth(3).click()
                     self.assertEqual(page.locator('#demo').is_visible(), False)
@@ -80,6 +80,23 @@ class BrowserSmoke(unittest.TestCase):
                     self.assertEqual(failures, [], f'{width}px console/network failures')
                 finally:
                     page.close()
+
+    def test_arcade_only_accepts_selected_rom_names_before_loading(self):
+        # No game assets, emulator JS or WASM are required for this UI contract.
+        page = self.browser.new_page(viewport={'width': 390, 'height': 844})
+        try:
+            page.goto(self.url, wait_until='networkidle')
+            page.locator('#systems button').last.click()
+            self.assertIn('pacman.zip', page.locator('#rom-help').inner_text())
+            page.locator('#rom-file').set_input_files({
+                'name': 'tetris.zip', 'mimeType': 'application/zip',
+                'buffer': b'PK\x03\x04' + bytes(64),
+            })
+            self.assertFalse(page.locator('#play').is_enabled())
+            self.assertIn('pacman.zip', page.locator('#notice').inner_text())
+            self.assertEqual(page.locator('iframe').count(), 0)
+        finally:
+            page.close()
 
     def test_blocked_browser_storage_displays_warning(self):
         context = self.browser.new_context()

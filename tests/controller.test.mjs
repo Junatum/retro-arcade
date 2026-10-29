@@ -97,3 +97,12 @@ test('Sega 8-bit uses two buttons; Mega Drive has six buttons and MODE',()=>{
   hit(buttons(el).find(b=>b.dataset.position==='c'),'pointerup');
   assert.deepEqual(events,[['c',true],['c',false]]);
 });
+
+test('Arcade controller includes coins and one-player start without other BIOS keys',()=>{
+  const el=root(),events=[];
+  renderController(el,'mame',(key,on)=>events.push([key,on]));
+  assert.deepEqual(buttons(el).map(b=>b.textContent),['↑','←','↓','→','B','A','COIN','1P START']);
+  const coin=buttons(el).find(b=>b.textContent==='COIN');
+  hit(coin,'pointerdown');hit(coin,'pointerup');
+  assert.deepEqual(events,[['coin',true],['coin',false]]);
+});

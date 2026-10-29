@@ -1,0 +1,28 @@
+{
+  "engine": "mame",
+  "version": "0.289",
+  "tag": "mame0289",
+  "revision": "f34f02505e32c1993c6a782b6814232cbfc74e36",
+  "upstream": "https://github.com/mamedev/mame",
+  "license": "GPL-2.0-or-later",
+  "sources": [
+    "src/mame/pacman/pacman.cpp",
+    "src/mame/galaxian/galaxian.cpp"
+  ],
+  "drivers": [
+    "pacman",
+    "galaxian"
+  ],
+  "optimization": "z",
+  "build_dir": "build-ssharcade-oz",
+  "runtime_exports": [
+    "FS"
+  ],
+  "license_sha256": "edaef632cbb643e4e7a221717a6c441a4c1a7c918e6e4d56debc3d8739b233f6",
+  "build_script_sha256": "134c759d66749538b9e5eddc116562ef744ef024951202a3fe1c03b4dc9010f9",
+  "emscripten": "emcc (Emscripten gcc/clang-like replacement + linker emulating GNU ld) 6.0.13-git",
+  "artifacts": {
+    "mame.js": "7604034ba6aec2d23a6d338c90ed3af7d80405fa24913898e952d6882113786a",
+    "mame.wasm": "49dd832025c413e23e2cde1ebf6b0326aeeab929f21d59c3f063fca49340cd5f"
+  }
+}
