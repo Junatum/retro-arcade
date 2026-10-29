@@ -1,7 +1,7 @@
 {
   "id": "retro-arcade",
   "package": "smartsafehub-app-retro-arcade",
-  "version": "1.2.0-r2",
+  "version": "1.2.0-r3",
   "name": "SmartSafeHub Retro Arcade",
   "category": "entertainment",
   "summary": "CHIP-8, GB/GBC/GBA, NES, Sega 8비트·16비트 및 Arcade 게임을 브라우저에서 실행",
@@ -34,5 +34,5 @@
     "Arcade (MAME 0.289 selected drivers)"
   ],
   "license": "GPL-3.0-or-later AND GPL-2.0-or-later AND MPL-2.0 AND Apache-2.0 AND MIT",
-  "notes": "Gearsystem(Game Gear/Master System/SG-1000)과 BlastEm(Mega Drive/Genesis)은 브라우저에서 로컬 WASM으로 실행합니다. ROM은 공유기로 전송되지 않습니다. Arcade는 MAME 0.289의 선택 드라이버(pacman/galaxian)로 빌드하며, 바이너리 미포함 시 릴리스가 차단됩니다."
+  "notes": "Gearsystem과 BlastEm은 브라우저의 로컬 WASM으로 실행합니다. 게임 파일은 공유기로 전송되지 않습니다. Arcade는 이미 빌드된 MAME 0.289 WASM의 등록된 기기 식별자만 지원하며, 바이너리·목록 검증 실패 시 릴리스가 차단됩니다."
 }

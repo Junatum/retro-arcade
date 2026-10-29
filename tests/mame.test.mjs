@@ -1,7 +1,7 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-test('MAME runner selects only two fixed drivers, with no remote ROM fetch',async()=>{
+test('MAME runner uses the compiled machine allowlist without remote ROM fetch',async()=>{
   const oldWindow=globalThis.window, oldLocation=globalThis.location;
   const subscriptions=[];
   globalThis.location={origin:'http://router.local'};

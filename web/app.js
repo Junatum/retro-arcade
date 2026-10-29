@@ -1,13 +1,13 @@
 /* SmartSafeHub Retro Arcade — GPL-3.0-or-later; entirely local browser playback. */
 import { Chip8, DISPLAY_WIDTH, DISPLAY_HEIGHT } from './chip8.js?v=24c3002c045b';
 import { DEMO_ROM, DEMO_TITLE, DEMO_CONTROLS, DEMO_FINISHED_PC, DEMO_WIN_SCORE } from './demo.js?v=d5358e9686ba';
-import { SYSTEMS, detectSystem, validateRom } from './systems.js?v=8595d59032d7';
+import { SYSTEMS, detectSystem, validateRom } from './systems.js?v=3baa74b0ac8f';
 import { romStorageKey } from './battery-store.js?v=089100328af3';
 import { SaveSession } from './save-session.js?v=091750ebf000';
 import { MgbaPlayer } from './mgba-player.js?v=8d6c2b534ff6';
 import { JsnesPlayer } from './jsnes-player.js?v=546b95572681';
 import { SegaPlayer } from './sega-player.js?v=0d35cad20b44';
-import { MamePlayer } from './mame-player.js?v=75e1d358d1ee';
+import { MamePlayer } from './mame-player.js?v=e87a0eeb77de';
 import { NesAudio } from './nes-audio.js?v=980e7224b90b';
 import { supportsGameAudio, paintAudioState } from './audio-controls.js?v=b4321a145dca';
 import { setupFullscreen } from './fullscreen.js?v=27d207810633';
@@ -179,7 +179,7 @@ function choose(system){
   input.value='';input.accept=system.extensions.map(x=>'.'+x).join(',');
   $('play').disabled=true;
   $('rom-label').textContent=`${system.label} ROM 파일`;
-  $('rom-help').textContent= system.id==='chip8' ? '권리를 보유한 .ch8 / .c8 ROM을 선택하세요 (최대 3,584바이트).' : system.id==='mgba-gb' ? '권리를 보유한 .gb / .gbc ROM을 선택하세요 (최대 8MiB). 게임 데이터는 공유기로 전송되지 않습니다.' : system.id==='mame' ? '권리를 보유한 pacman.zip / galaxian.zip만 지원합니다 (최대 12MiB). 해당 MAME 버전의 ROM 세트가 필요하며 게임 파일은 공유기로 전송되지 않습니다.' : system.id==='nes' ? '권리를 보유한 .nes 파일을 선택하세요 (최대 8MiB). 게임 데이터는 공유기로 전송되지 않습니다.' : system.id.startsWith('gearsystem-') || system.id==='blastem' ? `권리를 보유한 ${system.extensions.map(x=>'.'+x).join(' / ')} ROM을 선택하세요 (최대 ${system.maxSize/1024/1024}MiB). ROM은 공유기로 전송되지 않습니다.` : '권리를 보유한 .gba ROM을 선택하세요 (최대 32MiB). BIOS는 필요하지 않으며 ROM은 전송되지 않습니다.';
+  $('rom-help').textContent= system.id==='chip8' ? '권리를 보유한 .ch8 / .c8 ROM을 선택하세요 (최대 3,584바이트).' : system.id==='mgba-gb' ? '권리를 보유한 .gb / .gbc ROM을 선택하세요 (최대 8MiB). 게임 데이터는 공유기로 전송되지 않습니다.' : system.id==='mame' ? '내장된 아케이드 엔진과 호환되는 .zip 파일을 선택하세요 (최대 12MiB). 파일은 공유기로 전송되지 않습니다.' : system.id==='nes' ? '권리를 보유한 .nes 파일을 선택하세요 (최대 8MiB). 게임 데이터는 공유기로 전송되지 않습니다.' : system.id.startsWith('gearsystem-') || system.id==='blastem' ? `권리를 보유한 ${system.extensions.map(x=>'.'+x).join(' / ')} ROM을 선택하세요 (최대 ${system.maxSize/1024/1024}MiB). ROM은 공유기로 전송되지 않습니다.` : '권리를 보유한 .gba ROM을 선택하세요 (최대 32MiB). BIOS는 필요하지 않으며 ROM은 전송되지 않습니다.';
   $('control-help').textContent=system.id==='chip8' ? DEMO_CONTROLS + ' · 외부 CHIP-8 ROM은 게임마다 조작이 다릅니다.' : system.id==='mame' ? '방향키 이동 · Z(버튼 1) / X(버튼 2) · 5(COIN) / 1(1P START) · 모바일 터치 지원' : system.id==='blastem' ? '방향키 이동 · Z(A) / X(B) / C(C) · A(X) / S(Y) / D(Z) · Enter(START) / Shift(MODE) · 모바일 터치 지원' : '방향키 이동 · X(A) / Z(B) · Enter(START) / Shift(SELECT)' + (system.id==='mgba' ? ' · A(L) / S(R)' : '') + ' · 모바일 터치 지원';
   const hasDemo=system.id==='chip8';
   $('demo').disabled=!hasDemo;

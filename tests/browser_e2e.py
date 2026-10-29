@@ -81,19 +81,25 @@ class BrowserSmoke(unittest.TestCase):
                 finally:
                     page.close()
 
-    def test_arcade_only_accepts_selected_rom_names_before_loading(self):
+    def test_arcade_accepts_compiled_machine_ids_only_before_loading(self):
         # No game assets, emulator JS or WASM are required for this UI contract.
         page = self.browser.new_page(viewport={'width': 390, 'height': 844})
         try:
             page.goto(self.url, wait_until='networkidle')
             page.locator('#systems button').last.click()
-            self.assertIn('pacman.zip', page.locator('#rom-help').inner_text())
+            self.assertIn('호환되는 .zip', page.locator('#rom-help').inner_text())
             page.locator('#rom-file').set_input_files({
                 'name': 'tetris.zip', 'mimeType': 'application/zip',
                 'buffer': b'PK\x03\x04' + bytes(64),
             })
             self.assertFalse(page.locator('#play').is_enabled())
-            self.assertIn('pacman.zip', page.locator('#notice').inner_text())
+            self.assertIn('지원하지 않는', page.locator('#notice').inner_text())
+            self.assertEqual(page.locator('iframe').count(), 0)
+            page.locator('#rom-file').set_input_files({
+                'name': 'mooncrst.zip', 'mimeType': 'application/zip',
+                'buffer': b'PK\x03\x04' + bytes(64),
+            })
+            self.assertTrue(page.locator('#play').is_enabled())
             self.assertEqual(page.locator('iframe').count(), 0)
         finally:
             page.close()

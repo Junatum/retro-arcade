@@ -1,18 +1,18 @@
+import { arcadeMachine, isArcadeMachine } from './machines.js?v=fe66260ee1a4';
 /* Local, isolated arcade loader. ROM bytes arrive from the same-origin parent only.
  * The pinned MAME 0.289 runtime exports FS_createPath / FS_createDataFile,
  * not Module.FS.  Keep the fallback for other compatible FS exports.
  * No ROMs are fetched from a server; only mame.js/mame.wasm are loaded locally. */
-const SYSTEMS = Object.freeze({ 'pacman.zip': 'pacman', 'galaxian.zip': 'galaxian' });
 let started = false;
 let moduleRef = null;
 const notify = (type, message = '') => window.parent.postMessage({mame:type,message}, location.origin);
 export function driverName(filename) {
-  return Object.hasOwn(SYSTEMS, String(filename).toLowerCase()) ? SYSTEMS[filename.toLowerCase()] : null;
+  return arcadeMachine(filename);
 }
 /** Store the explicitly selected local ROM before the MAME main() call.
  * MAME 0.289 exposes legacy file helpers, not necessarily Module.FS. */
 export function installRom(module, driver, contents) {
-  if (!['pacman', 'galaxian'].includes(driver) || !(contents instanceof Uint8Array))
+  if (!isArcadeMachine(driver) || !(contents instanceof Uint8Array))
     throw new Error('지원하지 않는 아케이드 ROM입니다.');
   if (typeof module?.FS_createPath === 'function' &&
       typeof module?.FS_createDataFile === 'function') {

@@ -1,10 +1,11 @@
+import { arcadeMachine } from './mame/machines.js?v=fe66260ee1a4';
 /* Browser-local MAME arcade iframe adapter, isolated from mGBA/Sega canvases. */
 const ARCADE_URL = new URL('./mame/runner.html', import.meta.url);
 const IDLE_TIMEOUT = 45000;
 export class MamePlayer {
   constructor(frame) { this.iframe=frame; this.active=false; this.fps=60; this.paused=false; }
   static create(stage, bytes, filename, {timeout=IDLE_TIMEOUT}={}) {
-    if (!(bytes instanceof Uint8Array) || bytes.length<22 || bytes[0]!==0x50 || bytes[1]!==0x4b || bytes[2]!==3 || bytes[3]!==4 || !/^(pacman|galaxian)\.zip$/i.test(filename))
+    if (!(bytes instanceof Uint8Array) || bytes.length<22 || bytes[0]!==0x50 || bytes[1]!==0x4b || bytes[2]!==3 || bytes[3]!==4 || !arcadeMachine(filename))
       return Promise.reject(new Error('지원하지 않는 아케이드 ROM입니다.'));
     const iframe=document.createElement('iframe');
     iframe.src=ARCADE_URL.href;

@@ -55,13 +55,15 @@ test('Gearsystem and BlastEm cartridge limits and mappings',()=>{
   assert.match(validateRom({name:'wrong.gg',size:256},md),/\.md/);
 });
 
-test('MAME 0.289 accepts only the two selected arcade parent ROM ZIPs',()=>{
+test('MAME 0.289 accepts compiled machine identifiers, without public ROM metadata',()=>{
   const arcade=SYSTEMS.find(s=>s.id==='mame');
   assert.equal(detectSystem('pacman.zip'),arcade);
   assert.equal(validateRom({name:'pacman.zip',size:6000},arcade),null);
   assert.equal(validateRom({name:'GALAXIAN.ZIP',size:20000},arcade),null);
-  assert.match(validateRom({name:'tetris.zip',size:10000},arcade),/pacman.zip/);
+  assert.equal(validateRom({name:'mooncrst.zip',size:8000},arcade),null);
+  assert.equal(validateRom({name:'mspacman.zip',size:8000},arcade),null);
+  assert.match(validateRom({name:'tetris.zip',size:10000},arcade),/지원하지 않는/);
   assert.match(validateRom({name:'pacman.zip',size:20},arcade),/ZIP/);
   assert.match(validateRom({name:'pacman.zip',size:13*1024*1024},arcade),/12MiB/);
-  assert.match(validateRom({name:'pacman.nes',size:20000},arcade),/pacman.zip/);
+  assert.match(validateRom({name:'pacman.nes',size:20000},arcade),/지원하지 않는/);
 });

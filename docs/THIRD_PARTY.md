@@ -7,7 +7,7 @@
 | JSNES 2.1.0 NES/Famicom 에뮬레이터 | Ben Firshman 및 JSNES 기여자, Apache-2.0 | 검증된 ES 모듈 소스 |
 | Gearsystem Game Gear / Master System / SG-1000 | Nacho Sanchez 및 기여자, GPL-3.0 | JS/WASM 및 매니페스트 포함 |
 | BlastEm Mega Drive / Genesis | Michael Pavone 및 기여자, GPL-3.0-or-later | `-Oz` 빌드 JS/WASM 및 매니페스트 포함 |
-| MAME 0.289 (Pac-Man/Galaxian 선택 드라이버) | MAMEDev 및 기여자, GPL-2.0-or-later; 소스별 BSD-3-Clause 등 | **`-Oz` 로컬 빌드 JS/WASM·매니페스트 포함** |
+| MAME 0.289 (두 선택 소스 드라이버) | MAMEDev 및 기여자, GPL-2.0-or-later; 소스별 BSD-3-Clause 등 | **`-Oz` 로컬 빌드 JS/WASM·매니페스트 포함** |
 | Libretro API 헤더 | Libretro 프로젝트, MIT | 대응 소스에서 빌드 시 사용 |
 | EmulatorJS 및 기타 코어 | 원저작자 | 아니요 |
 | 게임 ROM / 상용 BIOS | 각 저작권자 | 아니요 |

@@ -11,13 +11,14 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 WEB = ROOT / 'web'
 # Only first-party source modules are rewritten. Vendor code remains byte-for-byte pinned.
-MODULES = ('app.js', 'demo.js', 'chip8.js', 'controller.js', 'systems.js',
+MODULES = ('mame/machines.js', 'mame/runner.js', 'mame-player.js', 'app.js', 'demo.js', 'chip8.js', 'controller.js', 'systems.js',
            'battery-store.js', 'fullscreen.js', 'mgba-player.js',
            'jsnes-player.js', 'nes-audio.js', 'sega-player.js',
            'audio-controls.js')
 IMPORT = re.compile(r"(?P<prefix>(?:\bfrom\s*|\bimport\s*\(\s*)['\"])(?P<url>\.{1,2}/[^'\"\s)]+\.js)(?:\?v=[^'\"]+)?(?P<suffix>['\"])")
 CSS = re.compile(r'(?P<pre>href="\./styles\.css)(?:\?v=[a-f0-9]{12})?(?P<post>")')
 ENTRY = re.compile(r'(?P<pre>src="\./app\.js)(?:\?v=[^\"]+)?(?P<post>")')
+MAME_ENTRY = re.compile(r'(?P<pre>src="\./runner\.js)(?:\?v=[^\"]+)?(?P<post>")')
 
 
 def digest(path: Path) -> str:
@@ -60,6 +61,10 @@ def expected_contents(web=WEB):
             app_hash = hashlib.sha256(sources['app.js'].encode('utf-8')).hexdigest()[:12]
             text = ENTRY.sub(lambda m: f"{m['pre']}?v={app_hash}{m['post']}", text)
         sources[page] = text
+    mame_html = (web / 'mame/runner.html').read_text(encoding='utf-8')
+    mame_hash = hashlib.sha256(sources['mame/runner.js'].encode('utf-8')).hexdigest()[:12]
+    sources['mame/runner.html'] = MAME_ENTRY.sub(
+        lambda m: f"{m['pre']}?v={mame_hash}{m['post']}", mame_html)
     return sources
 
 

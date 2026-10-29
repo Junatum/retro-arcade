@@ -27,15 +27,16 @@ test('bundled MAME legacy FS exports create exactly one local ROM ZIP', () => {
 test('other compatible MAME builds may export Module.FS', () => {
   const ops=[];
   const mod={FS:{mkdir:p=>ops.push(['mkdir',p]), writeFile:(p,contents)=>ops.push(['write',p,contents])}};
-  installRom(mod,'galaxian',content);
-  assert.deepEqual(ops,[['mkdir','/roms'],['write','/roms/galaxian.zip',content]]);
+  installRom(mod,'mooncrst',content);
+  assert.deepEqual(ops,[['mkdir','/roms'],['write','/roms/mooncrst.zip',content]]);
 });
 
 test('rejects missing FS, wrong driver and non-ROM data; never downloads ROM', () => {
   assert.throws(()=>installRom({},'pacman',content),/파일시스템/);
   assert.throws(()=>installRom({},'../../pacman',content),/지원하지 않는/);
+  assert.throws(()=>installRom({},'notbuilt',content),/지원하지 않는/);
   assert.throws(()=>installRom({},'pacman',null),/지원하지 않는/);
-  assert.throws(()=>makeConfiguration('other.zip',content,{},()=>{},()=>{}),/허용되지 않은/);
+  assert.throws(()=>makeConfiguration('tetris.zip',content,{},()=>{},()=>{}),/허용되지 않은/);
   const source = makeConfiguration('pacman.zip', content, {}, ()=>{}, ()=>{});
   assert.deepEqual(source.arguments.slice(0,3),['pacman','-rompath','/roms']);
   assert.equal(source.preRun.length,1);

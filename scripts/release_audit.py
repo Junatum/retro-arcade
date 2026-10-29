@@ -8,15 +8,17 @@ import re
 from pathlib import Path
 try:
     from scripts.cache_bust import check as check_browser_cache
+    from scripts.mame_registry import check as check_mame_registry
 except ModuleNotFoundError:  # python3 scripts/release_audit.py
     from cache_bust import check as check_browser_cache
+    from mame_registry import check as check_mame_registry
 
 ROOT = Path(__file__).resolve().parents[1]
 WEB = ROOT / 'web'
-VERSION = '1.2.0-r2'
+VERSION = '1.2.0-r3'
 EXPECTED_WEB = {
     'index.html', 'styles.css', 'favicon.svg', 'favicon.ico', 'app.js', 'fullscreen.js', 'controller.js', 'chip8.js', 'systems.js',
-    'mame-player.js', 'mame/runner.html', 'mame/runner.js', 'mame/runner.css', 'demo.js', 'open-source.html', 'battery-store.js', 'save-session.js', 'mgba-player.js', 'jsnes-player.js', 'nes-audio.js', 'sega-player.js', 'audio-controls.js',
+    'mame-player.js', 'mame/runner.html', 'mame/runner.js', 'mame/runner.css', 'mame/machines.js', 'demo.js', 'open-source.html', 'battery-store.js', 'save-session.js', 'mgba-player.js', 'jsnes-player.js', 'nes-audio.js', 'sega-player.js', 'audio-controls.js',
 }
 MGBA_VENDOR = {'mgba/mgba.js', 'mgba/mgba.wasm', 'mgba/manifest.json'}
 SEGA_ENGINES = ('gearsystem', 'blastem')
@@ -29,7 +31,7 @@ MAME_VENDOR = {'mame/mame.js', 'mame/mame.wasm', 'mame/manifest.json'}
 SEGA_LICENSE = {'gearsystem': 'Gearsystem.txt', 'blastem': 'BlastEm.txt'}
 EXPECTED_SOURCE_COMPONENTS = {
     'native': {'mgba_bridge.c', 'sega_libretro_bridge.c', 'blastem_headless.h'},
-    'scripts': {'build_mgba.py', 'build_sega.py', 'build_mame.py', 'cache_bust.py', 'release_audit.py', 'vendor_jsnes.py'},
+    'scripts': {'build_mgba.py', 'build_sega.py', 'build_mame.py', 'cache_bust.py', 'release_audit.py', 'vendor_jsnes.py', 'mame_registry.py'},
     'LICENSES': {'mGBA.txt', 'JSNES.txt', 'Gearsystem.txt', 'BlastEm.txt', 'Libretro.txt', 'MAME-GPL2.txt'},
 }
 
@@ -54,7 +56,7 @@ def audit(release: bool = False, require_sega: bool = True, require_mame: bool =
         errors.append('incorrect app version/license')
     if meta.get('included_systems') != ['CHIP-8', 'Game Boy', 'Game Boy Color', 'Game Boy Advance', 'NES', 'Famicom', 'Game Gear', 'Master System', 'SG-1000', 'Mega Drive', 'Genesis', 'Arcade (MAME 0.289 selected drivers)'] or meta.get('offline') is not True:
         errors.append('incorrect included platforms/offline policy')
-    for required in ('PKG_VERSION:=1.2.0', 'PKG_RELEASE:=2', 'PKG_LICENSE:=GPL-3.0-or-later GPL-2.0-or-later MPL-2.0 Apache-2.0 MIT',
+    for required in ('PKG_VERSION:=1.2.0', 'PKG_RELEASE:=3', 'PKG_LICENSE:=GPL-3.0-or-later GPL-2.0-or-later MPL-2.0 Apache-2.0 MIT',
                      'python3 $(CURDIR)/scripts/release_audit.py --release'):
         if required not in mk:
             errors.append(f'incorrect OpenWrt package config: {required}')
@@ -96,7 +98,7 @@ def audit(release: bool = False, require_sega: bool = True, require_mame: bool =
         errors.append(f'missing source offer: {exc}')
     try:
         history = (ROOT / 'CHANGELOG.md').read_text(encoding='utf-8')
-        if re.findall(r'^## (\d+\.\d+\.\d+-r\d+)\b', history, re.M) != [VERSION, '1.2.0-r1', '1.1.0-r5', '1.1.0-r4', '1.1.0-r3', '1.1.0-r2', '1.1.0-r1', '1.0.0-r1', '0.1.0-r6', '0.1.0-r5', '0.1.0-r4', '0.1.0-r3', '0.1.0-r2', '0.1.0-r1']:
+        if re.findall(r'^## (\d+\.\d+\.\d+-r\d+)\b', history, re.M) != [VERSION, '1.2.0-r2', '1.2.0-r1', '1.1.0-r5', '1.1.0-r4', '1.1.0-r3', '1.1.0-r2', '1.1.0-r1', '1.0.0-r1', '0.1.0-r6', '0.1.0-r5', '0.1.0-r4', '0.1.0-r3', '0.1.0-r2', '0.1.0-r1']:
             errors.append('changelog must contain the current release and all previous versions')
     except OSError as exc:
         errors.append(f'missing changelog: {exc}')
@@ -161,7 +163,7 @@ def audit(release: bool = False, require_sega: bool = True, require_mame: bool =
         if actual != expected:
             errors.append(f'unexpected source inventory in {directory}: {sorted(actual ^ expected)}')
     for script in ('web/app.js', 'web/fullscreen.js', 'web/controller.js', 'web/chip8.js', 'web/demo.js', 'web/systems.js',
-                   'web/battery-store.js', 'web/save-session.js', 'web/mgba-player.js', 'web/jsnes-player.js', 'web/nes-audio.js', 'web/sega-player.js', 'web/audio-controls.js', 'web/mame-player.js', 'web/mame/runner.js'):
+                   'web/battery-store.js', 'web/save-session.js', 'web/mgba-player.js', 'web/jsnes-player.js', 'web/nes-audio.js', 'web/sega-player.js', 'web/audio-controls.js', 'web/mame-player.js', 'web/mame/runner.js', 'web/mame/machines.js'):
         try:
             source = (ROOT / script).read_text(encoding='utf-8')
         except OSError as exc:
@@ -183,7 +185,7 @@ def audit(release: bool = False, require_sega: bool = True, require_mame: bool =
                 errors.append(f'unreviewed binary: {path.relative_to(ROOT)}')
     for required in ('docs/THIRD_PARTY.md', 'docs/ARCHITECTURE.md', 'docs/SOURCE_OFFER.md',
                      'docs/INSTALLATION_INFO.md', 'docs/RELEASE_CHECKLIST.md',
-                     'native/mgba_bridge.c', 'native/sega_libretro_bridge.c', 'scripts/build_mgba.py', 'scripts/build_sega.py', 'scripts/vendor_jsnes.py', 'scripts/build_mame.py', 'LICENSES/MAME-GPL2.txt', 'LICENSES/mGBA.txt', 'LICENSES/JSNES.txt', 'LICENSES/Gearsystem.txt', 'LICENSES/BlastEm.txt', 'LICENSES/Libretro.txt'):
+                     'native/mgba_bridge.c', 'native/sega_libretro_bridge.c', 'scripts/build_mgba.py', 'scripts/build_sega.py', 'scripts/vendor_jsnes.py', 'scripts/build_mame.py', 'scripts/mame_registry.py', 'LICENSES/MAME-GPL2.txt', 'LICENSES/mGBA.txt', 'LICENSES/JSNES.txt', 'LICENSES/Gearsystem.txt', 'LICENSES/BlastEm.txt', 'LICENSES/Libretro.txt'):
         if not (ROOT / required).is_file():
             errors.append(f'missing required source: {required}')
     if any((ROOT / name).exists() for name in
@@ -323,6 +325,8 @@ def audit(release: bool = False, require_sega: bool = True, require_mame: bool =
                     errors.append(f'mame: invalid artifact hash {name}')
             if not (WEB / 'mame/mame.wasm').read_bytes().startswith(b'\x00asm\x01\x00\x00\x00'):
                 errors.append('mame: invalid WebAssembly header')
+            if not check_mame_registry(WEB / 'mame/mame.wasm', WEB / 'mame/machines.js'):
+                errors.append('mame: supported machine list does not match bundled WASM')
             runtime = (WEB / 'mame/mame.js').read_text(encoding='utf-8')
             has_helpers = ('Module["FS_createPath"]' in runtime and
                            'Module["FS_createDataFile"]' in runtime)

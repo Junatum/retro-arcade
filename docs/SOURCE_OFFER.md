@@ -1,4 +1,4 @@
-# 대응 소스 및 라이선스 안내 — SmartSafeHub Retro Arcade 1.2.0-r2
+# 대응 소스 및 라이선스 안내 — SmartSafeHub Retro Arcade 1.2.0-r3
 
 이 문서는 OpenWrt APK에 포함된 **HTML/JavaScript/WebAssembly 바이너리의 대응 소스 확인 방법**을 설명합니다. 실제 배포자가 원본 소스와 빌드 방법을 정확하게 제공해야 하며, 문서의 링크만 기재했다고 모든 배포 의무가 충족되는 것은 아닙니다.
 
@@ -31,7 +31,7 @@
 
 - 공식 고정 소스: https://github.com/mamedev/mame 태그 `mame0289` (빌드 매니페스트에 정확한 Git 커밋 기록).
 - MAME 프로젝트 전체는 `GPL-2.0-or-later`, 다수 파일은 `BSD-3-Clause` 등 별도 조건을 갖습니다. MAME 상표권은 별도로 보호됩니다.
-- `scripts/build_mame.py`는 개발 PC에서 pacman/galaxian **드라이버만** 공식 Emscripten으로 빌드하고 JS/WASM/manifest를 생성합니다.
+- `scripts/build_mame.py`는 개발 PC에서 두 고정 소스 드라이버를 공식 Emscripten으로 빌드하고 JS/WASM/manifest를 생성합니다. 같은 파일에 포함된 기기 식별자는 `scripts/mame_registry.py --check`로 검사합니다. WASM을 재빌드한 경우 개발 PC에서 `--update`로 식별자 목록을 재생성하고 검증합니다.
 - **현재 배포 소스에 JS/WASM/매니페스트가 포함**되어 있습니다: `web/mame/mame.js`, `web/mame/mame.wasm`, `web/mame/manifest.json`. 정확한 MAME 소스 커밋은 `f34f02505e32c1993c6a782b6814232cbfc74e36`이며, Emscripten 6.0.13, `OPTIMIZE=z` (`-Oz`), `BUILDDIR=build-ssharcade-oz`가 기록되어 있습니다. `--release`는 해당 빌드의 해시 일치를 확인합니다.
 - 번들된 JS에는 `Module.FS`가 없고 `FS_createPath` 및 `FS_createDataFile`이 있습니다. 별도 실행기 `web/mame/runner.js`가 이 API를 사용해 로컬 ROM을 메모리에 배치합니다. CSP 스타일은 `web/mame/runner.css`에 있습니다. 이러한 브라우저 실행기 파일도 대응 소스에 포함합니다.
 - 정확한 버전의 MAME 전체 소스 및 링크 의존성의 개별 SPDX/라이선스 고지(BSD 등 포함), Emscripten 빌드 옵션, 도구 버전 및 수정 내역을 배포자가 보관·제공해야 합니다. `LICENSES/MAME-GPL2.txt` 단독 제공만으로 모든 라이선스 고지가 충족되는 것은 아닙니다. ROM/BIOS는 포함하지 않습니다.

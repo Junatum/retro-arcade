@@ -115,7 +115,7 @@ class MameOzTests(unittest.TestCase):
                               'mame.wasm': release_audit.sha256(wasm)},
             }
             path = engine / 'manifest.json'
-            with patch.object(release_audit, 'ROOT', fake), patch.object(release_audit, 'WEB', fake / 'web'):
+            with patch.object(release_audit, 'ROOT', fake), patch.object(release_audit, 'WEB', fake / 'web'), patch.object(release_audit, 'check_mame_registry', return_value=True):
                 path.write_text(json.dumps(manifest))
                 self.assertEqual(release_audit.audit(release=True), [])
                 manifest['optimization'] = 's'

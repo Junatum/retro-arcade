@@ -35,7 +35,7 @@ ROM은 브라우저에서만 처리합니다. 외부 CDN, 게임 서버, 상용 
 | `web/gearsystem/`, `web/blastem/` | 검증된 Sega JS/WASM 및 빌드 출처 매니페스트 |
 | `native/sega_libretro_bridge.c`, `native/blastem_headless.h` | Libretro 연결 브리지와 BlastEm 브라우저용 선택적 디버그 기능 제거 |
 | `scripts/build_sega.py` | 고정된 Gearsystem/BlastEm 소스를 Emscripten으로 빌드 |
-| `scripts/release_audit.py` | 버전, 출처, 파일 해시, ABI 브리지 일치 검증 |
+| `scripts/release_audit.py`, `scripts/mame_registry.py` | 버전, 출처, 파일 해시, 등록된 MAME 기기 ID와 ABI 검증 |
 | `Makefile`, `app-info.json` | OpenWrt APK 패키징 / SmartSafeHub Apps 메타데이터 |
 
 ## 플랫폼 및 저장
@@ -118,4 +118,4 @@ JSNES는 `scripts/vendor_jsnes.py`로 npm 2.1.0 타르볼의 SHA-512를 검증�
 
 ## Arcade MAME 0.289 (1.2.0부터)
 
-선택 드라이버 `pacman.cpp`, `galaxian.cpp`를 별도로 Emscripten 빌드합니다. 공식 MAME 런타임은 별도 `web/mame/runner.html` iframe 안에서 실행되며 부모 화면은 동일 출처 `postMessage`로 ROM 데이터를 전송합니다. 파일은 네트워크 서버에 업로드하지 않고 MAME 메모리 파일시스템 `/roms/<driver>.zip`에 씁니다. MAME 자체 브라우저 빌드·SDL 입력 및 소리 통합은 실기 테스트 후 배포해야 합니다. 실제 배포에는 `mame.js`·`mame.wasm`·`manifest.json`이 포함되어 있으며 해시를 검증합니다. 제공된 JS는 `Module.FS` 대신 `FS_createPath`·`FS_createDataFile`을 내보내므로 실행기의 `preRun`에서 이를 사용해 ROM ZIP을 생성합니다. 스타일은 CSP `style-src 'self'`와 충돌하지 않도록 `runner.css`에 둡니다. 파일이 누락되면 `release_audit --release`가 실패합니다.
+선택 드라이버 `pacman.cpp`, `galaxian.cpp`를 별도로 Emscripten 빌드합니다. 공식 MAME 런타임은 별도 `web/mame/runner.html` iframe 안에서 실행되며 부모 화면은 동일 출처 `postMessage`로 ROM 데이터를 전송합니다. 파일은 네트워크 서버에 업로드하지 않고 MAME 메모리 파일시스템 `/roms/<driver>.zip`에 씁니다. MAME 자체 브라우저 빌드·SDL 입력 및 소리 통합은 실기 테스트 후 배포해야 합니다. 두 선택 소스 드라이버에 이미 등록된 기기 식별자는 `web/mame/machines.js`에서 검증되며, 추가 WASM 빌드 없이 사용할 수 있습니다. 이는 모든 기기의 단일 ZIP 파일만으로 실행이 보장된다는 의미는 아닙니다. 실제 배포에는 `mame.js`·`mame.wasm`·`manifest.json`이 포함되어 있으며 해시를 검증합니다. 제공된 JS는 `Module.FS` 대신 `FS_createPath`·`FS_createDataFile`을 내보내므로 실행기의 `preRun`에서 이를 사용해 ROM ZIP을 생성합니다. 스타일은 CSP `style-src 'self'`와 충돌하지 않도록 `runner.css`에 둡니다. 파일이 누락되면 `release_audit --release`가 실패합니다.

@@ -27,13 +27,13 @@ SmartSafeHub Apps에서 제공하는 **로컬 레트로 게임 앱**입니다. �
 | Master System | `.sms` | Gearsystem 3.9.21 | 십자 방향키, A/B, SELECT/START |
 | SG-1000 | `.sg` | Gearsystem 3.9.21 | 십자 방향키, A/B, SELECT/START |
 | Mega Drive / Genesis | `.md`, `.gen`, `.bin` | BlastEm 1.0.0 계열 | 십자 방향키, A/B/C, X/Y/Z, START/MODE |
-| Arcade (선택 드라이버) | `pacman.zip`, `galaxian.zip` | MAME 0.289 (로컬 JS/WASM 번들) | 십자 방향키, 버튼 1/2, COIN/START |
+| Arcade (선택 드라이버) | `.zip` (내장 기기 식별자와 일치) | MAME 0.289 (로컬 JS/WASM 번들) | 십자 방향키, 버튼 1/2, COIN/START |
 
 Game Boy, Game Boy Color, Game Boy Advance는 **하나의 mGBA 엔진**으로 실행됩니다. CHIP-8에는 직접 제작한 **패들 랠리** 미니게임이 포함되어 있으며, **데모 게임 플레이 버튼은 CHIP-8 선택 시에만 표시**됩니다.
 
 ## Arcade (MAME 0.289, 선택 드라이버)
 
-아케이드 화면은 **Pac-Man·Galaxian 드라이버만** 포함하는 소규모 MAME Emscripten 빌드를 사용하도록 설계되었습니다. 사용자가 적법하게 소유한 **`pacman.zip` 또는 `galaxian.zip`** 을 직접 선택합니다. 다른 ZIP, 클론, BIOS·CHD, 상용 ROM 및 자동 다운로드는 지원하지 않습니다. 아케이드 ROM 세트는 MAME 0.289와 일치해야 합니다.
+아케이드 화면은 MAME 0.289의 두 소스 드라이버에서 빌드된 **기기 식별자**를 내장 WASM과 대조해 지원합니다. 게임 파일은 사용자가 직접 선택하며 공유기·서버로 전송하지 않습니다. 기기별로 추가 파일이 필요한 경우 실행에 실패할 수 있으며, 앱은 게임 파일을 제공하거나 다운로드하지 않습니다.
 
 현재 저장소에는 개발 PC에서 빌드한 **MAME 0.289 `mame.js`·`mame.wasm`·`manifest.json`이 포함**되어 있습니다. 일반 실행 또는 OpenWrt APK 빌드를 위해 MAME를 다시 컴파일할 필요는 없습니다. `release_audit.py --release`는 파일 누락, 바뀐 바이너리 해시, 빌드 출처 불일치를 검사합니다. 다만 실제 아케이드 게임의 화면·입력·오디오·모바일 성능은 별도로 확인해야 하며, 자동 검사 통과만으로 실기 호환성을 보장하지 않습니다.
 

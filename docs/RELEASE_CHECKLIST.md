@@ -3,10 +3,11 @@
 - [ ] MAME 0.289의 **정확한 태그**와 pacman/galaxian 2개 드라이버만 사용했는지 확인
 - [ ] `web/mame/mame.js`, `mame.wasm`, `manifest.json`을 로컬에서 빌드·포함하고 해시·라이선스를 검증
 - [ ] 실제 MAME JS의 `FS_createPath`·`FS_createDataFile`을 이용한 로컬 ZIP 배치 및 브라우저 SDL 캔버스/입력/오디오 확인
+- [ ] `python3 scripts/mame_registry.py --check`로 WASM 내장 기기 식별자와 브라우저 허용 목록 일치 확인
 - [ ] MAME 실행 화면의 `runner.css` 로컬 로딩과 `style-src 'self'` CSP 차단 로그 확인
 - [ ] 정확한 MAME 고정 리비전 및 사용된 개별 소스 파일의 BSD 등 라이선스 고지·대응 소스 제공 확인
-- [ ] 라이선스/상표 검토 및 Pac-Man/Galaxian 게임 ROM/BIOS **미포함** 확인
-- [ ] 실기에서 사용자가 제공한 적법한 두 ROM 세트의 실행과 브라우저 메모리·Flash 사용량 확인
+- [ ] 라이선스/상표 검토 및 상용 게임 데이터·BIOS **미포함** 확인
+- [ ] 실기에서 호환되는 로컬 테스트 파일의 실행과 브라우저 메모리·Flash 사용량 확인
 
 
 - [ ] 포함된 mGBA 0.10.5 JS/WASM과 매니페스트의 빌드 출처·해시 확인 (브리지 또는 코어 변경 시에만 재빌드)

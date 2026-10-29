@@ -61,7 +61,7 @@ class MameBuildTests(unittest.TestCase):
         self.assertIn("frame-src 'self'",page)
         self.assertIn('MAME 0.289',readme)
         self.assertIn('GPL-2.0-or-later',package)
-        self.assertIn('pacman.zip', (ROOT/'web/mame/runner.js').read_text())
+        self.assertIn('arcadeMachine', (ROOT/'web/mame/runner.js').read_text())
         self.assertTrue((ROOT/'web/mame/runner.js').is_file())
 
 if __name__=='__main__':
