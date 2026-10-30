@@ -5,11 +5,13 @@ No copyrighted game assets, no frontend build, and no access to external hosts.
 """
 from __future__ import annotations
 import functools
+import io
 import http.server
 import os
 from pathlib import Path
 import shutil
 import threading
+import zipfile
 import unittest
 
 ROOT = Path(__file__).resolve().parents[1]
@@ -101,6 +103,84 @@ class BrowserSmoke(unittest.TestCase):
             })
             self.assertTrue(page.locator('#play').is_enabled())
             self.assertEqual(page.locator('iframe').count(), 0)
+        finally:
+            page.close()
+
+    def test_mame_real_wasm_initializes_without_copyrighted_rom(self):
+        """Run the actual bundled MAME JS/WASM in Chromium without game assets.
+
+        A self-authored ZIP is mounted through the production ROM filesystem
+        helper.  MAME's ROM-independent -listfull command then exercises its
+        compiled machine registry.  This is NOT a gameplay/video/audio test.
+        """
+        with io.BytesIO() as memory:
+            with zipfile.ZipFile(memory, 'w', zipfile.ZIP_STORED) as archive:
+                archive.writestr('ci-diagnostic.txt', b'Retro Arcade original CI fixture; no game ROMs.\n')
+            diagnostic_zip = list(memory.getvalue())
+
+        page = self.browser.new_page(viewport={'width': 1024, 'height': 768})
+        errors = []
+        forbidden_requests = []
+        page.on('pageerror', lambda error: errors.append(str(error)))
+        page.on('request', lambda request: forbidden_requests.append(request.url)
+                if not request.url.startswith(self.url) else None)
+        try:
+            # Use the shipped CSP and actual bundled scripts; do not bypass CSP,
+            # stub the WASM, or download binaries/drivers from a CDN.
+            page.goto(self.url + 'mame/runner.html', wait_until='load')
+            page.evaluate(r"""async (zipBytes) => {
+                const { installRom } = await import('./runner.js');
+                const output = document.createElement('output');
+                output.id = 'mame-ci-result';
+                output.textContent = 'MAME ROM-free smoke running';
+                document.body.appendChild(output);
+                let initialized = false;
+                let mounted = false;
+                const printed = [];
+                const diagnostics = [];
+                function update() {
+                    if (initialized && mounted &&
+                        /\bpacman\b/i.test(printed.join('\n')) &&
+                        /\bgalaxian\b/i.test(printed.join('\n'))) {
+                        output.dataset.result = 'pass';
+                        output.textContent = 'MAME WASM initialized, local FS works, driver registry queried';
+                    }
+                }
+                window.__mameCiDiagnostics = diagnostics;
+                window.__mameCiOutput = printed;
+                window.Module = {
+                    arguments: ['-listfull'],
+                    locateFile: name => new URL(name.endsWith('.wasm') ? './mame.wasm' : './' + name, location.href).href,
+                    preRun: [function() {
+                        installRom(window.Module, 'galaxian', new Uint8Array(zipBytes));
+                        mounted = true;
+                    }],
+                    onRuntimeInitialized: () => { initialized = true; update(); },
+                    onAbort: error => diagnostics.push('MAME abort: ' + String(error)),
+                    print: line => { printed.push(String(line)); update(); },
+                    printErr: line => diagnostics.push(String(line)),
+                };
+                const script = document.createElement('script');
+                script.src = './mame.js';
+                script.onerror = () => diagnostics.push('Unable to load local MAME JS');
+                document.head.appendChild(script);
+            }""", diagnostic_zip)
+            try:
+                page.locator('#mame-ci-result[data-result="pass"]').wait_for(state='attached', timeout=60000)
+            except Exception as exc:
+                stdout = page.evaluate('window.__mameCiOutput || []')
+                stderr = page.evaluate('window.__mameCiDiagnostics || []')
+                raise AssertionError(
+                    f'Bundled MAME ROM-free WASM smoke failed; '
+                    f'stdout={stdout[-12:]!r}; stderr={stderr[-12:]!r}; '
+                    f'pageerrors={errors[-4:]!r}'
+                ) from exc
+            self.assertEqual(forbidden_requests, [], 'MAME must run fully offline')
+            # A clean MAME command-line exit can generate an ExitStatus(0)
+            # rejection in older Emscripten glue; no other JS errors are valid.
+            unexpected = [error for error in errors
+                          if not ('ExitStatus' in error and ('status: 0' in error or 'exit(0)' in error))]
+            self.assertEqual(unexpected, [], f'Unexpected MAME browser errors: {unexpected}')
         finally:
             page.close()
 

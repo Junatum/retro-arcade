@@ -1,4 +1,4 @@
-# 대응 소스 및 라이선스 안내 — SmartSafeHub Retro Arcade 1.2.0-r3
+# 대응 소스 및 라이선스 안내 — SmartSafeHub Retro Arcade 1.2.0-r4
 
 이 문서는 OpenWrt APK에 포함된 **HTML/JavaScript/WebAssembly 바이너리의 대응 소스 확인 방법**을 설명합니다. 실제 배포자가 원본 소스와 빌드 방법을 정확하게 제공해야 하며, 문서의 링크만 기재했다고 모든 배포 의무가 충족되는 것은 아닙니다.
 

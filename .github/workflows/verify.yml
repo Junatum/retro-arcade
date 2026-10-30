@@ -16,13 +16,10 @@ jobs:
         run: python3 scripts/release_audit.py --check
       - name: Verify existing released emulator integrity
         run: python3 scripts/release_audit.py --existing
-      - name: Verify optional MAME binary only when locally built
+      - name: Verify bundled MAME registry and release assets
         run: |
-          if [ -f web/mame/manifest.json ]; then
-            python3 scripts/release_audit.py --release
-          else
-            echo 'MAME WASM not yet locally built; Makefile release gate will reject APK.'
-          fi
+          python3 scripts/mame_registry.py --check
+          python3 scripts/release_audit.py --release
       - name: Verify browser cache hashes
         run: python3 scripts/cache_bust.py --check
       - name: Python tests
@@ -50,5 +47,5 @@ jobs:
         run: |
           python3 -m pip install playwright==1.57.0
           python3 -m playwright install --with-deps chromium
-      - name: HTTP Chromium desktop/mobile smoke tests
+      - name: HTTP Chromium desktop/mobile and ROM-free MAME WASM smoke tests
         run: python3 tests/browser_e2e.py -v

@@ -21,6 +21,7 @@
 - [ ] Python 및 JavaScript 단위 테스트 모두 통과
 - [ ] `python3 scripts/cache_bust.py --check` 통과 (배포 JS/CSS 해시 최신 여부)
 - [ ] `python3 tests/browser_e2e.py -v` Chromium HTTP/모바일 E2E 통과
+- [ ] ROM 없는 MAME 실 WASM 브라우저 스모크 검사(파일시스템·기기 목록, 외부 통신 없음) 통과. 실제 게임 영상·사운드·입력 검증은 별도로 수행
 - [ ] 저장소 차단·저장 실패·복원 실패 경고 및 종료 확인 동작 테스트
 - [ ] CHIP-8 내장 데모 브라우저 실행 확인
 - [ ] GB / GBC / GBA 실제 ROM별 화면·키보드·터치·배터리 저장·재실행 확인

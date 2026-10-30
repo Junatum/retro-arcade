@@ -15,7 +15,7 @@ except ModuleNotFoundError:  # python3 scripts/release_audit.py
 
 ROOT = Path(__file__).resolve().parents[1]
 WEB = ROOT / 'web'
-VERSION = '1.2.0-r3'
+VERSION = '1.2.0-r4'
 EXPECTED_WEB = {
     'index.html', 'styles.css', 'favicon.svg', 'favicon.ico', 'app.js', 'fullscreen.js', 'controller.js', 'chip8.js', 'systems.js',
     'mame-player.js', 'mame/runner.html', 'mame/runner.js', 'mame/runner.css', 'mame/machines.js', 'demo.js', 'open-source.html', 'battery-store.js', 'save-session.js', 'mgba-player.js', 'jsnes-player.js', 'nes-audio.js', 'sega-player.js', 'audio-controls.js',
@@ -56,7 +56,7 @@ def audit(release: bool = False, require_sega: bool = True, require_mame: bool =
         errors.append('incorrect app version/license')
     if meta.get('included_systems') != ['CHIP-8', 'Game Boy', 'Game Boy Color', 'Game Boy Advance', 'NES', 'Famicom', 'Game Gear', 'Master System', 'SG-1000', 'Mega Drive', 'Genesis', 'Arcade (MAME 0.289 selected drivers)'] or meta.get('offline') is not True:
         errors.append('incorrect included platforms/offline policy')
-    for required in ('PKG_VERSION:=1.2.0', 'PKG_RELEASE:=3', 'PKG_LICENSE:=GPL-3.0-or-later GPL-2.0-or-later MPL-2.0 Apache-2.0 MIT',
+    for required in ('PKG_VERSION:=1.2.0', 'PKG_RELEASE:=4', 'PKG_LICENSE:=GPL-3.0-or-later GPL-2.0-or-later MPL-2.0 Apache-2.0 MIT',
                      'python3 $(CURDIR)/scripts/release_audit.py --release'):
         if required not in mk:
             errors.append(f'incorrect OpenWrt package config: {required}')
@@ -98,7 +98,7 @@ def audit(release: bool = False, require_sega: bool = True, require_mame: bool =
         errors.append(f'missing source offer: {exc}')
     try:
         history = (ROOT / 'CHANGELOG.md').read_text(encoding='utf-8')
-        if re.findall(r'^## (\d+\.\d+\.\d+-r\d+)\b', history, re.M) != [VERSION, '1.2.0-r2', '1.2.0-r1', '1.1.0-r5', '1.1.0-r4', '1.1.0-r3', '1.1.0-r2', '1.1.0-r1', '1.0.0-r1', '0.1.0-r6', '0.1.0-r5', '0.1.0-r4', '0.1.0-r3', '0.1.0-r2', '0.1.0-r1']:
+        if re.findall(r'^## (\d+\.\d+\.\d+-r\d+)\b', history, re.M) != [VERSION, '1.2.0-r3', '1.2.0-r2', '1.2.0-r1', '1.1.0-r5', '1.1.0-r4', '1.1.0-r3', '1.1.0-r2', '1.1.0-r1', '1.0.0-r1', '0.1.0-r6', '0.1.0-r5', '0.1.0-r4', '0.1.0-r3', '0.1.0-r2', '0.1.0-r1']:
             errors.append('changelog must contain the current release and all previous versions')
     except OSError as exc:
         errors.append(f'missing changelog: {exc}')

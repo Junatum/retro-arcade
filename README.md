@@ -124,7 +124,7 @@ python3 -m unittest discover -s tests -p 'test_*.py' -v
 node --test tests/*.test.mjs
 ```
 
-실제 Chromium HTTP 통합 테스트는 개발 환경에서 Playwright가 준비된 경우 `python3 tests/browser_e2e.py -v`로 실행합니다. 이 명령은 테스트용 임시 HTTP 서버만 사용하고 게임 파일을 내려받지 않습니다.
+실제 Chromium HTTP 통합 테스트는 개발 환경에서 Playwright가 준비된 경우 `python3 tests/browser_e2e.py -v`로 실행합니다. GitHub Actions에서도 같은 테스트를 실행하며, **실제 MAME JS/WASM**을 ROM 없이 초기화한 뒤 자체 생성 ZIP을 브라우저 내부 파일시스템에 배치하고 `-listfull`로 내장 드라이버를 검사합니다. Node.js 테스트에서도 MAME의 실제 JS/WASM을 실행하여 초기화와 기기 조회를 별도로 검증합니다. 테스트는 임시 로컬 HTTP 서버만 이용하고 게임 ROM이나 BIOS를 다운로드·포함하지 않습니다. 이 검사는 MAME의 초기화·파일시스템·드라이버 조회 검증이며, **게임 화면·소리·입력이나 개별 ROM 호환성의 실기 검증을 대체하지 않습니다.**
 
 배터리 저장 게임의 경우 저장 실패·복원 실패를 플레이어에 표시하며 종료 시 재확인합니다. 브라우저 종료·전원 손실 등 갑작스러운 상황에서는 마지막 저장이 보장되지 않으므로 진행 중에는 수시로 게임 내부 저장을 수행하세요.
 
