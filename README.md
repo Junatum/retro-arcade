@@ -147,6 +147,7 @@ node --test tests/*.test.mjs
 - [Gearsystem 라이선스](LICENSES/Gearsystem.txt)
 - [BlastEm 라이선스](LICENSES/BlastEm.txt)
 - [MAME GPLv2 라이선스](LICENSES/MAME-GPL2.txt)
+- [Atari 2600 라이선스](LICENSES/Atari2600.txt)
 - [변경 이력](CHANGELOG.md)
 
 프로젝트 UI와 CHIP-8 코드는 **GPL-3.0-or-later**, mGBA 코어는 **MPL-2.0**, JSNES는 **Apache-2.0**, Gearsystem과 BlastEm은 **GPLv3 계열**, MAME는 프로젝트 전체 기준 **GPL-2.0-or-later**이며 Libretro API 헤더는 **MIT** 라이선스를 따릅니다. 자세한 배포·소스 제공 조건은 위 문서에서 확인하세요.

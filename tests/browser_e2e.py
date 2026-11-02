@@ -61,6 +61,13 @@ class BrowserSmoke(unittest.TestCase):
         cls.server.server_close()
         cls.thread.join(timeout=3)
 
+    def choose_platform(self, page, system_id):
+        """Select a stable platform ID instead of a reorderable list position."""
+        button = page.locator(f'#systems button[data-system="{system_id}"]')
+        self.assertEqual(button.count(), 1, f'Expected one {system_id} platform')
+        button.click()
+        self.assertEqual(button.get_attribute('aria-pressed'), 'true')
+
     def test_initialization_and_demo_in_desktop_and_mobile(self):
         for width in (1280, 390, 320):
             with self.subTest(width=width):
@@ -72,9 +79,9 @@ class BrowserSmoke(unittest.TestCase):
                     page.goto(self.url, wait_until='networkidle')
                     self.assertEqual(page.locator('#systems button').count(), 10)
                     self.assertEqual(page.locator('#demo').is_visible(), True)
-                    page.locator('#systems button').nth(3).click()
+                    self.choose_platform(page, 'nes')
                     self.assertEqual(page.locator('#demo').is_visible(), False)
-                    page.locator('#systems button').first.click()
+                    self.choose_platform(page, 'chip8')
                     page.locator('#demo').click()
                     self.assertTrue(page.locator('#player-section').is_visible())
                     self.assertEqual(page.locator('#game canvas').count(), 1)
@@ -88,7 +95,7 @@ class BrowserSmoke(unittest.TestCase):
         page = self.browser.new_page(viewport={'width': 390, 'height': 844})
         try:
             page.goto(self.url, wait_until='networkidle')
-            page.locator('#systems button').last.click()
+            self.choose_platform(page, 'mame')
             self.assertIn('호환되는 .zip', page.locator('#rom-help').inner_text())
             page.locator('#rom-file').set_input_files({
                 'name': 'tetris.zip', 'mimeType': 'application/zip',
@@ -190,7 +197,7 @@ class BrowserSmoke(unittest.TestCase):
         page = context.new_page()
         try:
             page.goto(self.url, wait_until='networkidle')
-            page.locator('#systems button').nth(3).click()
+            self.choose_platform(page, 'nes')
             page.locator('#rom-file').set_input_files({'name':'blocked.nes','mimeType':'application/octet-stream','buffer':synthetic_nes_rom()})
             page.locator('#play').click()
             page.locator('#save-status.save-status--error').wait_for(timeout=12000)
@@ -209,7 +216,7 @@ class BrowserSmoke(unittest.TestCase):
         page = context.new_page()
         try:
             page.goto(self.url, wait_until='networkidle')
-            page.locator('#systems button').nth(3).click()
+            self.choose_platform(page, 'nes')
             page.locator('#rom-file').set_input_files({
                 'name': 'silent.nes', 'mimeType': 'application/octet-stream',
                 'buffer': synthetic_nes_rom(),
@@ -233,7 +240,7 @@ class BrowserSmoke(unittest.TestCase):
         page.on('pageerror', lambda error: failures.append(str(error)))
         try:
             page.goto(self.url, wait_until='networkidle')
-            page.locator('#systems button').nth(3).click()
+            self.choose_platform(page, 'nes')
             page.locator('#rom-file').set_input_files({'name': 'smoke.nes', 'mimeType': 'application/octet-stream', 'buffer': synthetic_nes_rom()})
             self.assertTrue(page.locator('#play').is_enabled())
             page.locator('#play').click()
