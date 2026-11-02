@@ -21,6 +21,10 @@ __pycache__/
 *.gbc
 *.gba
 *.bin
+*.a26
+*.rom
+*.sch8
+*.sc8
 *.iso
 *.img
 *.chd

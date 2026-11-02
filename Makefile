@@ -4,9 +4,9 @@ include $(TOPDIR)/rules.mk
 
 PKG_NAME:=smartsafehub-app-retro-arcade
 PKG_VERSION:=1.3.0
-PKG_RELEASE:=1
+PKG_RELEASE:=2
 PKG_LICENSE:=GPL-3.0-or-later GPL-2.0-or-later MPL-2.0 Apache-2.0 MIT
-PKG_LICENSE_FILES:=LICENSE LICENSES/mGBA.txt LICENSES/JSNES.txt LICENSES/Gearsystem.txt LICENSES/BlastEm.txt LICENSES/Libretro.txt LICENSES/MAME-GPL2.txt
+PKG_LICENSE_FILES:=LICENSE LICENSES/mGBA.txt LICENSES/JSNES.txt LICENSES/Atari2600.txt LICENSES/Gearsystem.txt LICENSES/BlastEm.txt LICENSES/Libretro.txt LICENSES/MAME-GPL2.txt
 PKG_MAINTAINER:=SmartSafeHub Contributors
 PKGARCH:=all
 
@@ -22,7 +22,7 @@ define Package/smartsafehub-app-retro-arcade
 endef
 
 define Package/smartsafehub-app-retro-arcade/description
-  Browser-based CHIP-8/Super CHIP-8, GB/GBC/GBA, NES, Sega and selected MAME arcade drivers.
+  Browser-based CHIP-8/Super CHIP-8, GB/GBC/GBA, NES, Atari 2600, Sega and selected MAME arcade drivers.
   Local-only mGBA, Gearsystem, BlastEm and MAME WASM plus JSNES; no ROM downloads.
 endef
 
@@ -32,6 +32,7 @@ define Build/Prepare
 	$(INSTALL_DIR) $(PKG_BUILD_DIR)/LICENSES
 	$(CP) ./LICENSES/mGBA.txt $(PKG_BUILD_DIR)/LICENSES/
 	$(CP) ./LICENSES/JSNES.txt $(PKG_BUILD_DIR)/LICENSES/
+	$(CP) ./LICENSES/Atari2600.txt $(PKG_BUILD_DIR)/LICENSES/
 	$(CP) ./LICENSES/Gearsystem.txt $(PKG_BUILD_DIR)/LICENSES/
 	$(CP) ./LICENSES/BlastEm.txt $(PKG_BUILD_DIR)/LICENSES/
 	$(CP) ./LICENSES/Libretro.txt $(PKG_BUILD_DIR)/LICENSES/
@@ -49,6 +50,7 @@ define Package/smartsafehub-app-retro-arcade/install
 	$(INSTALL_DIR) $(1)/www/retro-arcade/LICENSES
 	$(INSTALL_DATA) ./LICENSES/mGBA.txt $(1)/www/retro-arcade/LICENSES/mGBA.txt
 	$(INSTALL_DATA) ./LICENSES/JSNES.txt $(1)/www/retro-arcade/LICENSES/JSNES.txt
+	$(INSTALL_DATA) ./LICENSES/Atari2600.txt $(1)/www/retro-arcade/LICENSES/Atari2600.txt
 	$(INSTALL_DATA) ./LICENSES/Gearsystem.txt $(1)/www/retro-arcade/LICENSES/Gearsystem.txt
 	$(INSTALL_DATA) ./LICENSES/BlastEm.txt $(1)/www/retro-arcade/LICENSES/BlastEm.txt
 	$(INSTALL_DATA) ./LICENSES/Libretro.txt $(1)/www/retro-arcade/LICENSES/Libretro.txt

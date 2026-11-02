@@ -40,3 +40,11 @@
 - [ ] CHIP-8/mGBA 오디오 미지원, NES/Sega 오디오 활성화 방법과 호환성 안내 확인
 
 - [ ] CHIP-8 내장 **패들 랠리**에서 W/S(터치 5/8) 이동, 공 반사, 점수 변경 확인
+
+## Atari 2600 출시 전 필수 검토
+
+- [ ] 원본 `mohrt/atari2600` 정확한 Git SHA를 고정하고 전체 소스 파일의 저작권·제3자 라이선스를 수동 검토
+- [ ] 개발 PC에서 `scripts/build_atari.py`로 코어만 오프라인 빌드, `web/atari2600/manifest.json`의 커밋·해시 확인
+- [ ] 웹 루트에 ROM/BIOS/원본 게임 목록/원본 다운로드·분석 코드/외부 CDN이 없음을 검증
+- [ ] Chromium/Firefox/Safari 모바일, 입력·오디오·브라우저 저장 및 실제 소유 게임 실행 실기 확인
+- [ ] `python3 scripts/release_audit.py --release` 및 모든 테스트 통과 후에만 상용 APK 출시

@@ -22,6 +22,7 @@ SmartSafeHub Apps에서 제공하는 **로컬 레트로 게임 앱**입니다. �
 | CHIP-8 / Super CHIP-8 | `.ch8`, `.c8`, `.sc8`, `.sch8` | 자체 JavaScript 실행기 (자동 SCHIP 호환) | 4×4 숫자 키패드 |
 | Game Boy / Game Boy Color | `.gb`, `.gbc` | mGBA 0.10.5 | 십자 방향키, A/B, SELECT/START |
 | Game Boy Advance | `.gba` | mGBA 0.10.5 | 십자 방향키, A/B, SELECT/START, L/R |
+| Atari 2600 | `.a26` (2~64KiB) | mohrt/atari2600 (MIT, 자체 로컬 빌드) | 십자키, FIRE, SELECT/RESET |
 | NES / Famicom | `.nes` | JSNES 2.1.0 | 십자 방향키, A/B, SELECT/START |
 | Game Gear | `.gg` | Gearsystem 3.9.21 | 십자 방향키, A/B, SELECT/START |
 | Master System | `.sms` | Gearsystem 3.9.21 | 십자 방향키, A/B, SELECT/START |
@@ -64,10 +65,10 @@ MAME의 **`OPTIMIZE=z` (`-Oz`)** 빌드는 `BUILDDIR=build-ssharcade-oz`에 새 
 - 실제 휴대용 게임기와 유사한 **터치 버튼 배치**, 키보드 조작 및 멀티터치
 - 화면 비율을 유지하는 **전체화면** 및 모바일 화면 확장 모드
 - 게임 시작 후 선택 화면 자동 숨김, 종료 시 복귀
-- 지원 게임의 **배터리 저장 데이터(GB/GBC/GBA·NES·Sega)를 브라우저에 보관**하고 재실행 시 복원
+- 지원 게임의 **배터리 저장 데이터(GB/GBC/GBA·NES·Atari 2600·Sega)를 브라우저에 보관**하고 재실행 시 복원
 - 실행에 외부 인터넷 연결이 필요 없고, **ROM 데이터는 공유기나 외부 서버로 전송되지 않음**
 
-**제한 사항:** CHIP-8과 mGBA 오디오 및 세이브 스테이트는 지원하지 않습니다. NES 및 Sega 게임은 게임 시작 시 소리를 자동으로 켜려고 시도합니다. 제목 옆에서 현재 소리 상태를 확인하거나 음소거할 수 있고, 브라우저가 차단하면 같은 버튼으로 다시 켤 수 있습니다. 게임 ROM과 상용 BIOS는 포함하지 않습니다. 지원 모델은 ipTIME AX3000SM/AX3000SE/A3004T 및 Xiaomi AX3000T이며, GL-MT300N-V2는 이 앱의 지원 대상에서 제외됩니다.
+**제한 사항:** CHIP-8과 mGBA 오디오 및 세이브 스테이트는 지원하지 않습니다. Atari 2600, Atari 2600, NES 및 Sega 게임은 게임 시작 시 소리를 자동으로 켜려고 시도합니다. 제목 옆에서 현재 소리 상태를 확인하거나 음소거할 수 있고, 브라우저가 차단하면 같은 버튼으로 다시 켤 수 있습니다. 게임 ROM과 상용 BIOS는 포함하지 않습니다. 지원 모델은 ipTIME AX3000SM/AX3000SE/A3004T 및 Xiaomi AX3000T이며, GL-MT300N-V2는 이 앱의 지원 대상에서 제외됩니다.
 
 ## 실행해 보기
 
@@ -114,6 +115,10 @@ python3 scripts/release_audit.py --release
 ```
 
 다운로드가 차단된 환경에서는 JSNES 2.1.0 npm tarball과 npm 공식 SHA-512 integrity 값을 확보해 `--archive`, `--integrity` 옵션으로 지정합니다. 정식 릴리스에는 검증된 소스가 모두 포함되어야 합니다.
+
+## Atari 2600 (ROM 없이 제공)
+
+`mohrt/atari2600` MIT 코어만 사용합니다. `.a26`만 자동 선택할 수 있으며 `.bin`은 Mega Drive와 충돌하므로 Atari에서 허용하지 않습니다. 게임 파일/BIOS/샘플 ROM은 포함하거나 내려받지 않습니다. 외부 통계, 게임 목록, 추적 코드를 포함하지 않습니다. 로컬 소스 감사와 빌드 방법은 [`docs/ATARI_BUILD.md`](docs/ATARI_BUILD.md)를 참조하세요.
 
 ## 배포 전 안정성 검사
 

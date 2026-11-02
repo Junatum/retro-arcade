@@ -1,4 +1,4 @@
-# 대응 소스 및 라이선스 안내 — SmartSafeHub Retro Arcade 1.3.0-r1
+# 대응 소스 및 라이선스 안내 — SmartSafeHub Retro Arcade 1.3.0-r2
 
 이 문서는 OpenWrt APK에 포함된 **HTML/JavaScript/WebAssembly 바이너리의 대응 소스 확인 방법**을 설명합니다. 실제 배포자가 원본 소스와 빌드 방법을 정확하게 제공해야 하며, 문서의 링크만 기재했다고 모든 배포 의무가 충족되는 것은 아닙니다.
 
@@ -76,3 +76,5 @@ BlastEm은 Emscripten 컴파일 시 `-Oz -flto`, 브리지 C 컴파일 시 `-Oz`
 4. mGBA의 MPL-2.0 적용 파일과 JSNES의 Apache-2.0 고지·NOTICE 등 실제 포함물에 대한 의무를 확인합니다. [외부 오픈소스 고지](THIRD_PARTY.md) 및 `LICENSES/`를 참조하세요.
 
 **게임 ROM과 상용 BIOS는 제공하지 않습니다.** 소스 제공 및 라이선스 준수의 최종 책임은 APK 배포자에게 있습니다.
+
+Atari 2600: 원본 https://github.com/mohrt/atari2600, MIT (`LICENSES/Atari2600.txt`). 빌드의 고정 커밋과 입력 소스 SHA-256은 `web/atari2600/manifest.json`에 보존합니다. `native/atari_bridge.ts`와 `scripts/build_atari.py`를 통해 로컬에서만 JS 실행 파일을 빌드합니다. 게임 ROM, 게임 카탈로그, 자동 다운로드 및 원본 분석 코드는 배포하지 않습니다. 실제 배포자는 대응 소스와 빌드 도구의 버전을 보존해야 합니다.

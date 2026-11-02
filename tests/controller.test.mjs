@@ -106,3 +106,15 @@ test('Arcade controller includes coins and one-player start without other BIOS k
   hit(coin,'pointerdown');hit(coin,'pointerup');
   assert.deepEqual(events,[['coin',true],['coin',false]]);
 });
+
+test('Atari 2600 has a single fire key plus TV Select/Reset, and releases stuck inputs',()=>{
+  const el=root(),events=[];
+  const ctl=renderController(el,'atari2600',(key,on)=>events.push([key,on]));
+  const list=buttons(el);
+  assert.deepEqual(list.map(b=>b.textContent),['↑','←','↓','→','FIRE','SELECT','START']);
+  assert.match(el.attributes['aria-label'],/Atari 2600/);
+  const fire=list.find(b=>b.textContent==='FIRE');
+  hit(fire,'pointerdown');
+  ctl.releaseAll();
+  assert.deepEqual(events,[['a',true],['a',false]]);
+});

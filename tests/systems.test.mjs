@@ -3,12 +3,12 @@ import assert from 'node:assert/strict';
 import { SYSTEMS,detectSystem,validateRom } from '../web/systems.js';
 
 test('CHIP-8 and one mGBA engine provide GB/GBC/GBA platforms',()=>{
-  assert.deepEqual(SYSTEMS.map(s=>s.id),['chip8','mgba-gb','mgba','nes','gearsystem-gg','gearsystem-sms','gearsystem-sg','blastem','mame']);
+  assert.deepEqual(SYSTEMS.map(s=>s.id),['chip8','mgba-gb','mgba','atari2600','nes','gearsystem-gg','gearsystem-sms','gearsystem-sg','blastem','mame']);
   assert.equal(detectSystem('puzzle.CH8'),SYSTEMS[0]);
   assert.equal(detectSystem('game.gb'),SYSTEMS[1]);
   assert.equal(detectSystem('game.GBC'),SYSTEMS[1]);
   assert.equal(detectSystem('Advance.GBA'),SYSTEMS[2]);
-  assert.equal(detectSystem('unknown.nes'),SYSTEMS[3]);
+  assert.equal(detectSystem('unknown.nes'),SYSTEMS[4]);
 });
 test('ROM validation prevents wrong types and oversized files',()=>{
   const ch8=SYSTEMS[0],gb=SYSTEMS[1],gba=SYSTEMS[2];
@@ -66,4 +66,16 @@ test('MAME 0.289 accepts compiled machine identifiers, without public ROM metada
   assert.match(validateRom({name:'pacman.zip',size:20},arcade),/ZIP/);
   assert.match(validateRom({name:'pacman.zip',size:13*1024*1024},arcade),/12MiB/);
   assert.match(validateRom({name:'pacman.nes',size:20000},arcade),/지원하지 않는/);
+});
+
+test('Atari accepts only user-provided .a26 and never captures Genesis .bin',()=>{
+  const atari=SYSTEMS.find(s=>s.id==='atari2600');
+  assert.ok(atari);
+  assert.equal(detectSystem('owned.a26'),atari);
+  assert.equal(detectSystem('demo.bin').id,'blastem');
+  assert.equal(validateRom({name:'owned.a26',size:4096},atari),null);
+  assert.match(validateRom({name:'rom.bin',size:4096},atari),/a26/);
+  assert.match(validateRom({name:'bad.a26',size:12},atari),/2KiB/);
+  assert.match(validateRom({name:'bad.a26',size:4097},atari),/1KiB/);
+  assert.match(validateRom({name:'big.a26',size:65537},atari),/64MiB|64KiB/);
 });

@@ -1,0 +1,39 @@
+{
+  "artifacts": {
+    "engine.js": "683a18fab5f913214205b285fbea1dc10fca67217d7a85c5e4bb622866fc2a48"
+  },
+  "bridge_sha256": "247dfcc81c435ec014e25d73edc55d7c1326fcb16d36a23aee56c92835f9df3d",
+  "build_script_sha256": "f757d06184f2887aa17983dfaff0fa7919f1615ff8cbda3640e7b8339ce72afc",
+  "compiled_sources": {
+    "atari2600.ts": "3565610d96a8d7b101f50202f6f49984e2e5e132902d6599c95ba753fa9530c4",
+    "cart/cartridge.ts": "a16ff491d367b252dabad270422fed6793da9615a72c73ac364c1a8d10109110",
+    "cart/detect.ts": "dafe2f9a237f407ef0b6c30b5b942972f6dbc4495054cab9055ab863859c607e",
+    "cart/schemes/atari.ts": "e4fda3cedd34d1b1a652bdeb4138447915f43133031452ca9effe25a800c1c9f",
+    "cart/schemes/plain.ts": "0e44121f4e6aff75ec302540c2f440d4aae92af8b8d794b5e20d1992d6819f3e",
+    "cart/schemes/segmented.ts": "d8d232bafb448b6549bef09b97df8c888306d79331f7d38d406e43461fe78b7d",
+    "cart/schemes/snooping.ts": "975210ce73cd48df06787dbf7a53393ff5937a6f15d60388492f6b54994aca21",
+    "cpu/cpu6507.ts": "5c47350fa3ce930b48d803502ffac2d756d9eb5a015bedf97cb4adc272bd46b1",
+    "emulator.ts": "d984bd9097afea14c0ed1d2dc9bcf0d48689ec74b359b751f0c97d63b11a3967",
+    "io/controllers/ports.ts": "67b6030bd1b35b98d7a584af1cde246ae470781c55d9e5cf663f47dabcca5c7f",
+    "io/controllers/types.ts": "95e75ff233c7b809b01e233af517e636eb896546503f158141dea94c30884081",
+    "io/player-input.ts": "83e8ff173fe9088e07d61df4693972dba3cefe313fbfaa63c8c39247d032e07f",
+    "render/frame-window.ts": "b111e94d69a77af81abf9c99c97efa854483ab6f4ec592d6d884e7740ef023fc",
+    "render/palette.ts": "2be85c770446d0b7bb4daa40203e91692623c3a0c1c41d154cb9568b2480ddb2",
+    "render/screen.ts": "f1f9c3622cb9ec28ac79c7543f3ca2fc1cd66e14833931f94662edf5f4b527df",
+    "riot/riot6532.ts": "17253617de2bc38592e103a4d8204ea73aefed618ac148481eba9949870146e3",
+    "state/snapshot.ts": "0261392f307513566bf5076ae494a8201535ee8a346a751ddc663945f524bfb1",
+    "tia/audio.ts": "7afc32ba93e41337c684503ec69b2c3965fd3fe9bce81ec9b481d9597290899a",
+    "tia/objects.ts": "8b35aa6b5124a76388845ee69986772fb5d156364f55f723a2702e79ba30ba5c",
+    "tia/tia.ts": "0fd3dcf8796c2bf30120751f7f99936053f86b23afe636458807617272cf7bcd"
+  },
+  "engine": "atari2600",
+  "license": "MIT",
+  "license_sha256": "86a16b1f808dc1de261a90886eb5b8050217bd58a01d91e8a3310eec08e38294",
+  "no_downloads": true,
+  "no_game_roms": true,
+  "no_telemetry": true,
+  "revision": "9374aef2bc4bbed097b1cc884645f1a879f8d1ac",
+  "source_files": 42,
+  "source_inventory_sha256": "1a612514e1aeb434e78eb342f9dbd5c34e424ee85d7682de7a1307b873cc1238",
+  "upstream": "https://github.com/mohrt/atari2600"
+}

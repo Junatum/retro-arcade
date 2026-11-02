@@ -44,6 +44,7 @@ export function renderController(root, systemId, press) {
   const isNes = systemId === 'nes';
   const isMega = systemId === 'blastem';
   const isArcade = systemId === 'mame';
+  const isAtari = systemId === 'atari2600';
   const isSega8 = systemId.startsWith('gearsystem-');
   const held = new Set();
   const releaseAll = () => {
@@ -51,7 +52,7 @@ export function renderController(root, systemId, press) {
   };
   root.replaceChildren();
   root.className = `keypad ${isChip8 ? 'keypad--chip8' : isMega ? 'keypad--handheld keypad--megadrive' : 'keypad--handheld'}`;
-  root.setAttribute('aria-label', isChip8 ? 'CHIP-8 / Super CHIP-8 16키 터치 키패드' : `${isGba ? 'Game Boy Advance' : isArcade ? 'Arcade' : isNes ? 'NES / Famicom' : isMega ? 'Mega Drive / Genesis' : isSega8 ? 'Sega 8-bit' : 'Game Boy / Color'} 터치 컨트롤러`);
+  root.setAttribute('aria-label', isChip8 ? 'CHIP-8 / Super CHIP-8 16키 터치 키패드' : `${isGba ? 'Game Boy Advance' : isArcade ? 'Arcade' : isAtari ? 'Atari 2600' : isNes ? 'NES / Famicom' : isMega ? 'Mega Drive / Genesis' : isSega8 ? 'Sega 8-bit' : 'Game Boy / Color'} 터치 컨트롤러`);
 
   function makeButton(item, groupClass) {
     const btn = doc.createElement('button');
@@ -115,7 +116,7 @@ export function renderController(root, systemId, press) {
   center.setAttribute('aria-hidden', 'true');
   dpad.appendChild(center);
   main.appendChild(dpad);
-  main.appendChild(makeGroup('controller-face', isMega ? MEGA_FACE : FACE));
+  main.appendChild(makeGroup('controller-face', isMega ? MEGA_FACE : isAtari ? [{key:'a',label:'FIRE',position:'a',name:'Atari 발사 버튼'}] : FACE));
   root.appendChild(main);
   root.appendChild(makeGroup('controller-meta', isArcade ? ARCADE_META : isMega ? [{key:'mode', label:'MODE', position:'mode', name:'MODE 버튼'}, SYSTEM[1]] : SYSTEM));
   return {releaseAll};

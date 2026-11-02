@@ -4,6 +4,7 @@
 |---|---|---|
 | SmartSafeHub Retro Arcade UI, CHIP-8/Super CHIP-8 | SmartSafeHub contributors, GPL-3.0-or-later | 예 |
 | mGBA 0.10.5 GB/GBC/GBA 코어 | Jeffrey Pfau 및 기여자, MPL-2.0 | WASM/JS 번들 |
+| Atari 2600 (`mohrt/atari2600`) | Monte Ohrt, MIT | 로컬 소스에서 빌드한 JavaScript만 포함. ROM/원본 웹앱/분석 기능 제외 |
 | JSNES 2.1.0 NES/Famicom 에뮬레이터 | Ben Firshman 및 JSNES 기여자, Apache-2.0 | 검증된 ES 모듈 소스 |
 | Gearsystem Game Gear / Master System / SG-1000 | Nacho Sanchez 및 기여자, GPL-3.0 | JS/WASM 및 매니페스트 포함 |
 | BlastEm Mega Drive / Genesis | Michael Pavone 및 기여자, GPL-3.0-or-later | `-Oz` 빌드 JS/WASM 및 매니페스트 포함 |
@@ -23,3 +24,5 @@ libretro API header: MIT — 원문 `LICENSES/Libretro.txt`에 포함.
 Gearsystem: https://github.com/drhelius/Gearsystem, `3.9.21` 태그·`d4a86dfa0a6493020d64af6816ecc35461407c67`. BlastEm: https://www.retrodev.com/repos/blastem, `v1.0.0` 직후 Libretro 수정 변경집합 `625fa5a85505`. 두 코어는 Emscripten으로 로컬 빌드한 JS/WASM이 **이미 포함**되어 있으며, 해시와 빌드 설정은 각각의 `manifest.json`에서 확인합니다. BlastEm의 데스크톱 전용 디버그·오실로스코프 호출은 `native/blastem_headless.h`에서 브라우저용으로 처리합니다. GPLv3 라이선스 전문은 `LICENSES/Gearsystem.txt`, `LICENSES/BlastEm.txt`로 제공합니다. Libretro 헤더의 MIT 고지와 정확한 대응 소스·빌드 파일도 배포 시 유지해야 합니다. [소스 제공 안내](SOURCE_OFFER.md)는 출처·재현 절차를 설명하며, APK 배포자의 실제 소스 제공 의무를 대신하지 않습니다.
 
 MAME: https://github.com/mamedev/mame, 고정 태그 `mame0289`. 전체 프로젝트 GPL-2.0-or-later, 일부 개별 파일은 BSD-3-Clause 등 별도 라이선스. `LICENSES/MAME-GPL2.txt`는 GPLv2 원문이며 소스 파일별 고지 전체를 대체하지 않습니다. MAME 이름·로고 상표 사용 허가는 별도입니다. 완성된 MAME JS/WASM의 구체적 소스는 로컬 빌드 뒤 `web/mame/manifest.json`에서 확인합니다. 현재 배포 소스에는 `web/mame/mame.js` 및 `mame.wasm`과 검증 매니페스트가 포함되어 있으며, MAME 0.289의 선택 드라이버 빌드 결과입니다. 빌드 리비전과 옵션은 매니페스트에 기록됩니다. `LICENSES/MAME-GPL2.txt`는 MAME에 포함된 모든 BSD 등 개별 파일의 라이선스 고지를 대체하지 않습니다. 배포자는 해당 버전의 전체 대응 소스, 개별 저작권 고지와 라이선스, 빌드 절차를 확인하고 실제로 제공해야 합니다.
+
+Atari 2600: https://github.com/mohrt/atari2600 (MIT, `LICENSES/Atari2600.txt`). 정확한 커밋·빌드 입력 해시는 `web/atari2600/manifest.json` 참조. 빌드 시 코어만 선택하며 원본 게임 카탈로그, 자동 게임 다운로드 코드, GA/분석, ROM, 원본 HTML/CSS/폰트는 포함하지 않습니다. 새 소스 버전을 사용할 경우 파일별 라이선스와 코드 출처를 다시 감사해야 하며, MIT 저작권 고지를 유지합니다.

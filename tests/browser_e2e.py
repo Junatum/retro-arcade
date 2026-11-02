@@ -70,7 +70,7 @@ class BrowserSmoke(unittest.TestCase):
                 page.on('request', lambda req: failures.append(f'external request: {req.url}') if not req.url.startswith(self.url) else None)
                 try:
                     page.goto(self.url, wait_until='networkidle')
-                    self.assertEqual(page.locator('#systems button').count(), 9)
+                    self.assertEqual(page.locator('#systems button').count(), 10)
                     self.assertEqual(page.locator('#demo').is_visible(), True)
                     page.locator('#systems button').nth(3).click()
                     self.assertEqual(page.locator('#demo').is_visible(), False)

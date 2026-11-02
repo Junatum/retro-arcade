@@ -1,7 +1,7 @@
 /* Local-only audio UI. The browser, not a global autoplay setting, decides
  * whether audio may begin without an additional click. */
 export function supportsGameAudio(systemId) {
-  return systemId === 'nes' || systemId === 'blastem' || systemId.startsWith('gearsystem-');
+  return systemId === 'atari2600' || systemId === 'nes' || systemId === 'blastem' || systemId.startsWith('gearsystem-');
 }
 
 const STATES = Object.freeze({

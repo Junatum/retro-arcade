@@ -4,6 +4,7 @@ export const SYSTEMS = Object.freeze([
   Object.freeze({id:'chip8', label:'CHIP-8', extensions:['ch8','c8','sc8','sch8'], icon:'8BIT', description:'Super CHIP-8 호환 · 64×32 / 128×64', maxSize:3584}),
   Object.freeze({id:'mgba-gb', label:'Game Boy / Color', extensions:['gb','gbc'], icon:'GB', description:'mGBA · 로컬 WASM', maxSize:8*1024*1024}),
   Object.freeze({id:'mgba', label:'Game Boy Advance', extensions:['gba'], icon:'GBA', description:'mGBA · 로컬 WASM', maxSize:32*1024*1024}),
+  Object.freeze({id:'atari2600', label:'Atari 2600', extensions:['a26'], icon:'2600', description:'Atari 2600 · 로컬 JavaScript', maxSize:64*1024}),
   Object.freeze({id:'nes', label:'NES / Famicom', extensions:['nes'], icon:'NES', description:'JSNES 2.1.0 · 로컬 JavaScript', maxSize:8*1024*1024}),
   Object.freeze({id:'gearsystem-gg', label:'Game Gear', extensions:['gg'], icon:'GG', description:'Gearsystem · 로컬 WASM', maxSize:4*1024*1024}),
   Object.freeze({id:'gearsystem-sms', label:'Master System', extensions:['sms'], icon:'SMS', description:'Gearsystem · 로컬 WASM', maxSize:4*1024*1024}),
@@ -21,6 +22,8 @@ export function validateRom(file, system) {
   if (system.id==='mame' && file.size < 22) return '유효한 아케이드 ZIP 파일을 선택해 주세요.';
   if (system.id==='mgba-gb' && file.size < 0x150) return 'GB/GBC ROM 파일이 너무 작거나 잘못되었습니다.';
   if (system.id==='mgba' && file.size < 0xC0) return 'GBA ROM 파일이 너무 작거나 잘못되었습니다.';
+  if (system.id==='atari2600' && file.size > system.maxSize) return 'Atari 2600 ROM은 64KiB 이하만 지원합니다.';
+  if (system.id==='atari2600' && (file.size<2048 || file.size%1024!==0)) return 'Atari 2600 ROM은 2KiB 이상이며 1KiB 단위여야 합니다.';
   if (system.id==='nes' && file.size < 16+16384) return 'NES ROM 파일이 너무 작거나 잘못되었습니다.';
   if (file.size > system.maxSize) return system.id==='chip8' ? `${system.label} ROM은 3,584바이트 이하만 지원합니다.` : `${system.label} ROM은 ${system.maxSize/1024/1024}MiB 이하만 지원합니다.`;
   if ((system.id.startsWith('gearsystem-') || system.id==='blastem') && file.size < 64) return 'Sega ROM 파일이 너무 작거나 잘못되었습니다.';

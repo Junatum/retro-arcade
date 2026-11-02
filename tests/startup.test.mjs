@@ -55,8 +55,8 @@ test('Retro Arcade initializes platforms and highlights only the bundled demo pl
   globalThis.window = {addEventListener() {}};
   try {
     await import('../web/app.js?startup-test');
-    assert.equal(doc.getElementById('systems').children.length, 9);
-    assert.deepEqual(doc.getElementById('systems').children.map(b => b.dataset.system), ['chip8','mgba-gb','mgba','nes','gearsystem-gg','gearsystem-sms','gearsystem-sg','blastem','mame']);
+    assert.equal(doc.getElementById('systems').children.length, 10);
+    assert.deepEqual(doc.getElementById('systems').children.map(b => b.dataset.system), ['chip8','mgba-gb','mgba','atari2600','nes','gearsystem-gg','gearsystem-sms','gearsystem-sg','blastem','mame']);
     const demo = doc.getElementById('demo');
     const actions = doc.getElementById('load-buttons');
     assert.equal(doc.getElementById('rom-file').accept, '.ch8,.c8,.sc8,.sch8', 'same CHIP-8 platform accepts SCHIP extensions');
@@ -80,7 +80,7 @@ test('Retro Arcade initializes platforms and highlights only the bundled demo pl
       assert.equal(platform.children[1].tagName, 'strong');
     }
     assert.notEqual(platforms[1].children[0].innerHTML, platforms[2].children[0].innerHTML);
-    const nes = doc.getElementById('systems').children[3];
+    const nes = doc.getElementById('systems').children[4];
     nes.onclick();
     assert.equal(doc.getElementById('rom-file').accept, '.nes');
     assert.equal(nes.attrs['aria-pressed'], 'true');

@@ -12,7 +12,7 @@ function fakeElement(){
 }
 
 test('only bundled NES/Sega emulators show a prominent audio status',()=>{
-  for(const id of ['nes','gearsystem-gg','gearsystem-sms','gearsystem-sg','blastem'])
+  for(const id of ['atari2600','nes','gearsystem-gg','gearsystem-sms','gearsystem-sg','blastem'])
     assert.equal(supportsGameAudio(id),true,id);
   for(const id of ['chip8','mgba-gb','mgba'])assert.equal(supportsGameAudio(id),false,id);
 });

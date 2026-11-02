@@ -7,6 +7,10 @@ import json
 import re
 from pathlib import Path
 try:
+    from scripts.build_atari import denied_runtime_reason
+except ModuleNotFoundError:  # python3 scripts/release_audit.py
+    from build_atari import denied_runtime_reason
+try:
     from scripts.cache_bust import check as check_browser_cache
     from scripts.mame_registry import check as check_mame_registry
 except ModuleNotFoundError:  # python3 scripts/release_audit.py
@@ -15,10 +19,10 @@ except ModuleNotFoundError:  # python3 scripts/release_audit.py
 
 ROOT = Path(__file__).resolve().parents[1]
 WEB = ROOT / 'web'
-VERSION = '1.3.0-r1'
+VERSION = '1.3.0-r2'
 EXPECTED_WEB = {
     'index.html', 'styles.css', 'favicon.svg', 'favicon.ico', 'app.js', 'fullscreen.js', 'controller.js', 'chip8.js', 'systems.js',
-    'mame-player.js', 'mame/runner.html', 'mame/runner.js', 'mame/runner.css', 'mame/machines.js', 'demo.js', 'open-source.html', 'battery-store.js', 'save-session.js', 'mgba-player.js', 'jsnes-player.js', 'nes-audio.js', 'sega-player.js', 'audio-controls.js',
+    'mame-player.js', 'atari-player.js', 'mame/runner.html', 'mame/runner.js', 'mame/runner.css', 'mame/machines.js', 'demo.js', 'open-source.html', 'battery-store.js', 'save-session.js', 'mgba-player.js', 'jsnes-player.js', 'nes-audio.js', 'sega-player.js', 'audio-controls.js',
 }
 MGBA_VENDOR = {'mgba/mgba.js', 'mgba/mgba.wasm', 'mgba/manifest.json'}
 SEGA_ENGINES = ('gearsystem', 'blastem')
@@ -28,11 +32,13 @@ MAME_TAG = 'mame0289'
 MAME_VERSION = '0.289'
 MAME_SOURCES = 'src/mame/pacman/pacman.cpp,src/mame/galaxian/galaxian.cpp'
 MAME_VENDOR = {'mame/mame.js', 'mame/mame.wasm', 'mame/manifest.json'}
+ATARI_VENDOR = {'atari2600/engine.js', 'atari2600/manifest.json'}
+ROM_EXTENSIONS = {'.a26','.bin','.rom','.zip','.nes','.sfc','.smc','.gba','.gb','.gbc','.md','.gen','.ch8','.sc8','.chd','.iso','.cue','.7z'}
 SEGA_LICENSE = {'gearsystem': 'Gearsystem.txt', 'blastem': 'BlastEm.txt'}
 EXPECTED_SOURCE_COMPONENTS = {
-    'native': {'mgba_bridge.c', 'sega_libretro_bridge.c', 'blastem_headless.h'},
-    'scripts': {'build_mgba.py', 'build_sega.py', 'build_mame.py', 'cache_bust.py', 'release_audit.py', 'vendor_jsnes.py', 'mame_registry.py'},
-    'LICENSES': {'mGBA.txt', 'JSNES.txt', 'Gearsystem.txt', 'BlastEm.txt', 'Libretro.txt', 'MAME-GPL2.txt'},
+    'native': {'mgba_bridge.c', 'sega_libretro_bridge.c', 'blastem_headless.h', 'atari_bridge.ts'},
+    'scripts': {'build_mgba.py', 'build_sega.py', 'build_mame.py', 'cache_bust.py', 'release_audit.py', 'vendor_jsnes.py', 'mame_registry.py', 'build_atari.py'},
+    'LICENSES': {'mGBA.txt', 'JSNES.txt', 'Gearsystem.txt', 'BlastEm.txt', 'Libretro.txt', 'MAME-GPL2.txt', 'Atari2600.txt'},
 }
 
 
@@ -40,7 +46,7 @@ def sha256(path: Path) -> str:
     return hashlib.sha256(path.read_bytes()).hexdigest()
 
 
-def audit(release: bool = False, require_sega: bool = True, require_mame: bool = True) -> list[str]:
+def audit(release: bool = False, require_sega: bool = True, require_mame: bool = True, require_atari: bool = True) -> list[str]:
     errors = []
     try:
         meta = json.loads((ROOT / 'app-info.json').read_text(encoding='utf-8'))
@@ -54,9 +60,9 @@ def audit(release: bool = False, require_sega: bool = True, require_mame: bool =
         return [f'missing or invalid release source: {exc}']
     if meta.get('version') != VERSION or meta.get('license') != 'GPL-3.0-or-later AND GPL-2.0-or-later AND MPL-2.0 AND Apache-2.0 AND MIT':
         errors.append('incorrect app version/license')
-    if meta.get('included_systems') != ['CHIP-8', 'Game Boy', 'Game Boy Color', 'Game Boy Advance', 'NES', 'Famicom', 'Game Gear', 'Master System', 'SG-1000', 'Mega Drive', 'Genesis', 'Arcade (MAME 0.289 selected drivers)'] or meta.get('offline') is not True:
+    if meta.get('included_systems') != ['CHIP-8', 'Game Boy', 'Game Boy Color', 'Game Boy Advance', 'NES', 'Famicom', 'Atari 2600', 'Game Gear', 'Master System', 'SG-1000', 'Mega Drive', 'Genesis', 'Arcade (MAME 0.289 selected drivers)'] or meta.get('offline') is not True:
         errors.append('incorrect included platforms/offline policy')
-    for required in ('PKG_VERSION:=1.3.0', 'PKG_RELEASE:=1', 'PKG_LICENSE:=GPL-3.0-or-later GPL-2.0-or-later MPL-2.0 Apache-2.0 MIT',
+    for required in ('PKG_VERSION:=1.3.0', 'PKG_RELEASE:=2', 'PKG_LICENSE:=GPL-3.0-or-later GPL-2.0-or-later MPL-2.0 Apache-2.0 MIT',
                      'python3 $(CURDIR)/scripts/release_audit.py --release'):
         if required not in mk:
             errors.append(f'incorrect OpenWrt package config: {required}')
@@ -98,7 +104,7 @@ def audit(release: bool = False, require_sega: bool = True, require_mame: bool =
         errors.append(f'missing source offer: {exc}')
     try:
         history = (ROOT / 'CHANGELOG.md').read_text(encoding='utf-8')
-        if re.findall(r'^## (\d+\.\d+\.\d+-r\d+)\b', history, re.M) != [VERSION, '1.2.0-r4', '1.2.0-r3', '1.2.0-r2', '1.2.0-r1', '1.1.0-r5', '1.1.0-r4', '1.1.0-r3', '1.1.0-r2', '1.1.0-r1', '1.0.0-r1', '0.1.0-r6', '0.1.0-r5', '0.1.0-r4', '0.1.0-r3', '0.1.0-r2', '0.1.0-r1']:
+        if re.findall(r'^## (\d+\.\d+\.\d+-r\d+)\b', history, re.M) != [VERSION, '1.3.0-r1', '1.2.0-r4', '1.2.0-r3', '1.2.0-r2', '1.2.0-r1', '1.1.0-r5', '1.1.0-r4', '1.1.0-r3', '1.1.0-r2', '1.1.0-r1', '1.0.0-r1', '0.1.0-r6', '0.1.0-r5', '0.1.0-r4', '0.1.0-r3', '0.1.0-r2', '0.1.0-r1']:
             errors.append('changelog must contain the current release and all previous versions')
     except OSError as exc:
         errors.append(f'missing changelog: {exc}')
@@ -119,6 +125,11 @@ def audit(release: bool = False, require_sega: bool = True, require_mame: bool =
         errors.append('JSNES attribution missing')
     if 'GNU GENERAL PUBLIC LICENSE' not in (ROOT / 'LICENSES/MAME-GPL2.txt').read_text():
         errors.append('MAME GPLv2 license missing')
+    if 'Atari 2600' not in readme or 'Atari 2600' not in notice:
+        errors.append('Atari 2600 attribution missing')
+    if (not (ROOT / 'LICENSES/Atari2600.txt').is_file() or
+            'MIT License' not in (ROOT / 'LICENSES/Atari2600.txt').read_text()):
+        errors.append('Atari 2600 MIT notice missing')
     if 'MAME' not in readme or 'MAME' not in notice:
         errors.append('MAME attribution missing')
     try:
@@ -148,8 +159,16 @@ def audit(release: bool = False, require_sega: bool = True, require_mame: bool =
             errors.append(f'stale browser asset hashes: {stale}; run scripts/cache_bust.py --update')
     except (OSError, ValueError) as exc:
         errors.append(f'cannot verify browser asset hashes: {exc}')
+    # Never bundle games, BIOS or an upstream game's download/telemetry frontend.
+    # The allow-list below also excludes *all* Atari upstream UI, manifests,
+    # game catalogs and networking helpers from the browser web root.
+    for name in web_files:
+        if Path(name).suffix.lower() in ROM_EXTENSIONS:
+            errors.append(f'prohibited ROM/game content in web package: {name}')
+        if name.startswith('atari2600/') and name not in ATARI_VENDOR:
+            errors.append(f'unapproved Atari asset: {name}')
     vendor_files = {name for name in web_files if name.startswith('vendor/jsnes/')}
-    ordinary_web = web_files - vendor_files - MAME_VENDOR
+    ordinary_web = web_files - vendor_files - MAME_VENDOR - ATARI_VENDOR
     if (ordinary_web - SEGA_VENDOR) not in (EXPECTED_WEB, EXPECTED_WEB | MGBA_VENDOR):
         errors.append(f'unexpected/incomplete web inventory: {sorted((ordinary_web - SEGA_VENDOR) ^ (EXPECTED_WEB | MGBA_VENDOR))}')
     if any(name.startswith('vendor/') and not name.startswith('vendor/jsnes/') for name in web_files):
@@ -231,6 +250,43 @@ def audit(release: bool = False, require_sega: bool = True, require_mame: bool =
                             errors.append(f'invalid JSNES source hash: {name}')
             except (OSError, ValueError, TypeError, AttributeError) as exc:
                 errors.append(f'invalid JSNES manifest: {exc}')
+    # In source-only mode the generated engine is deliberately absent. APK
+    # release requires the locally built, provenance-pinned artifact pair.
+    atari_present = ATARI_VENDOR & web_files
+    if atari_present != ATARI_VENDOR:
+        if release and require_atari:
+            errors.append('atari2600: locally built engine.js + manifest.json required before APK release')
+        elif atari_present:
+            errors.append('atari2600: incomplete engine bundle')
+    else:
+        try:
+            manifest = json.loads((WEB / 'atari2600/manifest.json').read_text())
+            if not (manifest.get('engine') == 'atari2600' and
+                    manifest.get('upstream') == 'https://github.com/mohrt/atari2600' and
+                    manifest.get('license') == 'MIT' and
+                    re.fullmatch(r'[a-f0-9]{40}', str(manifest.get('revision',''))) and
+                    manifest.get('no_game_roms') is True and
+                    manifest.get('no_downloads') is True and
+                    manifest.get('no_telemetry') is True and
+                    isinstance(manifest.get('compiled_sources'),dict) and
+                    {'emulator.ts','atari2600.ts','cart/detect.ts','render/screen.ts','io/controllers/ports.ts'}.issubset(manifest.get('compiled_sources')) and
+                    isinstance(manifest.get('source_files'),int) and manifest['source_files'] >= 10 and
+                    re.fullmatch(r'[a-f0-9]{64}', str(manifest.get('source_inventory_sha256','')))):
+                errors.append('atari2600: unapproved revision/source provenance or offline promises')
+            for key, file in (('license_sha256','LICENSES/Atari2600.txt'),
+                              ('bridge_sha256','native/atari_bridge.ts'),
+                              ('build_script_sha256','scripts/build_atari.py')):
+                if sha256(ROOT / file) != manifest.get(key):
+                    errors.append(f'atari2600: {key} changed; local rebuild required')
+            runtime = (WEB / 'atari2600/engine.js').read_bytes()
+            if len(runtime) < 1000 or sha256(WEB / 'atari2600/engine.js') != manifest.get('artifacts',{}).get('engine.js'):
+                errors.append('atari2600: generated JS checksum or size invalid')
+            from_bytes = runtime.decode('utf-8')
+            reason = denied_runtime_reason(from_bytes)
+            if reason:
+                errors.append(f'atari2600: forbidden download/analytics runtime code: {reason}')
+        except (OSError,ValueError,TypeError,AttributeError,UnicodeError) as exc:
+            errors.append(f'atari2600: malformed local build artifact: {exc}')
     if release:
         if not MGBA_VENDOR.issubset(web_files):
             errors.append('mGBA 0.10.5 WASM/JS + provenance manifest are mandatory before APK release')

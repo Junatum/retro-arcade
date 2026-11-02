@@ -38,6 +38,7 @@ jobs:
           node --check web/save-session.js
           node --check web/mgba-player.js
 
+          node --check web/atari-player.js
           node --check web/jsnes-player.js
           node --check web/nes-audio.js
           node --check web/sega-player.js

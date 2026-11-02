@@ -25,13 +25,13 @@ class MameCspTests(unittest.TestCase):
             shutil.copytree(ROOT, fake, ignore=shutil.ignore_patterns('.git', '__pycache__'))
             with (patch.object(release_audit, 'ROOT', fake),
                   patch.object(release_audit, 'WEB', fake / 'web')):
-                self.assertEqual(release_audit.audit(release=True), [])
+                self.assertEqual(release_audit.audit(release=True, require_atari=False), [])
                 page = fake / 'web/mame/runner.html'
                 page.write_text(page.read_text().replace('</head>', '<style>body{color:red}</style></head>'))
-                self.assertTrue(any('runner CSP' in e for e in release_audit.audit(release=True)))
+                self.assertTrue(any('runner CSP' in e for e in release_audit.audit(release=True, require_atari=False)))
                 page.write_text((ROOT / 'web/mame/runner.html').read_text())
                 (fake / 'web/mame/runner.css').unlink()
-                self.assertTrue(any('web inventory' in e for e in release_audit.audit(release=True)))
+                self.assertTrue(any('web inventory' in e for e in release_audit.audit(release=True, require_atari=False)))
 
     def test_pinned_generated_mame_js_has_rom_export_functions(self):
         source = (ROOT / 'web/mame/mame.js').read_text(encoding='utf-8')

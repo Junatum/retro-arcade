@@ -44,7 +44,7 @@ class MameBuildTests(unittest.TestCase):
             for name in ('mame.js', 'mame.wasm', 'manifest.json'):
                 (fake / 'web/mame' / name).unlink(missing_ok=True)
             with patch.object(release_audit, 'ROOT', fake), patch.object(release_audit, 'WEB', fake / 'web'):
-                errors = release_audit.audit(release=True)
+                errors = release_audit.audit(release=True, require_atari=False)
                 self.assertIn('mame: JS/WASM/manifest required before 1.2.0 APK release', errors)
                 self.assertEqual(release_audit.audit(release=False), [])
         with tempfile.TemporaryDirectory() as folder:

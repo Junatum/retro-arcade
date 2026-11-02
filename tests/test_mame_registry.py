@@ -40,7 +40,7 @@ class MachineRegistryTests(unittest.TestCase):
             target.write_text(target.read_text().replace("'mooncrst'", "'notbuilt'"))
             with patch.object(release_audit, 'ROOT', fake), patch.object(release_audit, 'WEB', fake / 'web'):
                 self.assertTrue(any('machine list does not match' in e
-                                    for e in release_audit.audit(release=True)))
+                                    for e in release_audit.audit(release=True, require_atari=False)))
 
 
 if __name__ == '__main__':
