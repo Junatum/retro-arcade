@@ -19,7 +19,7 @@ SmartSafeHub Apps에서 제공하는 **로컬 레트로 게임 앱**입니다. �
 
 | 게임기 | 게임 파일 | 실행 엔진 | 터치 조작 |
 |---|---|---|---|
-| CHIP-8 | `.ch8`, `.c8` | 자체 JavaScript 실행기 | 4×4 숫자 키패드 |
+| CHIP-8 / Super CHIP-8 | `.ch8`, `.c8`, `.sc8`, `.sch8` | 자체 JavaScript 실행기 (자동 SCHIP 호환) | 4×4 숫자 키패드 |
 | Game Boy / Game Boy Color | `.gb`, `.gbc` | mGBA 0.10.5 | 십자 방향키, A/B, SELECT/START |
 | Game Boy Advance | `.gba` | mGBA 0.10.5 | 십자 방향키, A/B, SELECT/START, L/R |
 | NES / Famicom | `.nes` | JSNES 2.1.0 | 십자 방향키, A/B, SELECT/START |
@@ -28,6 +28,8 @@ SmartSafeHub Apps에서 제공하는 **로컬 레트로 게임 앱**입니다. �
 | SG-1000 | `.sg` | Gearsystem 3.9.21 | 십자 방향키, A/B, SELECT/START |
 | Mega Drive / Genesis | `.md`, `.gen`, `.bin` | BlastEm 1.0.0 계열 | 십자 방향키, A/B/C, X/Y/Z, START/MODE |
 | Arcade (선택 드라이버) | `.zip` (내장 기기 식별자와 일치) | MAME 0.289 (로컬 JS/WASM 번들) | 십자 방향키, 버튼 1/2, COIN/START |
+
+Super CHIP-8은 128×64 해상도, 화면 스크롤, 16×16 스프라이트, 큰 숫자 글꼴 및 8개 RPL 플래그를 지원합니다. **현대 SCHIP 호환 모드**로 해상도 전환 시 화면을 지우고, 스크롤은 현재 논리 해상도를 기준으로 합니다. 원래 HP48 기반 SCHIP 1.0/1.1의 반픽셀 스크롤이나 화면 보존을 필요로 하는 ROM과는 차이가 있을 수 있습니다. 같은 CHIP-8 메뉴에서 모든 확장자를 실행합니다. `.sc8` / `.sch8`은 시작부터 SCHIP 규칙을 사용하고, `.ch8` / `.c8`은 기존 CHIP-8 규칙을 유지하다 실제 SCHIP 명령이 실행되면 자동 전환합니다. ROM은 최대 3,584바이트이며 외부 ROM은 포함하지 않습니다.
 
 Game Boy, Game Boy Color, Game Boy Advance는 **하나의 mGBA 엔진**으로 실행됩니다. CHIP-8에는 직접 제작한 **패들 랠리** 미니게임이 포함되어 있으며, **데모 게임 플레이 버튼은 CHIP-8 선택 시에만 표시**됩니다.
 

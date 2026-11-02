@@ -59,6 +59,7 @@ test('Retro Arcade initializes platforms and highlights only the bundled demo pl
     assert.deepEqual(doc.getElementById('systems').children.map(b => b.dataset.system), ['chip8','mgba-gb','mgba','nes','gearsystem-gg','gearsystem-sms','gearsystem-sg','blastem','mame']);
     const demo = doc.getElementById('demo');
     const actions = doc.getElementById('load-buttons');
+    assert.equal(doc.getElementById('rom-file').accept, '.ch8,.c8,.sc8,.sch8', 'same CHIP-8 platform accepts SCHIP extensions');
     assert.equal(demo.disabled, false, 'CHIP-8 starts with a visible demo');
     assert.equal(demo.classList.contains('hidden'), false);
     assert.equal(actions.classList.contains('buttons--single'), false);

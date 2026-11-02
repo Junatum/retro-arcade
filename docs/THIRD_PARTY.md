@@ -2,7 +2,7 @@
 
 | 구성 | 저작권 / 라이선스 | 포함 |
 |---|---|---|
-| SmartSafeHub Retro Arcade UI, CHIP-8 | SmartSafeHub contributors, GPL-3.0-or-later | 예 |
+| SmartSafeHub Retro Arcade UI, CHIP-8/Super CHIP-8 | SmartSafeHub contributors, GPL-3.0-or-later | 예 |
 | mGBA 0.10.5 GB/GBC/GBA 코어 | Jeffrey Pfau 및 기여자, MPL-2.0 | WASM/JS 번들 |
 | JSNES 2.1.0 NES/Famicom 에뮬레이터 | Ben Firshman 및 JSNES 기여자, Apache-2.0 | 검증된 ES 모듈 소스 |
 | Gearsystem Game Gear / Master System / SG-1000 | Nacho Sanchez 및 기여자, GPL-3.0 | JS/WASM 및 매니페스트 포함 |

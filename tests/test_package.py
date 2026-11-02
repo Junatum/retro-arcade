@@ -123,13 +123,13 @@ class PackageTests(unittest.TestCase):
     def test_revision_platforms_and_licenses(self):
         info = json.loads((ROOT / 'app-info.json').read_text())
         make = (ROOT / 'Makefile').read_text()
-        self.assertEqual(info['version'], '1.2.0-r4')
-        self.assertIn('PKG_VERSION:=1.2.0', make)
-        self.assertIn('PKG_RELEASE:=4', make)
+        self.assertEqual(info['version'], '1.3.0-r1')
+        self.assertIn('PKG_VERSION:=1.3.0', make)
+        self.assertIn('PKG_RELEASE:=1', make)
         self.assertEqual(info['license'], 'GPL-3.0-or-later AND GPL-2.0-or-later AND MPL-2.0 AND Apache-2.0 AND MIT')
         self.assertEqual(info['included_systems'], ['CHIP-8', 'Game Boy', 'Game Boy Color', 'Game Boy Advance', 'NES', 'Famicom', 'Game Gear', 'Master System', 'SG-1000', 'Mega Drive', 'Genesis', 'Arcade (MAME 0.289 selected drivers)'])
         self.assertNotIn('GL-MT300N-V2', info['supported_models'])
-        self.assertIn('Browser-based CHIP-8, GB/GBC/GBA, NES, Sega', make)
+        self.assertIn('Browser-based CHIP-8/Super CHIP-8, GB/GBC/GBA, NES, Sega', make)
         self.assertIn('LICENSES/mGBA.txt', make)
         self.assertIn('LICENSES/JSNES.txt', make)
 
@@ -383,12 +383,12 @@ class PackageTests(unittest.TestCase):
         history = (ROOT / 'CHANGELOG.md').read_text()
         for heading in ('### 추가', '### 개선', '### 수정', '### 호환성', '### 테스트'):
             self.assertIn(heading, history)
-        self.assertIn('1.2.0-r4', (ROOT / 'docs/SOURCE_OFFER.md').read_text())
+        self.assertIn('1.3.0-r1', (ROOT / 'docs/SOURCE_OFFER.md').read_text())
         for path in ('README.md', 'docs/ARCHITECTURE.md', 'docs/RELEASE_CHECKLIST.md',
                      'docs/THIRD_PARTY.md', 'web/open-source.html'):
             source = (ROOT / path).read_text()
             self.assertIsNone(re.search(r'\b\d+\.\d+\.\d+-r\d+\b', source), path)
-        self.assertIn('<span class="edition">v1.2.0-r4</span>', (ROOT / 'web/index.html').read_text())
+        self.assertIn('<span class="edition">v1.3.0-r1</span>', (ROOT / 'web/index.html').read_text())
 
     def test_release_guard_requires_correct_header_badge(self):
         with tempfile.TemporaryDirectory() as tmp:

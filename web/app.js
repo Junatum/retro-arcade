@@ -1,7 +1,7 @@
 /* SmartSafeHub Retro Arcade — GPL-3.0-or-later; entirely local browser playback. */
-import { Chip8, DISPLAY_WIDTH, DISPLAY_HEIGHT } from './chip8.js?v=24c3002c045b';
-import { DEMO_ROM, DEMO_TITLE, DEMO_CONTROLS, DEMO_FINISHED_PC, DEMO_WIN_SCORE } from './demo.js?v=d5358e9686ba';
-import { SYSTEMS, detectSystem, validateRom } from './systems.js?v=3baa74b0ac8f';
+import { Chip8, DISPLAY_WIDTH, DISPLAY_HEIGHT } from './chip8.js?v=b360d75504b3';
+import { DEMO_ROM, DEMO_TITLE, DEMO_CONTROLS, DEMO_FINISHED_PC, DEMO_WIN_SCORE } from './demo.js?v=414c11e15c8d';
+import { SYSTEMS, detectSystem, validateRom } from './systems.js?v=3df244a4d5ea';
 import { romStorageKey } from './battery-store.js?v=089100328af3';
 import { SaveSession } from './save-session.js?v=091750ebf000';
 import { MgbaPlayer } from './mgba-player.js?v=8d6c2b534ff6';
@@ -11,7 +11,7 @@ import { MamePlayer } from './mame-player.js?v=e87a0eeb77de';
 import { NesAudio } from './nes-audio.js?v=980e7224b90b';
 import { supportsGameAudio, paintAudioState } from './audio-controls.js?v=b4321a145dca';
 import { setupFullscreen } from './fullscreen.js?v=27d207810633';
-import { renderController, CHIP8_KEYBOARD, CHIP8_MATRIX, HANDHELD_KEYS, SEGA_KEYS } from './controller.js?v=0e7bd2eab65a';
+import { renderController, CHIP8_KEYBOARD, CHIP8_MATRIX, HANDHELD_KEYS, SEGA_KEYS } from './controller.js?v=0fedb0296d2a';
 const $ = id => document.getElementById(id);
 const input=$('rom-file'), notice=$('notice'), stage=$('game');
 const fullscreen=setupFullscreen($('player-section'),$('fullscreen'),document,document.body);
@@ -21,7 +21,7 @@ canvas.width=DISPLAY_WIDTH;canvas.height=DISPLAY_HEIGHT;
 canvas.setAttribute('aria-label','에뮬레이터 게임 화면');
 stage.appendChild(canvas);
 const ctx=canvas.getContext('2d',{alpha:false});
-const chip8=new Chip8();
+let chip8=new Chip8();
 const KEYMAP=new Map([...CHIP8_KEYBOARD].map((key,index)=>[key,CHIP8_MATRIX[index]]));
 const GBKEY=new Map([['arrowup','up'],['arrowdown','down'],['arrowleft','left'],['arrowright','right'],['x','a'],['z','b'],['enter','start'],['shift','select'],['a','l'],['s','r']]);
 const ARCADEKEY=new Map([['arrowup','up'],['arrowdown','down'],['arrowleft','left'],['arrowright','right'],['z','a'],['x','b'],['5','coin'],['1','start']]);
@@ -50,11 +50,12 @@ const saves=new SaveSession({status:(type,message)=>{
 }});
 function announce(message,ok=false){notice.textContent=message;notice.classList.toggle('ok',ok);notice.classList.remove('hidden');}
 function paintChip8(){
-  if(canvas.width!==DISPLAY_WIDTH||canvas.height!==DISPLAY_HEIGHT){canvas.width=DISPLAY_WIDTH;canvas.height=DISPLAY_HEIGHT;}
-  const image=ctx.createImageData(DISPLAY_WIDTH,DISPLAY_HEIGHT);
+  const width=chip8.width, height=chip8.height;
+  if(canvas.width!==width||canvas.height!==height){canvas.width=width;canvas.height=height;}
+  const image=ctx.createImageData(width,height);
   for(let i=0;i<chip8.pixels.length;i++){
     const j=i*4,lit=Boolean(chip8.pixels[i]);
-    const x=i%DISPLAY_WIDTH, y=Math.floor(i/DISPLAY_WIDTH);
+    const x=i%width, y=Math.floor(i/width);
     // Only the bundled demo uses a right-side player accent. External CHIP-8
     // ROMs retain the standard monochrome palette.
     const playerPixel=demoActive && lit && x>=58 && x<=60 && y>=chip8.v[2] && y<chip8.v[2]+6;
@@ -76,6 +77,11 @@ function drawLoop(time){
       let count=0;
       while(clock>=1000/60 && count++<6){clock-=1000/60;for(let i=0;i<12;i++)chip8.step();chip8.tick();}
       if(chip8.changed)paintChip8();
+      if(chip8.halted){
+        stop('Super CHIP-8 프로그램이 종료되었습니다.');
+        $('toggle').disabled=true;$('toggle').textContent='프로그램 종료';
+        return;
+      }
       if(demoActive && chip8.v[14] && chip8.pc===DEMO_FINISHED_PC){finishDemo();return;}
     } else if(game){
       let count=0;
@@ -119,8 +125,12 @@ function showPlayer(system,label){
 }
 function persistBattery(){return saves.persist(game,saveKey);}
 function playChip8(bytes,label,isDemo=false){
-  cancelAnimationFrame(frame);chip8.load(bytes);game=null;saveKey=null;demoActive=isDemo;
-  paintChip8();showPlayer(SYSTEMS[0],label);
+  cancelAnimationFrame(frame);
+  // Explicit SCHIP extensions select its register quirks from the start;
+  // .ch8/.c8 games can still activate SCHIP when an extension opcode runs.
+  chip8=new Chip8(Math.random,{superchip:/\.(?:sc8|sch8)$/i.test(label)});
+  chip8.load(bytes);game=null;saveKey=null;demoActive=isDemo;
+  paintChip8();showPlayer(selected,label);
 }
 async function playMgba(bytes,label){
   const system=selected;
@@ -179,8 +189,8 @@ function choose(system){
   input.value='';input.accept=system.extensions.map(x=>'.'+x).join(',');
   $('play').disabled=true;
   $('rom-label').textContent=`${system.label} ROM 파일`;
-  $('rom-help').textContent= system.id==='chip8' ? '권리를 보유한 .ch8 / .c8 ROM을 선택하세요 (최대 3,584바이트).' : system.id==='mgba-gb' ? '권리를 보유한 .gb / .gbc ROM을 선택하세요 (최대 8MiB). 게임 데이터는 공유기로 전송되지 않습니다.' : system.id==='mame' ? '내장된 아케이드 엔진과 호환되는 .zip 파일을 선택하세요 (최대 12MiB). 파일은 공유기로 전송되지 않습니다.' : system.id==='nes' ? '권리를 보유한 .nes 파일을 선택하세요 (최대 8MiB). 게임 데이터는 공유기로 전송되지 않습니다.' : system.id.startsWith('gearsystem-') || system.id==='blastem' ? `권리를 보유한 ${system.extensions.map(x=>'.'+x).join(' / ')} ROM을 선택하세요 (최대 ${system.maxSize/1024/1024}MiB). ROM은 공유기로 전송되지 않습니다.` : '권리를 보유한 .gba ROM을 선택하세요 (최대 32MiB). BIOS는 필요하지 않으며 ROM은 전송되지 않습니다.';
-  $('control-help').textContent=system.id==='chip8' ? DEMO_CONTROLS + ' · 외부 CHIP-8 ROM은 게임마다 조작이 다릅니다.' : system.id==='mame' ? '방향키 이동 · Z(버튼 1) / X(버튼 2) · 5(COIN) / 1(1P START) · 모바일 터치 지원' : system.id==='blastem' ? '방향키 이동 · Z(A) / X(B) / C(C) · A(X) / S(Y) / D(Z) · Enter(START) / Shift(MODE) · 모바일 터치 지원' : '방향키 이동 · X(A) / Z(B) · Enter(START) / Shift(SELECT)' + (system.id==='mgba' ? ' · A(L) / S(R)' : '') + ' · 모바일 터치 지원';
+  $('rom-help').textContent= system.id==='chip8' ? '권리를 보유한 .ch8 / .c8 / .sc8 / .sch8 ROM을 선택하세요 (최대 3,584바이트). Super CHIP-8 해상도는 자동 전환됩니다.' : system.id==='mgba-gb' ? '권리를 보유한 .gb / .gbc ROM을 선택하세요 (최대 8MiB). 게임 데이터는 공유기로 전송되지 않습니다.' : system.id==='mame' ? '내장된 아케이드 엔진과 호환되는 .zip 파일을 선택하세요 (최대 12MiB). 파일은 공유기로 전송되지 않습니다.' : system.id==='nes' ? '권리를 보유한 .nes 파일을 선택하세요 (최대 8MiB). 게임 데이터는 공유기로 전송되지 않습니다.' : system.id.startsWith('gearsystem-') || system.id==='blastem' ? `권리를 보유한 ${system.extensions.map(x=>'.'+x).join(' / ')} ROM을 선택하세요 (최대 ${system.maxSize/1024/1024}MiB). ROM은 공유기로 전송되지 않습니다.` : '권리를 보유한 .gba ROM을 선택하세요 (최대 32MiB). BIOS는 필요하지 않으며 ROM은 전송되지 않습니다.';
+  $('control-help').textContent=system.id==='chip8' ? DEMO_CONTROLS + ' · CHIP-8/SCHIP 모두 16키 입력 (1234 / QWER / ASDF / ZXCV) · ROM마다 조작이 다릅니다.' : system.id==='mame' ? '방향키 이동 · Z(버튼 1) / X(버튼 2) · 5(COIN) / 1(1P START) · 모바일 터치 지원' : system.id==='blastem' ? '방향키 이동 · Z(A) / X(B) / C(C) · A(X) / S(Y) / D(Z) · Enter(START) / Shift(MODE) · 모바일 터치 지원' : '방향키 이동 · X(A) / Z(B) · Enter(START) / Shift(SELECT)' + (system.id==='mgba' ? ' · A(L) / S(R)' : '') + ' · 모바일 터치 지원';
   const hasDemo=system.id==='chip8';
   $('demo').disabled=!hasDemo;
   $('demo').classList.toggle('hidden',!hasDemo);

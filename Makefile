@@ -3,8 +3,8 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=smartsafehub-app-retro-arcade
-PKG_VERSION:=1.2.0
-PKG_RELEASE:=4
+PKG_VERSION:=1.3.0
+PKG_RELEASE:=1
 PKG_LICENSE:=GPL-3.0-or-later GPL-2.0-or-later MPL-2.0 Apache-2.0 MIT
 PKG_LICENSE_FILES:=LICENSE LICENSES/mGBA.txt LICENSES/JSNES.txt LICENSES/Gearsystem.txt LICENSES/BlastEm.txt LICENSES/Libretro.txt LICENSES/MAME-GPL2.txt
 PKG_MAINTAINER:=SmartSafeHub Contributors
@@ -22,7 +22,7 @@ define Package/smartsafehub-app-retro-arcade
 endef
 
 define Package/smartsafehub-app-retro-arcade/description
-  Browser-based CHIP-8, GB/GBC/GBA, NES, Sega and selected MAME arcade drivers.
+  Browser-based CHIP-8/Super CHIP-8, GB/GBC/GBA, NES, Sega and selected MAME arcade drivers.
   Local-only mGBA, Gearsystem, BlastEm and MAME WASM plus JSNES; no ROM downloads.
 endef
 

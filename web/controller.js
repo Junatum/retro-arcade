@@ -51,7 +51,7 @@ export function renderController(root, systemId, press) {
   };
   root.replaceChildren();
   root.className = `keypad ${isChip8 ? 'keypad--chip8' : isMega ? 'keypad--handheld keypad--megadrive' : 'keypad--handheld'}`;
-  root.setAttribute('aria-label', isChip8 ? 'CHIP-8 16키 터치 키패드' : `${isGba ? 'Game Boy Advance' : isArcade ? 'Arcade' : isNes ? 'NES / Famicom' : isMega ? 'Mega Drive / Genesis' : isSega8 ? 'Sega 8-bit' : 'Game Boy / Color'} 터치 컨트롤러`);
+  root.setAttribute('aria-label', isChip8 ? 'CHIP-8 / Super CHIP-8 16키 터치 키패드' : `${isGba ? 'Game Boy Advance' : isArcade ? 'Arcade' : isNes ? 'NES / Famicom' : isMega ? 'Mega Drive / Genesis' : isSega8 ? 'Sega 8-bit' : 'Game Boy / Color'} 터치 컨트롤러`);
 
   function makeButton(item, groupClass) {
     const btn = doc.createElement('button');

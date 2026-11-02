@@ -22,7 +22,7 @@ ROM은 브라우저에서만 처리합니다. 외부 CDN, 게임 서버, 상용 
 |---|---|
 | `web/app.js`, `web/systems.js` | 플랫폼 선택, ROM 로딩, 입력 및 렌더링 루프 |
 | `web/controller.js` | CHIP-8 4×4 키패드, GB/GBC 십자키·A/B·SELECT/START, GBA L/R 터치 컨트롤러와 멀티터치 해제 |
-| `web/chip8.js`, `web/demo.js` | CHIP-8 실행기·내장 데모 |
+| `web/chip8.js`, `web/demo.js` | CHIP-8/SCHIP 실행기·내장 데모 |
 | `web/jsnes-player.js`, `web/nes-audio.js` | NES 실행/프레임 변환, SRAM, HTTP 환경의 Web Audio (사용자 활성화) |
 | `web/vendor/jsnes/` | 정확히 JSNES 2.1.0 원본 ES 모듈·매니페스트, 처음 개발 시 한 번 내려받아 포함 |
 | `scripts/vendor_jsnes.py` | npm SHA-512 무결성 검증, 원본 모듈 의존성 트리 추출 |
@@ -40,7 +40,7 @@ ROM은 브라우저에서만 처리합니다. 외부 CDN, 게임 서버, 상용 
 
 ## 플랫폼 및 저장
 
-- CHIP-8: `.ch8`, `.c8` 최대 3,584바이트, 내장 데모 제공. 내장 데모 실행 버튼은 CHIP-8에서만 표시되며 다른 플랫폼에서는 숨깁니다.
+- CHIP-8 / Super CHIP-8: 단일 CHIP-8 메뉴에서 `.ch8`, `.c8`, `.sc8`, `.sch8`(최대 3,584바이트) 실행. 내장 데모 제공. `.sc8`/`.sch8`은 즉시 SCHIP 규칙을 사용하고 `.ch8`/`.c8`은 실행 중 확장 명령어에 따라 SCHIP 규칙으로 전환합니다. 64×32↔128×64 화면·스크롤·큰 글꼴·RPL 플래그. 데모 버튼은 CHIP-8 메뉴에서만 표시됩니다.
 - Game Boy / Color: `.gb`, `.gbc`, 최대 8MiB, mGBA의 GB 코어, 160×144 화면.
 - Game Boy Advance: `.gba`, 최대 32MiB, mGBA의 GBA 코어, 240×160 화면.
 - NES/Famicom: `.nes`, 최대 8MiB, JSNES 코어, 256×240 화면. 십자키·A/B·SELECT/START, 브라우저 IndexedDB에 배터리 RAM 저장.

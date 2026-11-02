@@ -192,5 +192,5 @@ test('Paddle Rally reports both win and loss correctly at five points',()=>{
   }
 });
 test('bad unknown opcode fails closed',()=>{
-  const m=machine(0x00fd);assert.throws(()=>m.step(),/지원하지/);
+  const m=machine(0x00f0);assert.throws(()=>m.step(),/지원하지/);
 });
