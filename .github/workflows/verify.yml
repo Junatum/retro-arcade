@@ -1,31 +1,42 @@
 name: Verify Retro Arcade
+
 on:
   push:
   pull_request:
+
 permissions:
   contents: read
+
 jobs:
   verify:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-python@v5
+      - uses: actions/checkout@v7
+
+      - uses: actions/setup-python@v7
         with:
-          python-version: '3.13'
+          python-version: '3.14'
+
       - name: Verify source contents (offline)
         run: python3 scripts/release_audit.py --check
+
       - name: Verify existing released emulator integrity
         run: python3 scripts/release_audit.py --existing
+
       - name: Verify bundled MAME registry and release assets
         run: |
           python3 scripts/mame_registry.py --check
           python3 scripts/release_audit.py --release
+
       - name: Verify browser cache hashes
         run: python3 scripts/cache_bust.py --check
+
       - name: Python tests
         run: python3 -m unittest discover -s tests -p 'test_*.py' -v
+
       - name: JavaScript tests
         run: node --test tests/*.test.mjs
+
       - name: JavaScript syntax
         run: |
           node --check web/app.js
@@ -44,9 +55,11 @@ jobs:
           node --check web/sega-player.js
           node --check web/mame-player.js
           node --check web/mame/runner.js
+
       - name: Install Chromium browser E2E runner (tests only)
         run: |
           python3 -m pip install playwright==1.57.0
           python3 -m playwright install --with-deps chromium
+
       - name: HTTP Chromium desktop/mobile and ROM-free MAME WASM smoke tests
         run: python3 tests/browser_e2e.py -v
