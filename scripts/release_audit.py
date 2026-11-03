@@ -19,7 +19,7 @@ except ModuleNotFoundError:  # python3 scripts/release_audit.py
 
 ROOT = Path(__file__).resolve().parents[1]
 WEB = ROOT / 'web'
-VERSION = '1.3.0-r2'
+VERSION = '1.3.0-r3'
 EXPECTED_WEB = {
     'index.html', 'styles.css', 'favicon.svg', 'favicon.ico', 'app.js', 'fullscreen.js', 'controller.js', 'chip8.js', 'systems.js',
     'mame-player.js', 'atari-player.js', 'mame/runner.html', 'mame/runner.js', 'mame/runner.css', 'mame/machines.js', 'demo.js', 'open-source.html', 'battery-store.js', 'save-session.js', 'mgba-player.js', 'jsnes-player.js', 'nes-audio.js', 'sega-player.js', 'audio-controls.js',
@@ -62,7 +62,7 @@ def audit(release: bool = False, require_sega: bool = True, require_mame: bool =
         errors.append('incorrect app version/license')
     if meta.get('included_systems') != ['CHIP-8', 'Game Boy', 'Game Boy Color', 'Game Boy Advance', 'NES', 'Famicom', 'Atari 2600', 'Game Gear', 'Master System', 'SG-1000', 'Mega Drive', 'Genesis', 'Arcade (MAME 0.289 selected drivers)'] or meta.get('offline') is not True:
         errors.append('incorrect included platforms/offline policy')
-    for required in ('PKG_VERSION:=1.3.0', 'PKG_RELEASE:=2', 'PKG_LICENSE:=GPL-3.0-or-later GPL-2.0-or-later MPL-2.0 Apache-2.0 MIT',
+    for required in ('PKG_VERSION:=1.3.0', 'PKG_RELEASE:=3', 'PKG_LICENSE:=GPL-3.0-or-later GPL-2.0-or-later MPL-2.0 Apache-2.0 MIT',
                      'python3 $(CURDIR)/scripts/release_audit.py --release'):
         if required not in mk:
             errors.append(f'incorrect OpenWrt package config: {required}')
