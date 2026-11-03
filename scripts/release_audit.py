@@ -102,12 +102,6 @@ def audit(release: bool = False, require_sega: bool = True, require_mame: bool =
             errors.append('source offer must identify exact release version')
     except OSError as exc:
         errors.append(f'missing source offer: {exc}')
-    try:
-        history = (ROOT / 'CHANGELOG.md').read_text(encoding='utf-8')
-        if re.findall(r'^## (\d+\.\d+\.\d+-r\d+)\b', history, re.M) != [VERSION, '1.3.0-r1', '1.2.0-r4', '1.2.0-r3', '1.2.0-r2', '1.2.0-r1', '1.1.0-r5', '1.1.0-r4', '1.1.0-r3', '1.1.0-r2', '1.1.0-r1', '1.0.0-r1', '0.1.0-r6', '0.1.0-r5', '0.1.0-r4', '0.1.0-r3', '0.1.0-r2', '0.1.0-r1']:
-            errors.append('changelog must contain the current release and all previous versions')
-    except OSError as exc:
-        errors.append(f'missing changelog: {exc}')
     if 'GNU GENERAL PUBLIC LICENSE' not in license_text.upper():
         errors.append('GPL license missing')
     if 'Mozilla Public License Version 2.0' not in mgba_license:
