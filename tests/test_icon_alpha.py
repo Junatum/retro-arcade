@@ -11,56 +11,65 @@ WEB = pathlib.Path(__file__).resolve().parents[1] / 'web'
 PNG_MAGIC = b'\x89PNG\r\n\x1a\n'
 
 
-def png_dimensions_and_corner_alpha(content):
-    """Read PNG dimensions and top-left alpha using only Python's stdlib."""
+def png_alpha_info(content):
+    """Read RGBA or tRNS-indexed PNG alpha and visible bounds without Pillow."""
     if not content.startswith(PNG_MAGIC):
         raise AssertionError('PNG signature missing')
-    width, height, depth, color = struct.unpack_from('>IIBB', content, 16)
-    if depth != 8 or color != 6:
-        raise AssertionError('PNG must be 8-bit RGBA (not opaque RGB)')
-    offset = 8
-    data = bytearray()
-    while offset + 12 <= len(content):
-        size = struct.unpack_from('>I', content, offset)[0]
-        kind = content[offset + 4:offset + 8]
-        if kind == b'IDAT':
-            data += content[offset + 8:offset + 8 + size]
-        offset += 12 + size
-        if kind == b'IEND':
-            break
-    decoded = zlib.decompress(data)
-    # The first pixel has no left or upper neighbors, whatever the row filter.
-    return (width, height), decoded[4]
+    if len(content) < 33:
+        raise AssertionError('PNG header is incomplete')
+    width, height, depth, color, compression, filtering, interlace = struct.unpack_from(
+        '>IIBBBBB', content, 16
+    )
+    if (width == 0 or height == 0 or depth != 8 or color not in (3, 6)
+            or compression != 0 or filtering != 0 or interlace != 0):
+        raise AssertionError('Only non-interlaced 8-bit RGBA or indexed PNG is supported')
 
-
-def png_alpha_bounds(content):
-    """Decode RGBA PNG row filters to measure actual visible icon bounds."""
-    (width, height), _ = png_dimensions_and_corner_alpha(content)
-    offset = 8
     compressed = bytearray()
+    transparency = None
+    palette_size = 0
+    offset = 8
     while offset + 12 <= len(content):
         size = struct.unpack_from('>I', content, offset)[0]
         kind = content[offset + 4:offset + 8]
-        if kind == b'IDAT':
-            compressed.extend(content[offset + 8:offset + 8 + size])
+        if offset + size + 12 > len(content):
+            raise AssertionError('Invalid PNG chunk length')
+        payload = content[offset + 8:offset + 8 + size]
+        if kind == b'PLTE':
+            if size % 3:
+                raise AssertionError('Invalid indexed PNG palette')
+            palette_size = size // 3
+        elif kind == b'tRNS':
+            transparency = payload
+        elif kind == b'IDAT':
+            compressed.extend(payload)
         offset += size + 12
         if kind == b'IEND':
             break
-    stream = zlib.decompress(compressed)
-    stride = width * 4
+
+    if color == 3 and (not palette_size or not transparency
+                       or len(transparency) > palette_size
+                       or all(alpha == 255 for alpha in transparency)):
+        raise AssertionError('Indexed PNG must have a transparent palette entry')
+
+    bpp = 4 if color == 6 else 1
+    stride = width * bpp
+    pixels = zlib.decompress(compressed)
+    if len(pixels) != (stride + 1) * height:
+        raise AssertionError('Unexpected PNG scanline length')
     previous = bytearray(stride)
     minimum_x, minimum_y = width, height
     maximum_x, maximum_y = -1, -1
+    corner_alpha = None
     cursor = 0
     for y in range(height):
-        filter_type = stream[cursor]
+        filter_type = pixels[cursor]
         cursor += 1
-        row = bytearray(stream[cursor:cursor + stride])
+        row = bytearray(pixels[cursor:cursor + stride])
         cursor += stride
         for i in range(stride):
-            left = row[i - 4] if i >= 4 else 0
+            left = row[i - bpp] if i >= bpp else 0
             above = previous[i]
-            upper_left = previous[i - 4] if i >= 4 else 0
+            upper_left = previous[i - bpp] if i >= bpp else 0
             if filter_type == 1:
                 prediction = left
             elif filter_type == 2:
@@ -77,15 +86,55 @@ def png_alpha_bounds(content):
                 raise AssertionError(f'Unsupported PNG row filter: {filter_type}')
             row[i] = (row[i] + prediction) & 255
         for x in range(width):
-            if row[x * 4 + 3]:
+            alpha = (row[x * 4 + 3] if color == 6
+                     else transparency[row[x]] if row[x] < len(transparency) else 255)
+            if corner_alpha is None:
+                corner_alpha = alpha
+            if alpha:
                 minimum_x, minimum_y = min(minimum_x, x), min(minimum_y, y)
                 maximum_x, maximum_y = max(maximum_x, x), max(maximum_y, y)
         previous = row
-    assert maximum_x >= 0, 'Empty image'
-    return (minimum_x, minimum_y, maximum_x + 1, maximum_y + 1)
+    if maximum_x < 0:
+        raise AssertionError('Empty image')
+    return ((width, height), corner_alpha,
+            (minimum_x, minimum_y, maximum_x + 1, maximum_y + 1))
+
+
+def png_dimensions_and_corner_alpha(content):
+    size, alpha, _ = png_alpha_info(content)
+    return size, alpha
+
+
+def png_alpha_bounds(content):
+    return png_alpha_info(content)[2]
 
 
 class RetroArcadeIconAlphaTests(unittest.TestCase):
+    @staticmethod
+    def _sample_indexed_png(alpha_values):
+        """Tiny 8-bit palette PNG: transparent outer pixels, colored center."""
+        def chunk(kind, data):
+            return (struct.pack('>I', len(data)) + kind + data
+                    + struct.pack('>I', zlib.crc32(kind + data) & 0xffffffff))
+        header = struct.pack('>IIBBBBB', 3, 3, 8, 3, 0, 0, 0)
+        palette = bytes([0, 0, 0, 255, 0, 255])
+        # Rows use PNG filter 0; palette index 1 is the center pixel.
+        raw = b'\x00\x00\x00\x00' + b'\x00\x00\x01\x00' + b'\x00\x00\x00\x00'
+        return (PNG_MAGIC + chunk(b'IHDR', header) + chunk(b'PLTE', palette)
+                + (chunk(b'tRNS', bytes(alpha_values)) if alpha_values is not None else b'')
+                + chunk(b'IDAT', zlib.compress(raw)) + chunk(b'IEND', b''))
+
+    def test_indexed_png_with_trns_keeps_transparency_and_visible_bounds(self):
+        sample = self._sample_indexed_png([0, 255])
+        self.assertEqual(png_dimensions_and_corner_alpha(sample), ((3, 3), 0))
+        self.assertEqual(png_alpha_bounds(sample), (1, 1, 2, 2))
+
+    def test_opaque_or_missing_trns_is_not_accepted_as_transparency(self):
+        for values in (None, [255, 255]):
+            with self.subTest(transparency=values):
+                with self.assertRaisesRegex(AssertionError, 'transparent palette entry'):
+                    png_dimensions_and_corner_alpha(self._sample_indexed_png(values))
+
     def test_full_size_icon_has_transparent_background(self):
         image = (WEB / 'app-icon.png').read_bytes()
         size, alpha = png_dimensions_and_corner_alpha(image)
