@@ -123,9 +123,9 @@ class PackageTests(unittest.TestCase):
     def test_revision_platforms_and_licenses(self):
         info = json.loads((ROOT / 'app-info.json').read_text())
         make = (ROOT / 'Makefile').read_text()
-        self.assertEqual(info['version'], '1.3.0-r3')
+        self.assertEqual(info['version'], '1.3.0-r4')
         self.assertIn('PKG_VERSION:=1.3.0', make)
-        self.assertIn('PKG_RELEASE:=3', make)
+        self.assertIn('PKG_RELEASE:=4', make)
         self.assertEqual(info['license'], 'GPL-3.0-or-later AND GPL-2.0-or-later AND MPL-2.0 AND Apache-2.0 AND MIT')
         self.assertEqual(info['included_systems'], ['CHIP-8', 'Game Boy', 'Game Boy Color', 'Game Boy Advance', 'NES', 'Famicom', 'Atari 2600', 'Game Gear', 'Master System', 'SG-1000', 'Mega Drive', 'Genesis', 'Arcade (MAME 0.289 selected drivers)'])
         self.assertNotIn('GL-MT300N-V2', info['supported_models'])
@@ -309,6 +309,14 @@ class PackageTests(unittest.TestCase):
         css = (ROOT / 'web/styles.css').read_text()
         app = (ROOT / 'web/app.js').read_text()
         self.assertIn('.header{height:84px;display:flex', css)
+        self.assertIn('src="./app-icon.png"', html)
+        self.assertIn('class="brand-mark__image"', html)
+        # Header artwork must remain proportionate to the two-line title,
+        # with a mobile-specific size that fits the 72px header.
+        self.assertIn('.brand-mark{width:54px;height:54px;flex-shrink:0;', css)
+        self.assertIn('.brand-mark__image{display:block;width:100%;height:100%;object-fit:cover}', css)
+        self.assertIn('.brand-mark{width:46px;height:46px;border-radius:13px}', css)
+        self.assertIn('.header{height:72px}', css)
         self.assertNotIn('border-bottom:1px solid #2a2a3b', css)
         self.assertIn('별도 계정이나 게임 서버 없이 로컬에서 실행하며', html)
         self.assertNotIn('자체 CHIP-8, mGBA 기반', html)
@@ -383,12 +391,12 @@ class PackageTests(unittest.TestCase):
         history = (ROOT / 'CHANGELOG.md').read_text()
         for heading in ('### 추가', '### 개선', '### 수정', '### 호환성', '### 테스트'):
             self.assertIn(heading, history)
-        self.assertIn('1.3.0-r3', (ROOT / 'docs/SOURCE_OFFER.md').read_text())
+        self.assertIn('1.3.0-r4', (ROOT / 'docs/SOURCE_OFFER.md').read_text())
         for path in ('README.md', 'docs/ARCHITECTURE.md', 'docs/RELEASE_CHECKLIST.md',
                      'docs/THIRD_PARTY.md', 'web/open-source.html'):
             source = (ROOT / path).read_text()
             self.assertIsNone(re.search(r'\b\d+\.\d+\.\d+-r\d+\b', source), path)
-        self.assertIn('<span class="edition">v1.3.0-r3</span>', (ROOT / 'web/index.html').read_text())
+        self.assertIn('<span class="edition">v1.3.0-r4</span>', (ROOT / 'web/index.html').read_text())
 
     def test_release_guard_requires_correct_header_badge(self):
         with tempfile.TemporaryDirectory() as tmp:
@@ -419,8 +427,11 @@ class PackageTests(unittest.TestCase):
         from xml.etree import ElementTree
         svg = ROOT / 'web/favicon.svg'
         ico = ROOT / 'web/favicon.ico'
+        app_icon = ROOT / 'web/app-icon.png'
         self.assertEqual(ElementTree.parse(svg).getroot().tag,
                          '{http://www.w3.org/2000/svg}svg')
+        self.assertTrue(app_icon.is_file())
+        self.assertGreater(len(app_icon.read_bytes()), 1000)
         contents = ico.read_bytes()
         self.assertGreater(len(contents), 200)
         self.assertEqual(contents[:4], b'\x00\x00\x01\x00')
@@ -429,6 +440,7 @@ class PackageTests(unittest.TestCase):
             html = (ROOT / 'web' / page).read_text()
             self.assertIn('href="./favicon.svg"', html)
             self.assertIn('href="./favicon.ico"', html)
+            self.assertIn('href="./app-icon.png"', html)
         self.assertEqual(audit(release=False), [])
 
     def test_release_rejects_missing_favicon_or_page_reference(self):
@@ -439,6 +451,9 @@ class PackageTests(unittest.TestCase):
                 (fake / 'web/favicon.ico').unlink()
                 self.assertTrue(any('favicon' in error for error in audit(release=True, require_atari=False, require_mame=False)))
                 (fake / 'web/favicon.ico').write_bytes((ROOT / 'web/favicon.ico').read_bytes())
+                (fake / 'web/app-icon.png').unlink()
+                self.assertTrue(any('favicon' in error or 'app icon' in error for error in audit(release=True, require_atari=False, require_mame=False)))
+                (fake / 'web/app-icon.png').write_bytes((ROOT / 'web/app-icon.png').read_bytes())
                 source = fake / 'web/open-source.html'
                 source.write_text(source.read_text().replace('href="./favicon.svg"', 'href="./missing.svg"'))
                 self.assertTrue(any('missing favicon link' in error for error in audit(release=True, require_atari=False, require_mame=False)))

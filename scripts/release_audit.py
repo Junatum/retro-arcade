@@ -19,9 +19,9 @@ except ModuleNotFoundError:  # python3 scripts/release_audit.py
 
 ROOT = Path(__file__).resolve().parents[1]
 WEB = ROOT / 'web'
-VERSION = '1.3.0-r3'
+VERSION = '1.3.0-r4'
 EXPECTED_WEB = {
-    'index.html', 'styles.css', 'favicon.svg', 'favicon.ico', 'app.js', 'fullscreen.js', 'controller.js', 'chip8.js', 'systems.js',
+    'index.html', 'styles.css', 'favicon.svg', 'favicon.ico', 'app-icon.png', 'app.js', 'fullscreen.js', 'controller.js', 'chip8.js', 'systems.js',
     'mame-player.js', 'atari-player.js', 'mame/runner.html', 'mame/runner.js', 'mame/runner.css', 'mame/machines.js', 'demo.js', 'open-source.html', 'battery-store.js', 'save-session.js', 'mgba-player.js', 'jsnes-player.js', 'nes-audio.js', 'sega-player.js', 'audio-controls.js',
 }
 MGBA_VENDOR = {'mgba/mgba.js', 'mgba/mgba.wasm', 'mgba/manifest.json'}
@@ -62,7 +62,7 @@ def audit(release: bool = False, require_sega: bool = True, require_mame: bool =
         errors.append('incorrect app version/license')
     if meta.get('included_systems') != ['CHIP-8', 'Game Boy', 'Game Boy Color', 'Game Boy Advance', 'NES', 'Famicom', 'Atari 2600', 'Game Gear', 'Master System', 'SG-1000', 'Mega Drive', 'Genesis', 'Arcade (MAME 0.289 selected drivers)'] or meta.get('offline') is not True:
         errors.append('incorrect included platforms/offline policy')
-    for required in ('PKG_VERSION:=1.3.0', 'PKG_RELEASE:=3', 'PKG_LICENSE:=GPL-3.0-or-later GPL-2.0-or-later MPL-2.0 Apache-2.0 MIT',
+    for required in ('PKG_VERSION:=1.3.0', 'PKG_RELEASE:=4', 'PKG_LICENSE:=GPL-3.0-or-later GPL-2.0-or-later MPL-2.0 Apache-2.0 MIT',
                      'python3 $(CURDIR)/scripts/release_audit.py --release'):
         if required not in mk:
             errors.append(f'incorrect OpenWrt package config: {required}')
@@ -72,20 +72,25 @@ def audit(release: bool = False, require_sega: bool = True, require_mame: bool =
         errors.append('header version badge must match the OpenWrt release version')
     # Both user-facing pages must load the locally bundled favicon files.
     for page_name, html in (('index.html', page), ('open-source.html', notice)):
-        for name in ('favicon.svg', 'favicon.ico'):
+        for name in ('favicon.svg', 'favicon.ico', 'app-icon.png'):
             if f'href="./{name}"' not in html:
                 errors.append(f'missing favicon link in {page_name}: {name}')
     try:
         icon_svg = (WEB / 'favicon.svg').read_text(encoding='utf-8')
         icon_ico = (WEB / 'favicon.ico').read_bytes()
+        app_icon = (WEB / 'app-icon.png').read_bytes()
         if ('<svg' not in icon_svg or 'xmlns="http://www.w3.org/2000/svg"' not in icon_svg or
                 '<script' in icon_svg or re.search(r'(?:href|src)=["\'](?:https?:|//)', icon_svg)):
             errors.append('invalid or nonlocal favicon SVG')
         if (len(icon_ico) < 22 or icon_ico[:4] != b'\x00\x00\x01\x00' or
                 icon_ico[4:6] == b'\x00\x00'):
             errors.append('invalid favicon ICO header')
+        if not app_icon.startswith(b'\x89PNG\r\n\x1a\n'):
+            errors.append('invalid bundled app icon PNG')
     except OSError as exc:
         errors.append(f'missing favicon assets: {exc}')
+    if 'src="./app-icon.png"' not in page or 'class="brand-mark__image"' not in page:
+        errors.append('header must render bundled app icon image')
     for document, content in (('README.md', readme),
                               ('web/open-source.html', notice)):
         if VERSION in content or re.search(r'\b\d+\.\d+\.\d+-r\d+\b', content):
