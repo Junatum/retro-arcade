@@ -11,7 +11,7 @@ WEB = pathlib.Path(__file__).resolve().parents[1] / 'web'
 PNG_MAGIC = b'\x89PNG\r\n\x1a\n'
 
 
-def png_alpha_info(content):
+def png_alpha_info(content, corner=(0, 0)):
     """Read RGBA or tRNS-indexed PNG alpha and visible bounds without Pillow."""
     if not content.startswith(PNG_MAGIC):
         raise AssertionError('PNG signature missing')
@@ -88,7 +88,7 @@ def png_alpha_info(content):
         for x in range(width):
             alpha = (row[x * 4 + 3] if color == 6
                      else transparency[row[x]] if row[x] < len(transparency) else 255)
-            if corner_alpha is None:
+            if (x, y) == corner:
                 corner_alpha = alpha
             if alpha:
                 minimum_x, minimum_y = min(minimum_x, x), min(minimum_y, y)
@@ -100,8 +100,8 @@ def png_alpha_info(content):
             (minimum_x, minimum_y, maximum_x + 1, maximum_y + 1))
 
 
-def png_dimensions_and_corner_alpha(content):
-    size, alpha, _ = png_alpha_info(content)
+def png_dimensions_and_corner_alpha(content, corner=(0, 0)):
+    size, alpha, _ = png_alpha_info(content, corner)
     return size, alpha
 
 
@@ -137,17 +137,17 @@ class RetroArcadeIconAlphaTests(unittest.TestCase):
 
     def test_full_size_icon_has_transparent_background(self):
         image = (WEB / 'app-icon.png').read_bytes()
-        size, alpha = png_dimensions_and_corner_alpha(image)
-        self.assertEqual(size, (512, 512))
-        self.assertEqual(alpha, 0)
+        for corner in ((0, 0), (511, 0), (0, 511), (511, 511)):
+            with self.subTest(corner=corner):
+                size, alpha = png_dimensions_and_corner_alpha(image, corner)
+                self.assertEqual(size, (512, 512))
+                self.assertEqual(alpha, 0)
 
     def test_app_icon_uses_canvas_without_excess_padding(self):
         bounds = png_alpha_bounds((WEB / 'app-icon.png').read_bytes())
         left, top, right, bottom = bounds
-        self.assertLessEqual(max(left, top, 512 - right, 512 - bottom), 18,
+        self.assertLessEqual(max(left, top, 512 - right, 512 - bottom), 4,
                              f'Excess transparent margin around icon: {bounds}')
-        self.assertGreaterEqual(min(left, top, 512 - right, 512 - bottom), 4,
-                                f'Icon artwork is clipped against canvas border: {bounds}')
 
     def test_ico_has_transparency_at_every_size(self):
         ico = (WEB / 'favicon.ico').read_bytes()
