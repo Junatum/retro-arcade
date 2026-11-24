@@ -9,7 +9,9 @@ permissions:
 
 jobs:
   verify:
-    runs-on: ubuntu-latest
+    # Playwright 1.57.0 cannot install Chromium on Ubuntu 26.04.
+    # Use the supported runner until Playwright is deliberately upgraded.
+    runs-on: ubuntu-24.04
     steps:
       - uses: actions/checkout@v7
 

@@ -14,6 +14,16 @@ class MameCiContract(unittest.TestCase):
         self.assertIn('python3 tests/browser_e2e.py -v', workflow)
         self.assertIn('python3 -m playwright install --with-deps chromium', workflow)
 
+    def test_browser_ci_runner_matches_pinned_playwright(self):
+        """Playwright 1.57 Chromium installation needs Ubuntu 24.04, not 26.04."""
+        workflow = (ROOT / '.github/workflows/verify.yml').read_text(encoding='utf-8')
+        self.assertIn('runs-on: ubuntu-24.04', workflow)
+        self.assertNotIn('runs-on: ubuntu-latest', workflow)
+        self.assertIn("python-version: '3.14'", workflow)
+        self.assertIn('python3 -m pip install playwright==1.57.0', workflow)
+        self.assertIn('python3 -m playwright install --with-deps chromium', workflow)
+        self.assertNotIn('PLAYWRIGHT_HOST_PLATFORM_OVERRIDE', workflow)
+
     def test_mame_smoke_uses_real_wasm_and_own_data_not_game_roms(self):
         source = (ROOT / 'tests/browser_e2e.py').read_text(encoding='utf-8')
         self.assertIn('def test_mame_real_wasm_initializes_without_copyrighted_rom', source)
